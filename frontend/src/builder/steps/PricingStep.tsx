@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { SaveButton } from '@/builder/components/SaveButton';
 import type { SiteConfig, PricingPlan } from '@/types/builder';
 
@@ -35,6 +35,8 @@ export function PricingStep({
   const [plans, setPlans] = useState(config.pricingPlans);
   const [editingPlan, setEditingPlan] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [planToDelete, setPlanToDelete] = useState<string | null>(null);
+  const [planDeleteConfirmOpen, setPlanDeleteConfirmOpen] = useState(false);
   const [newPlan, setNewPlan] = useState({
     name: '',
     price: '',
@@ -66,6 +68,19 @@ export function PricingStep({
     setIsDirty(true);
   };
 
+  const initiateRemovePlan = (id: string) => {
+    setPlanToDelete(id);
+    setPlanDeleteConfirmOpen(true);
+  };
+
+  const confirmRemovePlan = () => {
+    if (planToDelete) {
+      handleRemovePlan(planToDelete);
+      setPlanToDelete(null);
+      setPlanDeleteConfirmOpen(false);
+    }
+  };
+
   const handleUpdatePlan = (id: string, updates: Partial<PricingPlan>) => {
     onUpdatePlan(id, updates);
     setPlans(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
@@ -92,6 +107,12 @@ export function PricingStep({
 
   return (
     <div className="space-y-6">
+      <datalist id="services-list">
+        {config.services?.map((service) => (
+          <option key={service.id} value={service.title} />
+        ))}
+      </datalist>
+
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold text-gray-900">Vos Tarifs</h2>
         <p className="text-gray-600">Définissez vos forfaits et prix</p>
@@ -167,9 +188,11 @@ export function PricingStep({
                   {newPlan.features.map((feature, index) => (
                     <div key={index} className="flex gap-2">
                       <Input
+                        list="services-list"
                         value={feature}
                         onChange={(e) => updateFeature(index, e.target.value)}
                         placeholder={`Élément ${index + 1}`}
+                        autoComplete="off"
                       />
                       {newPlan.features.length > 1 && (
                         <Button 
@@ -248,7 +271,7 @@ export function PricingStep({
                             variant="ghost" 
                             size="icon"
                             className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-gray-50 hover:bg-red-50 hover:text-red-600 transition-colors"
-                            onClick={() => handleRemovePlan(plan.id)}
+                            onClick={() => initiateRemovePlan(plan.id)}
                           >
                             <X className="w-4 h-4" />
                           </Button>
@@ -326,6 +349,38 @@ export function PricingStep({
           </Button>
         </div>
       </div>
+
+      {/* Plan Delete Confirmation Dialog */}
+      <Dialog open={planDeleteConfirmOpen} onOpenChange={setPlanDeleteConfirmOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-gray-900">
+              Supprimer le forfait ?
+            </DialogTitle>
+            <DialogDescription className="text-sm text-gray-500 mt-2">
+              Êtes-vous sûr de vouloir supprimer ce forfait ? Cette action est irréversible.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 mt-6">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setPlanToDelete(null);
+                setPlanDeleteConfirmOpen(false);
+              }}
+            >
+              Annuler
+            </Button>
+            <Button
+              variant="destructive"
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={confirmRemovePlan}
+            >
+              Supprimer
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -396,8 +451,11 @@ function EditPlanForm({
         {formData.features.map((feature, index) => (
           <div key={index} className="flex gap-2">
             <Input
+              list="services-list"
               value={feature}
               onChange={(e) => updateFeature(index, e.target.value)}
+              placeholder={`Élément ${index + 1}`}
+              autoComplete="off"
             />
             <Button 
               variant="outline" 

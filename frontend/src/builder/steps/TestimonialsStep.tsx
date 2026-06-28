@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { SaveButton } from '@/builder/components/SaveButton';
 import type { SiteConfig, Testimonial } from '@/types/builder';
 
@@ -34,6 +34,8 @@ export function TestimonialsStep({
   const [testimonials, setTestimonials] = useState(config.testimonials);
   const [editingTestimonial, setEditingTestimonial] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [testimonialToDelete, setTestimonialToDelete] = useState<string | null>(null);
+  const [testimonialDeleteConfirmOpen, setTestimonialDeleteConfirmOpen] = useState(false);
   const [newTestimonial, setNewTestimonial] = useState({
     name: '',
     role: '',
@@ -55,6 +57,19 @@ export function TestimonialsStep({
     onRemoveTestimonial(id);
     setTestimonials(prev => prev.filter(t => t.id !== id));
     setIsDirty(true);
+  };
+
+  const initiateRemoveTestimonial = (id: string) => {
+    setTestimonialToDelete(id);
+    setTestimonialDeleteConfirmOpen(true);
+  };
+
+  const confirmRemoveTestimonial = () => {
+    if (testimonialToDelete) {
+      handleRemoveTestimonial(testimonialToDelete);
+      setTestimonialToDelete(null);
+      setTestimonialDeleteConfirmOpen(false);
+    }
   };
 
   const handleUpdateTestimonial = (id: string, updates: Partial<Testimonial>) => {
@@ -197,7 +212,7 @@ export function TestimonialsStep({
                           variant="ghost" 
                           size="icon"
                           className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-gray-50 hover:bg-red-50 hover:text-red-600 transition-colors"
-                          onClick={() => handleRemoveTestimonial(testimonial.id)}
+                          onClick={() => initiateRemoveTestimonial(testimonial.id)}
                         >
                           <X className="w-4 h-4" />
                         </Button>
@@ -261,6 +276,38 @@ export function TestimonialsStep({
           </Button>
         </div>
       </div>
+
+      {/* Testimonial Delete Confirmation Dialog */}
+      <Dialog open={testimonialDeleteConfirmOpen} onOpenChange={setTestimonialDeleteConfirmOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-gray-900">
+              Supprimer le témoignage ?
+            </DialogTitle>
+            <DialogDescription className="text-sm text-gray-500 mt-2">
+              Êtes-vous sûr de vouloir supprimer ce témoignage ? Cette action est irréversible.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 mt-6">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setTestimonialToDelete(null);
+                setTestimonialDeleteConfirmOpen(false);
+              }}
+            >
+              Annuler
+            </Button>
+            <Button
+              variant="destructive"
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={confirmRemoveTestimonial}
+            >
+              Supprimer
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import type { SiteConfig } from '@/types/builder';
 import { defaultSiteConfig } from '@/types/builder';
 import { siteConfigService } from '@/services/siteConfigService';
+import { persistSiteConfigAssets } from '@/utils/siteConfigAssets';
 
 // ── localStorage keys ──────────────────────────────────────────────────────────
 const LS_STEP = 'vanda_current_step';
@@ -91,6 +92,13 @@ export function useBuilder() {
     setConfig(prev => ({
       ...prev,
       photos: prev.photos.filter(p => p.id !== id)
+    }));
+  }, []);
+
+  const updatePhoto = useCallback((id: string, updates: Partial<SiteConfig['photos'][number]>) => {
+    setConfig(prev => ({
+      ...prev,
+      photos: prev.photos.map(photo => photo.id === id ? { ...photo, ...updates } : photo)
     }));
   }, []);
 
@@ -230,29 +238,27 @@ export function useBuilder() {
         ? { ...config, ...updatesFromStep }
         : config;
 
+      const preparedConfig = await persistSiteConfigAssets(configToSave);
+
       if (configIdRef.current !== null) {
         // Update existing config
         const result = await siteConfigService.update(
           configIdRef.current,
-          configToSave,
-          configToSave.siteName
+          preparedConfig,
+          preparedConfig.siteName
         );
-        if (updatesFromStep) {
-          setConfig(configToSave);
-        }
+        setConfig(preparedConfig);
         // Mark site as built after first successful save
         setHasSiteBuilt(true);
         localStorage.setItem(LS_HAS_BUILT, 'true');
       } else {
         // Create new config
         const result = await siteConfigService.create(
-          configToSave,
-          configToSave.siteName
+          preparedConfig,
+          preparedConfig.siteName
         );
         configIdRef.current = result.data.id;
-        if (updatesFromStep) {
-          setConfig(configToSave);
-        }
+        setConfig(preparedConfig);
         // Mark site as built after creation
         setHasSiteBuilt(true);
         localStorage.setItem(LS_HAS_BUILT, 'true');
@@ -278,6 +284,7 @@ export function useBuilder() {
     addPhoto,
     addPhotos,
     removePhoto,
+    updatePhoto,
     addService,
     removeService,
     updateService,

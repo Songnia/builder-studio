@@ -29,6 +29,7 @@ class InvoiceController extends Controller
             'tax_rate' => 'required|numeric',
             'include_tax' => 'nullable|boolean',
             'total_amount' => 'required|numeric',
+            'amount_paid' => 'nullable|numeric|min:0',
             'studio_info' => 'nullable|json',
             'items' => 'required|array|min:1',
             'items.*.description' => 'required|string',
@@ -38,6 +39,14 @@ class InvoiceController extends Controller
         ]);
 
         return DB::transaction(function () use ($validated, $request) {
+            $amount_paid = $validated['amount_paid'] ?? 0;
+            $status = 'pending';
+            if ($amount_paid > 0 && $amount_paid < $validated['total_amount']) {
+                $status = 'partially_paid';
+            } elseif ($amount_paid >= $validated['total_amount']) {
+                $status = 'paid';
+            }
+
             $invoice = Invoice::create([
                 'user_id' => $request->user()->id,
                 'invoice_number' => $validated['invoice_number'],
@@ -50,8 +59,9 @@ class InvoiceController extends Controller
                 'tax_rate' => $validated['tax_rate'],
                 'include_tax' => $validated['include_tax'] ?? false,
                 'total_amount' => $validated['total_amount'],
+                'amount_paid' => $amount_paid,
                 'studio_info' => isset($validated['studio_info']) ? json_decode($validated['studio_info'], true) : null,
-                'status' => 'pending',
+                'status' => $status,
                 'currency' => 'FCFA'
             ]);
 
@@ -85,6 +95,7 @@ class InvoiceController extends Controller
             'tax_rate' => 'required|numeric',
             'include_tax' => 'nullable|boolean',
             'total_amount' => 'required|numeric',
+            'amount_paid' => 'nullable|numeric|min:0',
             'studio_info' => 'nullable|json',
             'items' => 'required|array|min:1',
             'items.*.description' => 'required|string',
@@ -94,6 +105,14 @@ class InvoiceController extends Controller
         ]);
 
         return DB::transaction(function () use ($validated, $invoice) {
+            $amount_paid = $validated['amount_paid'] ?? 0;
+            $status = 'pending';
+            if ($amount_paid > 0 && $amount_paid < $validated['total_amount']) {
+                $status = 'partially_paid';
+            } elseif ($amount_paid >= $validated['total_amount']) {
+                $status = 'paid';
+            }
+
             $invoice->update([
                 'invoice_number' => $validated['invoice_number'],
                 'issue_date' => $validated['issue_date'],
@@ -105,7 +124,9 @@ class InvoiceController extends Controller
                 'tax_rate' => $validated['tax_rate'],
                 'include_tax' => $validated['include_tax'] ?? false,
                 'total_amount' => $validated['total_amount'],
+                'amount_paid' => $amount_paid,
                 'studio_info' => isset($validated['studio_info']) ? json_decode($validated['studio_info'], true) : null,
+                'status' => $status,
             ]);
 
             // Plus simple : on supprime les anciens items et on recrée les nouveaux
@@ -116,6 +137,30 @@ class InvoiceController extends Controller
 
             return response()->json($invoice->load('items'));
         });
+    }
+
+    public function recordPayment(Request $request, $id)
+    {
+        $invoice = Invoice::where('user_id', $request->user()->id)->findOrFail($id);
+
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:0.01'
+        ]);
+
+        $newAmountPaid = ($invoice->amount_paid ?? 0) + $validated['amount'];
+        $status = 'pending';
+        if ($newAmountPaid > 0 && $newAmountPaid < $invoice->total_amount) {
+            $status = 'partially_paid';
+        } elseif ($newAmountPaid >= $invoice->total_amount) {
+            $status = 'paid';
+        }
+
+        $invoice->update([
+            'amount_paid' => $newAmountPaid,
+            'status' => $status
+        ]);
+
+        return response()->json($invoice->load('items'));
     }
 
     public function destroy($id, Request $request)

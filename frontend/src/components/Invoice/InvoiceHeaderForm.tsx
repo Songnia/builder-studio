@@ -32,23 +32,27 @@ const InvoiceHeaderForm: React.FC<HeaderFormProps> = ({ invoice, onUpdateMetadat
     const inputClasses = "w-full bg-white border border-black px-4 py-2.5 outline-none focus:ring-1 focus:ring-green-500 transition-all text-slate-800 rounded-lg text-sm";
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Colonne 1 : Informations Facture */}
-            <div className="flex flex-col gap-5">
-                <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-widest mb-1">DÉTAILS FACTURE</h3>
-                <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 block">N° Facture</label>
-                    <input
-                        type="text"
-                        value={invoice.number || ''}
-                        onChange={(e) => onUpdateMetadata('number', e.target.value)}
-                        className={`${inputClasses} font-mono font-bold`}
-                    />
+        <div className="flex flex-col gap-10">
+            {/* Section 1 : Informations Facture */}
+            <div className="flex flex-col gap-6">
+                <div className="flex items-center gap-4">
+                    <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-widest whitespace-nowrap">DÉTAILS FACTURE</h3>
+                    <div className="h-[1px] w-full bg-slate-100" />
                 </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div className="md:col-span-1">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 block tracking-wider">N° Facture</label>
+                        <input
+                            type="text"
+                            value={invoice.number || ''}
+                            onChange={(e) => onUpdateMetadata('number', e.target.value)}
+                            className={`${inputClasses} font-mono font-bold bg-slate-50/30`}
+                        />
+                    </div>
 
-                <div className="grid grid-cols-2 gap-3">
                     <div>
-                        <label className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 block">Date</label>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 block tracking-wider">Date d'émission</label>
                         <input
                             type="date"
                             value={invoice.issueDate || ''}
@@ -56,8 +60,9 @@ const InvoiceHeaderForm: React.FC<HeaderFormProps> = ({ invoice, onUpdateMetadat
                             className={inputClasses}
                         />
                     </div>
+                    
                     <div>
-                        <label className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 block">Échéance</label>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 block tracking-wider">Date d'échéance</label>
                         <input
                             type="date"
                             value={invoice.dueDate || ''}
@@ -65,78 +70,100 @@ const InvoiceHeaderForm: React.FC<HeaderFormProps> = ({ invoice, onUpdateMetadat
                             className={inputClasses}
                         />
                     </div>
-                </div>
-            </div>
 
-            {/* Colonne 2 : Prestataire (Studio) */}
-            <div className="flex flex-col gap-5">
-                <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-widest mb-1">PRESTATAIRE (VOUS)</h3>
-                <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 block">Nom du Studio</label>
-                    <input
-                        type="text"
-                        value={invoice.studio.photographerName || ''}
-                        onChange={(e) => onUpdateStudio('photographerName', e.target.value)}
-                        className={`${inputClasses} font-bold`}
-                    />
-                </div>
-                <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 block">Email & Contact</label>
-                    <input
-                        type="email"
-                        value={invoice.studio.email || ''}
-                        onChange={(e) => onUpdateStudio('email', e.target.value)}
-                        className={inputClasses}
-                        placeholder="email@studio.com"
-                    />
-                </div>
-                <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 block">Téléphone</label>
-                    <input
-                        type="tel"
-                        value={invoice.studio.phone || ''}
-                        onChange={(e) => onUpdateStudio('phone', e.target.value)}
-                        className={inputClasses}
-                    />
-                </div>
-            </div>
-
-            {/* Colonne 3 : Client */}
-            <div className="flex flex-col gap-5">
-                <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-widest mb-1">CLIENT</h3>
-                <div className="relative">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 block">Nom du Client</label>
-                    <input
-                        type="text"
-                        placeholder="Recherche..."
-                        value={search || ''}
-                        onFocus={() => setShowSuggestions(true)}
-                        onChange={(e) => {
-                            setSearch(e.target.value);
-                            onUpdateClient('name', e.target.value);
-                        }}
-                        className={`${inputClasses} font-bold`}
-                    />
-
-                    {showSuggestions && search && filteredClients.length > 0 && (
-                        <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 shadow-xl rounded-xl overflow-hidden">
-                            {filteredClients.map((client, idx) => (
-                                <div
-                                    key={idx}
-                                    onClick={() => handleSelectClient(client)}
-                                    className="px-4 py-2.5 hover:bg-green-50 cursor-pointer border-b border-slate-50 last:border-none"
-                                >
-                                    <div className="font-semibold text-slate-800 text-sm">{client.name}</div>
-                                    <div className="text-[10px] text-slate-500">{client.email}</div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
-                        <label className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 block">Email Client</label>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 block tracking-wider">Acompte (FCFA)</label>
+                        <input
+                            type="number"
+                            min="0"
+                            value={invoice.amountPaid || ''}
+                            onChange={(e) => onUpdateMetadata('amountPaid', Number(e.target.value))}
+                            className={inputClasses}
+                            placeholder="0"
+                        />
+                    </div>
+                </div>
+            </div>
+
+            {/* Section 2 : Prestataire (Studio) */}
+            <div className="flex flex-col gap-6">
+                <div className="flex items-center gap-4">
+                    <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-widest whitespace-nowrap">PRESTATAIRE (VOUS)</h3>
+                    <div className="h-[1px] w-full bg-slate-100" />
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 block tracking-wider">Nom du Studio / Photographe</label>
+                        <input
+                            type="text"
+                            value={invoice.studio.photographerName || ''}
+                            onChange={(e) => onUpdateStudio('photographerName', e.target.value)}
+                            className={`${inputClasses} font-bold`}
+                        />
+                    </div>
+                    <div>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 block tracking-wider">Email Professionnel</label>
+                        <input
+                            type="email"
+                            value={invoice.studio.email || ''}
+                            onChange={(e) => onUpdateStudio('email', e.target.value)}
+                            className={inputClasses}
+                            placeholder="email@studio.com"
+                        />
+                    </div>
+                    <div>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 block tracking-wider">Téléphone de contact</label>
+                        <input
+                            type="tel"
+                            value={invoice.studio.phone || ''}
+                            onChange={(e) => onUpdateStudio('phone', e.target.value)}
+                            className={inputClasses}
+                        />
+                    </div>
+                </div>
+            </div>
+
+            {/* Section 3 : Client */}
+            <div className="flex flex-col gap-6">
+                <div className="flex items-center gap-4">
+                    <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-widest whitespace-nowrap">INFORMATION CLIENT</h3>
+                    <div className="h-[1px] w-full bg-slate-100" />
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="relative">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 block tracking-wider">Nom du Client</label>
+                        <input
+                            type="text"
+                            placeholder="Rechercher ou saisir un nom..."
+                            value={search || ''}
+                            onFocus={() => setShowSuggestions(true)}
+                            onChange={(e) => {
+                                setSearch(e.target.value);
+                                onUpdateClient('name', e.target.value);
+                            }}
+                            className={`${inputClasses} font-bold`}
+                        />
+
+                        {showSuggestions && search && filteredClients.length > 0 && (
+                            <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 shadow-xl rounded-xl overflow-hidden animate-in fade-in slide-in-from-top-2">
+                                {filteredClients.map((client, idx) => (
+                                    <div
+                                        key={idx}
+                                        onClick={() => handleSelectClient(client)}
+                                        className="px-4 py-2.5 hover:bg-green-50 cursor-pointer border-b border-slate-50 last:border-none"
+                                    >
+                                        <div className="font-semibold text-slate-800 text-sm">{client.name}</div>
+                                        <div className="text-[10px] text-slate-500">{client.email}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    <div>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 block tracking-wider">Email de facturation</label>
                         <input
                             type="email"
                             value={invoice.client.email || ''}
@@ -144,8 +171,9 @@ const InvoiceHeaderForm: React.FC<HeaderFormProps> = ({ invoice, onUpdateMetadat
                             className={inputClasses}
                         />
                     </div>
+                    
                     <div>
-                        <label className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 block">Adresse Client</label>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 block tracking-wider">Adresse / Localisation</label>
                         <input
                             type="text"
                             placeholder="Ville, Pays..."
@@ -157,6 +185,7 @@ const InvoiceHeaderForm: React.FC<HeaderFormProps> = ({ invoice, onUpdateMetadat
                 </div>
             </div>
         </div>
+
     );
 };
 

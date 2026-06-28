@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Building2, Mail, Phone, MapPin, Image as ImageIcon, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { SaveButton } from '@/builder/components/SaveButton';
 import type { SiteConfig } from '@/types/builder';
+import { uploadBuilderMedia } from '@/services/mediaService';
 
 interface InfoStepProps {
   config: SiteConfig;
@@ -31,24 +32,47 @@ export function InfoStep({ config, onUpdate, onNext, onPrev, onSave, isSaving }:
     address: config.address,
     city: config.city,
     country: config.country,
-    promoterBiography: config.promoterBiography || '',
     promoterPhilosophy: config.promoterPhilosophy || '',
     promoterPhoto: config.promoterPhoto || ''
   });
+  const [isUploading, setIsUploading] = useState(false);
   const handleChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     setIsDirty(true);
   };
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  useEffect(() => {
+    setFormData({
+      siteName: config.siteName,
+      tagline: config.tagline,
+      description: config.description,
+      logo: config.logo || '',
+      useStudioNameAsLogo: config.useStudioNameAsLogo || false,
+      email: config.email,
+      phone: config.phone,
+      address: config.address,
+      city: config.city,
+      country: config.country,
+      promoterBiography: config.promoterBiography || '',
+      promoterPhilosophy: config.promoterPhilosophy || '',
+      promoterPhoto: config.promoterPhoto || ''
+    });
+  }, [config]);
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, logo: reader.result as string }));
-        setIsDirty(true);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const url = await uploadBuilderMedia(file, 'logo');
+      setFormData(prev => ({ ...prev, logo: url }));
+      setIsDirty(true);
+    } catch (err) {
+      console.error('Logo upload failed:', err);
+      alert('Erreur lors de l\'upload du logo.');
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -261,14 +285,19 @@ export function InfoStep({ config, onUpdate, onNext, onPrev, onSave, isSaving }:
                   id="promoterPhoto"
                   type="file"
                   accept="image/*"
-                  onChange={(e) => {
+                  onChange={async (e) => {
                     const file = e.target.files?.[0];
-                    if (file) {
-                      const reader = new FileReader();
-                      reader.onloadend = () => {
-                        handleChange('promoterPhoto', reader.result as string);
-                      };
-                      reader.readAsDataURL(file);
+                    if (!file) return;
+
+                    setIsUploading(true);
+                    try {
+                      const url = await uploadBuilderMedia(file, 'promoter');
+                      handleChange('promoterPhoto', url);
+                    } catch (err) {
+                      console.error('Promoter photo upload failed:', err);
+                      alert('Erreur lors de l\'upload de la photo.');
+                    } finally {
+                      setIsUploading(false);
                     }
                   }}
                   className="cursor-pointer"

@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\SiteConfigController;
 use App\Http\Controllers\Api\Admin\GalleryController as AdminGalleryController;
 use App\Http\Controllers\Api\Admin\InvoiceController as AdminInvoiceController;
+use App\Http\Controllers\Api\Admin\MediaController as AdminMediaController;
 use App\Http\Controllers\Api\Client\GalleryController as ClientGalleryController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -19,9 +20,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('admin')->group(function () {
         Route::apiResource('galleries', AdminGalleryController::class);
         Route::apiResource('invoices', AdminInvoiceController::class);
+        Route::post('invoices/{id}/payment', [AdminInvoiceController::class, 'recordPayment']);
         Route::post('galleries/{id}/photos', [AdminGalleryController::class, 'addPhotos']);
         Route::delete('galleries/{id}/photos/{photoId}', [AdminGalleryController::class, 'deletePhoto']);
         Route::post('galleries/{id}/zip', [AdminGalleryController::class, 'uploadZip']);
+
+        // Media uploads for the builder (hero, logo, portfolio, services, etc.)
+        Route::post('media/upload', [AdminMediaController::class, 'upload']);
+        Route::delete('media', [AdminMediaController::class, 'destroy']);
     });
 
     // Site Configuration Routes (Protected)

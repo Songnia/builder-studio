@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\PublicMedia;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\HasMedia;
@@ -47,7 +48,7 @@ class Gallery extends Model implements HasMedia
 
     public function getZipUrlAttribute()
     {
-        return $this->zip_path ? asset('storage/' . $this->zip_path) : null;
+        return $this->zip_path ? PublicMedia::url($this->zip_path) : null;
     }
 
     public function registerMediaConversions(?\Spatie\MediaLibrary\MediaCollections\Models\Media $media = null): void

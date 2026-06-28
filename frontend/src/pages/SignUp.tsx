@@ -53,7 +53,7 @@ const SignUp: React.FC = () => {
                 password,
                 password_confirmation: passwordConfirmation
             });
-            navigate('/builder');
+            navigate('/admin/site-builder');
         } catch (err: any) {
             setError(err.response?.data?.message || 'Une erreur est survenue lors de l\'inscription.');
         } finally {

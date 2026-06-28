@@ -61,6 +61,37 @@ const LayoutContent: React.FC = () => {
     // Création du thème dynamique
     const dynamicTheme = createThemeFromConfig(config);
 
+    // Chargement dynamique des Google Fonts configurées
+    React.useEffect(() => {
+        if (!config) return;
+        
+        const loadFont = (font: string) => {
+            if (!font) return;
+            const fontUrlName = font.trim().replace(/"/g, '').replace(/'/g, '').replace(/ /g, '+');
+            const linkId = `gfont-site-${fontUrlName.toLowerCase()}`;
+            if (document.getElementById(linkId)) return;
+            
+            const link = document.createElement('link');
+            link.id = linkId;
+            link.rel = 'stylesheet';
+            link.href = `https://fonts.googleapis.com/css2?family=${fontUrlName}:wght@300;400;500;600;700;800;900&display=swap`;
+            document.head.appendChild(link);
+        };
+
+        if (config.primaryFont) loadFont(config.primaryFont);
+        if (config.secondaryFont) loadFont(config.secondaryFont);
+    }, [config?.primaryFont, config?.secondaryFont]);
+
+    const isSecondaryDark = (color: string) => {
+        if (!color) return false;
+        const clean = color.replace('#', '');
+        if (clean.length !== 6 && clean.length !== 3) return false;
+        const r = parseInt(clean.length === 3 ? clean[0] + clean[0] : clean.substring(0, 2), 16);
+        const g = parseInt(clean.length === 3 ? clean[1] + clean[1] : clean.substring(2, 4), 16);
+        const b = parseInt(clean.length === 3 ? clean[2] + clean[2] : clean.substring(4, 6), 16);
+        return ((r * 299) + (g * 587) + (b * 114)) / 1000 < 128;
+    };
+
     return (
         <ThemeProvider theme={dynamicTheme}>
             <CssBaseline />
@@ -75,11 +106,16 @@ const LayoutContent: React.FC = () => {
                         m: 0,
                         p: 0,
                         // Injection des CSS variables pour Tailwind/utilitaires
-                        '--primary-color': config.primaryColor,
-                        '--secondary-color': config.secondaryColor,
+                        '--primary-color': dynamicTheme.palette.primary.main,
+                        '--secondary-color': dynamicTheme.palette.secondary.main,
                         '--accent-color': config.accentColor,
-                        '--background-color': config.backgroundColor,
-                        '--text-color': config.textColor,
+                        '--background-color': dynamicTheme.palette.background.default,
+                        '--text-color': dynamicTheme.palette.text.primary,
+                        '--subtitle-color': dynamicTheme.palette.text.secondary,
+                        '--text-alt-color': dynamicTheme.palette.secondary.contrastText,
+                        '--subtitle-alt-color': isSecondaryDark(dynamicTheme.palette.secondary.main) ? '#a1a1aa' : '#79747e',
+                        '--primary-font': config.primaryFont ? `"${config.primaryFont}", serif` : '"Playfair Display", serif',
+                        '--secondary-font': config.secondaryFont ? `"${config.secondaryFont}", sans-serif` : '"Inter", sans-serif',
                     } as React.CSSProperties}
                 >
                     <Navbar />

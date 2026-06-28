@@ -39,9 +39,13 @@ const InvoiceLineItems: React.FC<LineItemsProps> = ({ items, onUpdateItem, onAdd
                             <input 
                                 type="number"
                                 step="any"
-                                value={item.quantity || ''}
+                                value={item.quantity === 0 ? '' : item.quantity}
                                 min="0"
-                                onChange={(e) => onUpdateItem(item.id, 'quantity', e.target.value === '' ? 0 : parseFloat(e.target.value))}
+                                onChange={(e) => {
+                                    const val = e.target.value.replace(',', '.');
+                                    const parsed = parseFloat(val);
+                                    onUpdateItem(item.id, 'quantity', isNaN(parsed) ? 0 : parsed);
+                                }}
                                 className="w-full bg-white rounded-lg px-2 py-2 outline-none text-center font-mono text-xs border border-black focus:ring-1 focus:ring-green-500"
                             />
                         </div>
@@ -51,8 +55,12 @@ const InvoiceLineItems: React.FC<LineItemsProps> = ({ items, onUpdateItem, onAdd
                                 <input 
                                     type="number"
                                     step="any"
-                                    value={item.unitPrice || ''}
-                                    onChange={(e) => onUpdateItem(item.id, 'unitPrice', e.target.value === '' ? 0 : parseFloat(e.target.value))}
+                                    value={item.unitPrice === 0 ? '' : item.unitPrice}
+                                    onChange={(e) => {
+                                        const val = e.target.value.replace(',', '.');
+                                        const parsed = parseFloat(val);
+                                        onUpdateItem(item.id, 'unitPrice', isNaN(parsed) ? 0 : parsed);
+                                    }}
                                     className="w-full bg-white rounded-lg pl-2 pr-10 py-2 outline-none text-right font-mono text-xs border border-black focus:ring-1 focus:ring-green-500"
                                 />
                                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-400">FCFA</span>

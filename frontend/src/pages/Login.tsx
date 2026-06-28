@@ -46,7 +46,7 @@ const Login: React.FC = () => {
             if (response.has_site) {
                 navigate('/admin/dashboard');
             } else {
-                navigate('/builder');
+                navigate('/admin/site-builder');
             }
         } catch (err: any) {
             setError(err.response?.data?.message || 'Une erreur est survenue lors de la connexion.');

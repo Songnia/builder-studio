@@ -149,23 +149,23 @@ export function AdminNavbar({ onMenuClick }: AdminNavbarProps) {
                             <Button
                                 variant="outline"
                                 size="sm"
-                                className="gap-2 rounded-full border-slate-200 text-slate-700 hover:border-green-400 hover:text-green-600 hidden sm:flex"
+                                className="gap-2 rounded-full border-slate-200 text-slate-700 hover:border-green-400 hover:text-green-600 flex"
                             >
                                 <ExternalLink className="w-4 h-4" />
-                                Voir le site
+                                <span className="hidden sm:inline">Voir le site</span>
                             </Button>
                         </a>
                         <Button
                             variant="outline"
                             size="sm"
-                            className={`gap-2 rounded-full transition-colors hidden sm:flex ${copied
+                            className={`gap-2 rounded-full transition-colors flex ${copied
                                 ? 'border-green-400 text-green-600 bg-green-50'
                                 : 'border-slate-200 text-slate-700 hover:border-green-400 hover:text-green-600'
                                 }`}
                             onClick={copyLink}
                         >
                             {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                            {copied ? 'Lien copié !' : 'Copier le lien'}
+                            <span className="hidden sm:inline">{copied ? 'Lien copié !' : 'Copier le lien'}</span>
                         </Button>
                     </div>
                 )}

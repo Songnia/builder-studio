@@ -4,38 +4,68 @@ import FacebookIcon from '@mui/icons-material/Facebook';
 import InstagramIcon from '@mui/icons-material/Instagram';
 import TwitterIcon from '@mui/icons-material/Twitter';
 import LinkedInIcon from '@mui/icons-material/LinkedIn';
+import YouTubeIcon from '@mui/icons-material/YouTube';
+import LanguageIcon from '@mui/icons-material/Language';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import PhoneIcon from '@mui/icons-material/Phone';
 import EmailIcon from '@mui/icons-material/Email';
-import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useSiteConfig } from '@/context/SiteConfigContext';
+import { useSitePath } from '@/template/hooks/useSitePath';
 
 import logo from '@/template/assets/logo/vanda_logo.png';
 
 const Footer: React.FC = () => {
     const { t } = useTranslation();
     const { config } = useSiteConfig();
-    const location = useLocation();
+    const { getPath } = useSitePath();
 
     if (!config) return null;
 
-    // Get slug from current URL path
-    const params = location.pathname.split('/');
-    const slug = params[1] || config.siteName.toLowerCase().replace(/\s+/g, '-');
-
-    // Construct paths relative to the current site slug
-    const getPath = (path: string) => {
-        if (path === '/') return `/${slug}`;
-        return `/${slug}${path}`;
-    };
+    const showPortfolio = config?.enabledSections.portfolio && config?.photos && config.photos.length > 0;
 
     const quickLinks = [
         { label: t('navbar.home'), path: getPath('/') },
-        { label: t('navbar.portfolio'), path: getPath('/portfolio') },
+        ...(showPortfolio ? [{ label: t('navbar.portfolio'), path: getPath('/portfolio') }] : []),
         { label: t('navbar.about'), path: getPath('/about') },
         { label: t('navbar.contact'), path: getPath('/contact') },
     ];
+
+    const getSocialLink = (platform: string, value?: string) => {
+        if (!value) return '';
+        const cleanValue = value.trim();
+        if (cleanValue.startsWith('http://') || cleanValue.startsWith('https://')) {
+            return cleanValue;
+        }
+
+        switch (platform) {
+            case 'instagram':
+                return `https://instagram.com/${cleanValue.replace(/^@/, '')}`;
+            case 'facebook':
+                return `https://facebook.com/${cleanValue.replace(/^@/, '')}`;
+            case 'twitter':
+                return `https://x.com/${cleanValue.replace(/^@/, '')}`;
+            case 'youtube':
+                return cleanValue.startsWith('@')
+                    ? `https://youtube.com/${cleanValue}`
+                    : `https://youtube.com/@${cleanValue}`;
+            case 'website':
+                return cleanValue.startsWith('www.')
+                    ? `https://${cleanValue}`
+                    : `https://${cleanValue}`;
+            default:
+                return cleanValue;
+        }
+    };
+
+    const socialIcons = [
+        { key: 'facebook', icon: <FacebookIcon />, url: getSocialLink('facebook', config.socials?.facebook) },
+        { key: 'instagram', icon: <InstagramIcon />, url: getSocialLink('instagram', config.socials?.instagram) },
+        { key: 'twitter', icon: <TwitterIcon />, url: getSocialLink('twitter', config.socials?.twitter) },
+        { key: 'youtube', icon: <YouTubeIcon />, url: getSocialLink('youtube', config.socials?.youtube) },
+        { key: 'website', icon: <LanguageIcon />, url: getSocialLink('website', config.socials?.website) },
+    ].filter(item => item.url);
 
     return (
         <Box component="footer" sx={{ backgroundColor: '#181811', color: 'white', pt: 8, pb: 4 }}>
@@ -61,21 +91,22 @@ const Footer: React.FC = () => {
                             )}
                         </Box>
                         <Typography variant="body2" sx={{ color: 'grey.400', mb: 3, lineHeight: 1.8, maxWidth: '300px' }}>
-                            {t('footer.description', { siteName: config.siteName })}
+                            {config.description}
                         </Typography>
                         <Box sx={{ display: 'flex', gap: 1 }}>
-                            <IconButton size="small" sx={{ color: 'white' }}>
-                                <FacebookIcon />
-                            </IconButton>
-                            <IconButton size="small" sx={{ color: 'white' }}>
-                                <InstagramIcon />
-                            </IconButton>
-                            <IconButton size="small" sx={{ color: 'white' }}>
-                                <TwitterIcon />
-                            </IconButton>
-                            <IconButton size="small" sx={{ color: 'white' }}>
-                                <LinkedInIcon />
-                            </IconButton>
+                            {socialIcons.map((item) => (
+                                <IconButton
+                                    key={item.key}
+                                    size="small"
+                                    sx={{ color: 'white' }}
+                                    component="a"
+                                    href={item.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    {item.icon}
+                                </IconButton>
+                            ))}
                         </Box>
                     </Box>
 
@@ -91,10 +122,13 @@ const Footer: React.FC = () => {
                                     component={RouterLink}
                                     to={item.path}
                                     sx={{
-                                        color: 'secondary.main',
+                                        color: 'grey.400',
                                         textDecoration: 'none',
-                                        transition: 'color 0.2s',
-                                        '&:hover': { pl: 1 },
+                                        transition: 'all 0.2s',
+                                        '&:hover': { 
+                                            color: 'primary.main',
+                                            pl: 1 
+                                        },
                                         display: 'inline-block',
                                     }}
                                 >
@@ -111,19 +145,19 @@ const Footer: React.FC = () => {
                         </Typography>
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                             <Box sx={{ display: 'flex', gap: 2 }}>
-                                <LocationOnIcon sx={{ color: 'secondary.main' }} />
+                                <LocationOnIcon sx={{ color: 'primary.main' }} />
                                 <Typography variant="body2" sx={{ color: 'grey.400' }}>
                                     Douala, Cameroun
                                 </Typography>
                             </Box>
                             <Box sx={{ display: 'flex', gap: 2 }}>
-                                <PhoneIcon sx={{ color: 'secondary.main' }} />
+                                <PhoneIcon sx={{ color: 'primary.main' }} />
                                 <Typography variant="body2" sx={{ color: 'grey.400' }}>
                                     {config.phone || '+237 698 399 985'}
                                 </Typography>
                             </Box>
                             <Box sx={{ display: 'flex', gap: 2 }}>
-                                <EmailIcon sx={{ color: 'secondary.main' }} />
+                                <EmailIcon sx={{ color: 'primary.main' }} />
                                 <Typography variant="body2" sx={{ color: 'grey.400' }}>
                                     {config.email || 'contact@example.com'}
                                 </Typography>

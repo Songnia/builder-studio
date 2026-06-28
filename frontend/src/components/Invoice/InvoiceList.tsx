@@ -6,7 +6,8 @@ import DeleteConfirmDialog from '@/components/Common/DeleteConfirmDialog';
 import { toast } from 'sonner';
 import { pdf } from '@react-pdf/renderer';
 import InvoicePDFDocument from './InvoicePDFDocument';
-// import InvoiceShareDialog from './InvoiceShareDialog'; // Réservé pour usage futur
+import RecordPaymentDialog from './RecordPaymentDialog';
+import { CreditCard } from 'lucide-react';
 
 interface InvoiceListProps {
     onCreateNew: () => void;
@@ -18,6 +19,8 @@ const InvoiceList: React.FC<InvoiceListProps> = ({ onCreateNew, onEdit }) => {
     const [loading, setLoading] = useState(true);
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
     const [invoiceToDelete, setInvoiceToDelete] = useState<any>(null);
+    const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+    const [invoiceToPay, setInvoiceToPay] = useState<any>(null);
 
     useEffect(() => {
         const fetchInvoices = async () => {
@@ -50,6 +53,20 @@ const InvoiceList: React.FC<InvoiceListProps> = ({ onCreateNew, onEdit }) => {
         }
     };
 
+    const handleRecordPayment = async (amount: number) => {
+        if (!invoiceToPay) return;
+        try {
+            const response = await api.post(`/admin/invoices/${invoiceToPay.id}/payment`, { amount });
+            const updatedInvoice = response.data;
+            setInvoices(prev => prev.map(inv => inv.id === updatedInvoice.id ? updatedInvoice : inv));
+            toast.success(`Paiement de ${amount.toLocaleString('fr-FR')} FCFA enregistré.`);
+        } catch (error) {
+            console.error("Erreur paiement", error);
+            toast.error("Impossible d'enregistrer le paiement.");
+            throw error;
+        }
+    };
+
     const handleEditClick = (inv: any) => {
         // Mapping de l'API vers le format InvoiceData du frontend
         const mappedInvoice = {
@@ -72,6 +89,9 @@ const InvoiceList: React.FC<InvoiceListProps> = ({ onCreateNew, onEdit }) => {
             })),
             taxRate: inv.tax_rate,
             includeTax: inv.include_tax,
+            totalAmount: inv.total_amount,
+            amountPaid: inv.amount_paid,
+            status: inv.status,
             studio: inv.studio_info || {
                 logoUrl: '/logo.png',
                 photographerName: 'Vanda Studio',
@@ -230,6 +250,18 @@ const InvoiceList: React.FC<InvoiceListProps> = ({ onCreateNew, onEdit }) => {
         }
     };
 
+    const getStatusBadge = (status: string) => {
+        switch (status) {
+            case 'paid':
+                return <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">Payé</span>;
+            case 'partially_paid':
+                return <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">Acompte</span>;
+            case 'pending':
+            default:
+                return <span className="bg-orange-100 text-orange-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">En attente</span>;
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex justify-center items-center h-64">
@@ -268,9 +300,12 @@ const InvoiceList: React.FC<InvoiceListProps> = ({ onCreateNew, onEdit }) => {
                                     <div>
                                         <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Facture</div>
                                         <div className="font-mono font-bold text-slate-900">{inv.invoice_number}</div>
+                                        <div className="mt-1">{getStatusBadge(inv.status)}</div>
                                     </div>
-                                    <div className="bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs font-bold">
-                                        {inv.total_amount.toLocaleString('fr-FR')} FCFA
+                                    <div className="text-right">
+                                        <div className="bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs font-bold inline-block">
+                                            {Number(inv.total_amount).toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} FCFA
+                                        </div>
                                     </div>
                                 </div>
 
@@ -305,24 +340,34 @@ const InvoiceList: React.FC<InvoiceListProps> = ({ onCreateNew, onEdit }) => {
                                             </DropdownMenu.Trigger>
                                             <DropdownMenu.Portal>
                                                 <DropdownMenu.Content
-                                                    className="bg-white p-2 rounded-2xl shadow-xl border border-slate-100 w-56 z-[100]"
+                                                    className="bg-white p-2 rounded-2xl shadow-xl border border-slate-100 w-56 animate-in fade-in zoom-in-95 duration-200 z-[100]"
                                                     align="end"
                                                 >
                                                     <DropdownMenu.Item onClick={() => handleDownload(inv)} className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-700 outline-none hover:bg-slate-50 rounded-xl cursor-pointer transition-colors">
                                                         <div className="bg-slate-100 p-1.5 rounded-lg text-slate-600">
                                                             <FileDown size={18} />
                                                         </div>
-                                                        Télécharger la facture
+                                                        Télécharger PDF
                                                     </DropdownMenu.Item>
-                                                    {/*<DropdownMenu.Item
-                                                        onClick={() => { setSelectedUuid(inv.uuid || inv.id); setIsShareOpen(true); }}
-                                                        className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-700 outline-none hover:bg-slate-50 rounded-xl cursor-pointer transition-colors"
-                                                    >
-                                                        <div className="bg-indigo-50 p-1.5 rounded-lg text-indigo-600">
-                                                            <Share2 size={18} />
+                                                    <DropdownMenu.Item onClick={() => handlePrint(inv)} className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-700 outline-none hover:bg-slate-50 rounded-xl cursor-pointer transition-colors">
+                                                        <div className="bg-blue-50 p-1.5 rounded-lg text-blue-600">
+                                                            <Printer size={18} />
                                                         </div>
-                                                        Envoyer la Facture (PDF)
-                                                    </DropdownMenu.Item>*/}
+                                                        Imprimer
+                                                    </DropdownMenu.Item>
+                                                    <DropdownMenu.Item 
+                                                        onClick={() => {
+                                                            setInvoiceToPay(inv);
+                                                            setIsPaymentOpen(true);
+                                                        }}
+                                                        disabled={inv.status === 'paid'}
+                                                        className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-700 outline-none hover:bg-slate-50 rounded-xl cursor-pointer transition-colors data-[disabled]:opacity-50 data-[disabled]:cursor-not-allowed"
+                                                    >
+                                                        <div className="bg-green-50 p-1.5 rounded-lg text-green-600">
+                                                            <CreditCard size={18} />
+                                                        </div>
+                                                        Paiement
+                                                    </DropdownMenu.Item>
                                                     <DropdownMenu.Separator className="h-px bg-slate-100 my-1" />
                                                     <DropdownMenu.Item 
                                                         onClick={() => {
@@ -366,8 +411,11 @@ const InvoiceList: React.FC<InvoiceListProps> = ({ onCreateNew, onEdit }) => {
                                             <div className="text-xs text-slate-500">{inv.client_email}</div>
                                         </td>
                                         <td className="px-6 py-4 text-slate-600">{new Date(inv.issue_date).toLocaleDateString('fr-FR')}</td>
-                                        <td className="px-6 py-4 font-bold text-green-600">
-                                            {Number(inv.total_amount).toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} FCFA
+                                        <td className="px-6 py-4">
+                                            <div className="font-bold text-green-600">
+                                                {Number(inv.total_amount).toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} FCFA
+                                            </div>
+                                            <div className="mt-1">{getStatusBadge(inv.status)}</div>
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             <div className="flex justify-end gap-1">
@@ -408,6 +456,19 @@ const InvoiceList: React.FC<InvoiceListProps> = ({ onCreateNew, onEdit }) => {
                                                                     <Share2 size={18} />
                                                                 </div>
                                                                 Partager media
+                                                            </DropdownMenu.Item>
+                                                            <DropdownMenu.Item 
+                                                                onClick={() => {
+                                                                    setInvoiceToPay(inv);
+                                                                    setIsPaymentOpen(true);
+                                                                }}
+                                                                disabled={inv.status === 'paid'}
+                                                                className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-700 outline-none hover:bg-slate-50 rounded-xl cursor-pointer transition-colors data-[disabled]:opacity-50 data-[disabled]:cursor-not-allowed"
+                                                            >
+                                                                <div className="bg-emerald-50 p-1.5 rounded-lg text-emerald-600">
+                                                                    <CreditCard size={18} />
+                                                                </div>
+                                                                Paiement
                                                             </DropdownMenu.Item>
                                                             <DropdownMenu.Separator className="h-px bg-slate-100 my-1" />
                                                             <DropdownMenu.Item 
@@ -452,6 +513,16 @@ const InvoiceList: React.FC<InvoiceListProps> = ({ onCreateNew, onEdit }) => {
                 description={`Cette action est irréversible. La facture ${invoiceToDelete?.invoice_number} sera définitivement supprimée.`}
                 confirmValue={invoiceToDelete?.invoice_number}
                 itemName="facture"
+            />
+
+            <RecordPaymentDialog
+                open={isPaymentOpen}
+                onClose={() => {
+                    setIsPaymentOpen(false);
+                    setInvoiceToPay(null);
+                }}
+                onConfirm={handleRecordPayment}
+                invoice={invoiceToPay}
             />
         </div>
     );

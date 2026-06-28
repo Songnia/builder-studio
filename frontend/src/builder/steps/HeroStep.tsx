@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Upload, Image, X, Type, Sparkles, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,19 @@ import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { SaveButton } from '@/builder/components/SaveButton';
 import type { SiteConfig } from '@/types/builder';
+import { uploadBuilderMedia, uploadBuilderMediaBatch } from '@/services/mediaService';
+
+// Formule YIQ pour déterminer si une couleur est sombre ou claire
+function isColorDark(hex: string): boolean {
+  if (!hex) return false;
+  const color = hex.replace('#', '');
+  if (color.length !== 6 && color.length !== 3) return false;
+  const r = parseInt(color.length === 3 ? color[0] + color[0] : color.substring(0, 2), 16);
+  const g = parseInt(color.length === 3 ? color[1] + color[1] : color.substring(2, 4), 16);
+  const b = parseInt(color.length === 3 ? color[2] + color[2] : color.substring(4, 6), 16);
+  const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+  return yiq < 128;
+}
 
 interface HeroStepProps {
   config: SiteConfig;
@@ -24,37 +37,68 @@ export function HeroStep({ config, onUpdate, onNext, onPrev, onSave, isSaving }:
   const [tagline, setTagline] = useState(config.tagline);
   const [description, setDescription] = useState(config.description);
   const [showCTA, setShowCTA] = useState(true);
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const flashInfoFileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Charger les polices sélectionnées pour l'aperçu
+  useEffect(() => {
+    const loadFont = (font: string) => {
+      if (!font) return;
+      const fontUrlName = font.trim().replace(/"/g, '').replace(/'/g, '').replace(/ /g, '+');
+      const linkId = `gfont-hero-preview-${fontUrlName.toLowerCase()}`;
+      if (document.getElementById(linkId)) return;
+      
+      const link = document.createElement('link');
+      link.id = linkId;
+      link.rel = 'stylesheet';
+      link.href = `https://fonts.googleapis.com/css2?family=${fontUrlName}:wght@300;400;500;600;700;800;900&display=swap`;
+      document.head.appendChild(link);
+    };
+
+    loadFont(config.primaryFont || 'Playfair Display');
+    loadFont(config.secondaryFont || 'Inter');
+  }, [config.primaryFont, config.secondaryFont]);
+
+  useEffect(() => {
+    setHeroImages(config.heroImages);
+    setTagline(config.tagline);
+    setDescription(config.description);
+  }, [config.heroImages, config.tagline, config.description]);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (files) {
-      Array.from(files).forEach(file => {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          if (event.target?.result) {
-            setHeroImages(prev => [...prev, event.target!.result as string]);
-            setIsDirty(true);
-          }
-        };
-        reader.readAsDataURL(file);
-      });
+    if (!files || files.length === 0) return;
+
+    setIsUploading(true);
+    try {
+      const urls = await uploadBuilderMediaBatch(Array.from(files), 'hero');
+      setHeroImages(prev => [...prev, ...urls]);
+      setIsDirty(true);
+    } catch (err) {
+      console.error('Hero upload failed:', err);
+      alert('Erreur lors de l\'upload des images de bannière.');
+    } finally {
+      setIsUploading(false);
     }
   };
 
-  const handleFlashInfoImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFlashInfoImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (event.target?.result) {
-          onUpdate({
-            flashInfo: { ...config.flashInfo, backgroundImage: event.target!.result as string }
-          });
-        }
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const url = await uploadBuilderMedia(file, 'banner');
+      onUpdate({
+        flashInfo: { ...config.flashInfo, backgroundImage: url }
+      });
+      setIsDirty(true);
+    } catch (err) {
+      console.error('Flash info upload failed:', err);
+      alert('Erreur lors de l\'upload de l\'image de fond.');
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -67,13 +111,14 @@ export function HeroStep({ config, onUpdate, onNext, onPrev, onSave, isSaving }:
     onUpdate({
       heroImages,
       tagline,
-      description
+      description,
+      flashInfo: config.flashInfo
     });
     onNext();
   };
 
   const handleSave = async () => {
-    const updates = { heroImages, tagline, description };
+    const updates = { heroImages, tagline, description, flashInfo: config.flashInfo };
     onUpdate(updates);
     if (typeof onSave === 'function') {
       const ok = await onSave(updates);
@@ -105,7 +150,7 @@ export function HeroStep({ config, onUpdate, onNext, onPrev, onSave, isSaving }:
               placeholder="Ex: Capturer vos moments précieux"
             />
           </div>
-
+          
           {/* Description */}
           <div className="space-y-2">
             <Label htmlFor="heroDescription">Sous-titre / Description</Label>
@@ -135,15 +180,25 @@ export function HeroStep({ config, onUpdate, onNext, onPrev, onSave, isSaving }:
             />
 
             {heroImages.length === 0 ? (
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-green-500 transition-colors"
-              >
-                <Upload className="w-12 h-12 mx-auto text-gray-400 mb-3" />
-                <p className="text-gray-600 font-medium">Cliquez pour ajouter des images</p>
-                <p className="text-sm text-gray-500 mt-1">ou glissez-déposez vos photos ici</p>
-                <p className="text-xs text-gray-400 mt-2">PNG, JPG jusqu'à 10MB</p>
-              </div>
+                <div
+                  onClick={() => !isUploading && fileInputRef.current?.click()}
+                  className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                    isUploading 
+                    ? 'border-green-300 bg-green-50/20 cursor-wait' 
+                    : 'border-gray-300 hover:border-green-500 cursor-pointer'
+                  }`}
+                >
+                  <Upload className={`w-12 h-12 mx-auto mb-3 ${isUploading ? 'text-green-400 animate-pulse' : 'text-gray-400'}`} />
+                  <p className="text-gray-600 font-medium">
+                    {isUploading ? 'Chargement en cours...' : 'Cliquez pour ajouter des images'}
+                  </p>
+                  {!isUploading && (
+                    <>
+                      <p className="text-sm text-gray-500 mt-1">ou glissez-déposez vos photos ici</p>
+                      <p className="text-xs text-gray-400 mt-2">PNG, JPG jusqu'à 10MB</p>
+                    </>
+                  )}
+                </div>
             ) : (
               <div className="space-y-3">
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -212,9 +267,12 @@ export function HeroStep({ config, onUpdate, onNext, onPrev, onSave, isSaving }:
                       <Label>Titre de l'offre</Label>
                       <Input
                         value={config.flashInfo.title}
-                        onChange={(e) => onUpdate({
-                          flashInfo: { ...config.flashInfo, title: e.target.value }
-                        })}
+                        onChange={(e) => {
+                          onUpdate({
+                            flashInfo: { ...config.flashInfo, title: e.target.value }
+                          });
+                          setIsDirty(true);
+                        }}
                         placeholder="Ex: Offre Spéciale"
                       />
                     </div>
@@ -222,21 +280,42 @@ export function HeroStep({ config, onUpdate, onNext, onPrev, onSave, isSaving }:
                       <Label>Texte du bouton</Label>
                       <Input
                         value={config.flashInfo.buttonText}
-                        onChange={(e) => onUpdate({
-                          flashInfo: { ...config.flashInfo, buttonText: e.target.value }
-                        })}
+                        onChange={(e) => {
+                          onUpdate({
+                            flashInfo: { ...config.flashInfo, buttonText: e.target.value }
+                          });
+                          setIsDirty(true);
+                        }}
                         placeholder="Ex: En profiter"
                       />
                     </div>
                   </div>
-
+                  <div className="space-y-2">
+                    <Label>Lien de redirection du bouton (Optionnel)</Label>
+                    <Input
+                      value={config.flashInfo.redirectUrl || ''}
+                      onChange={(e) => {
+                        onUpdate({
+                          flashInfo: { ...config.flashInfo, redirectUrl: e.target.value }
+                        });
+                        setIsDirty(true);
+                      }}
+                      placeholder="Ex: https://wa.me/237698399985 ou autre lien de contact"
+                    />
+                    <p className="text-xs text-gray-500">
+                      Si renseigné, le clic sur le bouton redirigera directement vers ce lien (ex: un lien WhatsApp personnalisé, un site externe, etc.) au lieu d'utiliser le message WhatsApp par défaut.
+                    </p>
+                  </div>
                   <div className="space-y-2">
                     <Label>Sous-titre / Description de l'offre</Label>
                     <Input
                       value={config.flashInfo.subtitle}
-                      onChange={(e) => onUpdate({
-                        flashInfo: { ...config.flashInfo, subtitle: e.target.value }
-                      })}
+                      onChange={(e) => {
+                        onUpdate({
+                          flashInfo: { ...config.flashInfo, subtitle: e.target.value }
+                        });
+                        setIsDirty(true);
+                      }}
                       placeholder="Ex: -20% sur votre séance ce mois-ci !"
                     />
                   </div>
@@ -289,13 +368,18 @@ export function HeroStep({ config, onUpdate, onNext, onPrev, onSave, isSaving }:
                     <Label>Message WhatsApp pré-rempli</Label>
                     <Textarea
                       value={config.flashInfo.whatsappMessage}
-                      onChange={(e) => onUpdate({
-                        flashInfo: { ...config.flashInfo, whatsappMessage: e.target.value }
-                      })}
+                      onChange={(e) => {
+                        onUpdate({
+                          flashInfo: { ...config.flashInfo, whatsappMessage: e.target.value }
+                        });
+                        setIsDirty(true);
+                      }}
                       placeholder="Le message qui sera envoyé quand le client clique sur le bouton..."
                       rows={2}
                     />
                   </div>
+
+                  
                 </div>
               )}
             </div>
@@ -315,21 +399,36 @@ export function HeroStep({ config, onUpdate, onNext, onPrev, onSave, isSaving }:
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent flex flex-col justify-end p-6">
-              <h3 className="text-2xl md:text-3xl font-bold text-white mb-2">
+              <h3 
+                className="text-2xl md:text-3xl font-bold text-white mb-2"
+                style={{ fontFamily: config.primaryFont ? `"${config.primaryFont}", serif` : '"Playfair Display", serif' }}
+              >
                 {tagline || 'Votre titre'}
               </h3>
-              <p className="text-white/80 mb-4 max-w-lg">
+              <p 
+                className="text-white/80 mb-4 max-w-lg text-sm"
+                style={{ fontFamily: config.secondaryFont ? `"${config.secondaryFont}", sans-serif` : '"Inter", sans-serif' }}
+              >
                 {description || 'Votre description'}
               </p>
               {showCTA && (
                 <div className="flex gap-3">
                   <button
-                    className="px-4 py-2 rounded-lg font-medium"
-                    style={{ backgroundColor: config.accentColor, color: config.primaryColor }}
+                    className="px-4 py-2 rounded-lg font-medium text-sm transition-all hover:scale-[1.02]"
+                    style={{ 
+                      backgroundColor: config.primaryColor, 
+                      color: isColorDark(config.primaryColor) ? '#ffffff' : '#181811',
+                      fontFamily: config.secondaryFont ? `"${config.secondaryFont}", sans-serif` : '"Inter", sans-serif'
+                    }}
                   >
                     Voir le portfolio
                   </button>
-                  <button className="px-4 py-2 rounded-lg font-medium border-2 border-white text-white">
+                  <button 
+                    className="px-4 py-2 rounded-lg font-medium text-sm border-2 border-white text-white transition-all hover:bg-white/10"
+                    style={{ 
+                      fontFamily: config.secondaryFont ? `"${config.secondaryFont}", sans-serif` : '"Inter", sans-serif'
+                    }}
+                  >
                     Réserver
                   </button>
                 </div>

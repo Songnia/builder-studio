@@ -118,8 +118,8 @@ export function PreviewStep({ config, onReset, onPrev }: PreviewStepProps) {
       </div>
 
       {/* Aperçu */}
-      <Card className="p-4">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
+      <Card className="p-0 sm:p-4 bg-transparent sm:bg-white border-0 sm:border shadow-none sm:shadow-sm">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4 sm:mb-6 px-4 sm:px-0">
           <div className="flex items-center gap-2">
             <Eye className="w-5 h-5 text-green-500" />
             <h3 className="font-semibold text-gray-900">Aperçu en direct</h3>
@@ -139,6 +139,7 @@ export function PreviewStep({ config, onReset, onPrev }: PreviewStepProps) {
             >
               <Tablet className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
+            {/* Le mode mobile est désactivé car les media queries Tailwind nécessitent une Iframe pour bien s'isoler.
             <button
               onClick={() => setPreviewDevice('mobile')}
               className={`p-2 sm:p-2.5 rounded-lg transition-all ${previewDevice === 'mobile' ? 'bg-white shadow-sm text-green-600' : 'text-gray-500 hover:text-gray-700'}`}
@@ -146,14 +147,15 @@ export function PreviewStep({ config, onReset, onPrev }: PreviewStepProps) {
             >
               <Smartphone className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
+            */}
           </div>
         </div>
         <div className="flex justify-center">
           <div
-            className="border rounded-lg overflow-hidden transition-all duration-300"
+            className="border-y sm:border rounded-none sm:rounded-lg overflow-hidden transition-all duration-300 bg-white"
             style={{ width: getPreviewWidth(), maxWidth: '100%' }}
           >
-            <SitePreview config={config} />
+            <PreviewSiteWrapper config={config} />
           </div>
         </div>
       </Card>
@@ -325,8 +327,8 @@ export function PreviewStep({ config, onReset, onPrev }: PreviewStepProps) {
       {/* Barre de navigation */}
       {saveStep !== 3 && (
         <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 pt-6 border-t border-gray-100">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={onPrev}
             className="w-full sm:w-auto h-11 sm:h-10 order-2 sm:order-1"
           >
@@ -335,9 +337,9 @@ export function PreviewStep({ config, onReset, onPrev }: PreviewStepProps) {
           {saveStep === 1 && (
             <div className="flex flex-col sm:flex-row gap-3 order-1 sm:order-2">
               {existingId ? (
-                <Button 
-                  onClick={handleSave} 
-                  disabled={loading} 
+                <Button
+                  onClick={handleSave}
+                  disabled={loading}
                   className="bg-primary hover:bg-primary/90 gap-2 h-11 sm:h-10 w-full sm:w-auto font-bold"
                 >
                   {loading
@@ -346,8 +348,8 @@ export function PreviewStep({ config, onReset, onPrev }: PreviewStepProps) {
                   }
                 </Button>
               ) : (
-                <Button 
-                  onClick={handleNext} 
+                <Button
+                  onClick={handleNext}
                   className="bg-primary hover:bg-primary/90 gap-2 h-11 sm:h-10 w-full sm:w-auto font-bold"
                 >
                   Suivant <ArrowRight className="w-4 h-4" />
@@ -361,10 +363,7 @@ export function PreviewStep({ config, onReset, onPrev }: PreviewStepProps) {
   );
 }
 
-// Composant d'aperçu du site
-function SitePreview({ config }: { config: SiteConfig }) {
-  return <PreviewSiteWrapper config={config} />;
-}
+
 
 // Génère le code HTML complet du site
 function generateSiteCode(config: SiteConfig): string {

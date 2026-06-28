@@ -1,0 +1,44 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
+    <IfModule mod_mime.c>
+        AddType application/javascript .js .mjs
+        AddType text/css .css
+        AddType application/manifest+json .webmanifest
+    </IfModule>
+
+    # Handle Authorization Header
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # Handle X-XSRF-Token Header
+    RewriteCond %{HTTP:x-xsrf-token} .
+    RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
+
+    # 1. API -> Laravel
+    RewriteCond %{HTTP_HOST} ^api\.vanda-studio\.org$ [NC]
+    RewriteRule ^ index.php [L]
+
+    # 2. Admin app -> /app
+    RewriteCond %{HTTP_HOST} ^app\.vanda-studio\.org$ [NC]
+    RewriteCond %{REQUEST_URI} !^/app/
+    RewriteRule ^(.*)$ app/$1 [L]
+
+    # 3. Main domain + photographer subdomains -> /landing
+    RewriteCond %{HTTP_HOST} !^api\.vanda-studio\.org$ [NC]
+    RewriteCond %{HTTP_HOST} !^app\.vanda-studio\.org$ [NC]
+    RewriteCond %{HTTP_HOST} ^([a-z0-9-]+\.)?vanda-studio\.org$ [NC]
+    RewriteCond %{REQUEST_URI} !^/landing/
+    RewriteRule ^(.*)$ landing/$1 [L]
+
+    # 4. Laravel fallback only outside the React app folders
+    RewriteCond %{REQUEST_URI} !^/app/
+    RewriteCond %{REQUEST_URI} !^/landing/
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+</IfModule>

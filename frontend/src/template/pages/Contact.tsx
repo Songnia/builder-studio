@@ -5,9 +5,11 @@ import PhoneIcon from '@mui/icons-material/Phone';
 import EmailIcon from '@mui/icons-material/Email';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import { useTranslation } from 'react-i18next';
+import { useSiteConfig } from '@/context/SiteConfigContext';
 
 const Contact: React.FC = () => {
     const { t } = useTranslation();
+    const { config } = useSiteConfig();
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -51,7 +53,7 @@ const Contact: React.FC = () => {
 
         // Encode and redirect to WhatsApp
         const encodedMessage = encodeURIComponent(whatsappMessage);
-        const phoneNumber = "237698399985"; // Replace with actual business number
+        const phoneNumber = config?.phone ? config.phone.replace(/\D/g, '') : "237698399985";
         const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
 
         window.open(whatsappUrl, '_blank');
@@ -87,7 +89,9 @@ const Contact: React.FC = () => {
                             <Box>
                                 <Typography variant="subtitle1" fontWeight="bold">{t('contact.info.address')}</Typography>
                                 <Typography variant="body2" color="text.secondary">
-                                    Douala, Cameroun
+                                    {config?.address 
+                                        ? `${config.address}${config.city ? `, ${config.city}` : ''}${config.country ? `, ${config.country}` : ''}`
+                                        : "Douala, Cameroun"}
                                 </Typography>
                             </Box>
                         </Box>
@@ -96,7 +100,7 @@ const Contact: React.FC = () => {
                             <Box>
                                 <Typography variant="subtitle1" fontWeight="bold">{t('contact.info.phone')}</Typography>
                                 <Typography variant="body2" color="text.secondary">
-                                    +237 698 399 985
+                                    {config?.phone || "+237 698 399 985"}
                                 </Typography>
                             </Box>
                         </Box>
@@ -105,7 +109,7 @@ const Contact: React.FC = () => {
                             <Box>
                                 <Typography variant="subtitle1" fontWeight="bold">{t('contact.info.email')}</Typography>
                                 <Typography variant="body2" color="text.secondary">
-                                    ultimastudioinfo@gmail.com
+                                    {config?.email || "ultimastudioinfo@gmail.com"}
                                 </Typography>
                             </Box>
                         </Box>

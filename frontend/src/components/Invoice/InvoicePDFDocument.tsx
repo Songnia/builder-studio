@@ -226,7 +226,9 @@ interface PDFProps {
 }
 
 const fmt = (n: number) =>
-    Number(n).toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    Number(n)
+        .toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
+        .replace(/[\s\u202F\u00A0]/g, ' ');
 
 const InvoicePDFDocument: React.FC<PDFProps> = ({
     inv,
@@ -251,7 +253,7 @@ const InvoicePDFDocument: React.FC<PDFProps> = ({
                 </View>
                 <View style={styles.invoiceTitle}>
                     <Text style={styles.titleText}>FACTURE</Text>
-                    <Text style={styles.invoiceNumber}>{inv.invoice_number}</Text>
+                    <Text style={[styles.invoiceNumber, { color: studio.primaryColor || GREEN }]}>{inv.invoice_number}</Text>
                 </View>
             </View>
 
@@ -316,11 +318,23 @@ const InvoicePDFDocument: React.FC<PDFProps> = ({
                         </>
                     )}
                     <View style={styles.grandTotalRow}>
-                        <Text style={styles.grandTotalLabel}>
+                        <Text style={[styles.grandTotalLabel, { color: studio.primaryColor || GREEN }]}>
                             {inv.include_tax ? 'TOTAL TTC' : 'TOTAL NET'}
                         </Text>
-                        <Text style={styles.grandTotalValue}>{fmt(total)} FCFA</Text>
+                        <Text style={[styles.grandTotalValue, { color: studio.primaryColor || GREEN }]}>{fmt(total)} FCFA</Text>
                     </View>
+                    {Number(inv.amount_paid) > 0 && (
+                        <>
+                            <View style={[styles.totalRow, { marginTop: 8 }]}>
+                                <Text style={styles.totalLabel}>Acompte versé</Text>
+                                <Text style={styles.totalValue}>{fmt(Number(inv.amount_paid))} FCFA</Text>
+                            </View>
+                            <View style={[styles.grandTotalRow, { borderTopWidth: 1, borderTopColor: '#94a3b8', paddingTop: 4 }]}>
+                                <Text style={[styles.grandTotalLabel, { color: '#ef4444' }]}>RESTE À PAYER</Text>
+                                <Text style={[styles.grandTotalValue, { color: '#ef4444' }]}>{fmt(total - Number(inv.amount_paid))} FCFA</Text>
+                            </View>
+                        </>
+                    )}
                 </View>
             </View>
 

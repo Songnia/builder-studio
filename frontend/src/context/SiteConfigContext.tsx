@@ -72,7 +72,13 @@ export function SiteConfigProvider({ children, initialConfig, slug: explicitSlug
             setConfig(fullConfig);
         } catch (err: any) {
             console.error('Erreur chargement config:', err);
-            setError(err.response?.data?.message || 'Site non trouvé ou non publié');
+
+            if (!err.response) {
+                setError("Impossible de joindre l'API du site. Vérifiez la configuration CORS ou l'accès au domaine API.");
+            } else {
+                setError(err.response?.data?.message || 'Site non trouvé ou non publié');
+            }
+
             setConfig(null);
         } finally {
             setLoading(false);

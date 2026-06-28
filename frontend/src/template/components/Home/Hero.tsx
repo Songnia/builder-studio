@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Box, Typography, Button, Container, IconButton } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useSiteConfig } from '@/context/SiteConfigContext';
+import { useSitePath } from '@/template/hooks/useSitePath';
 
 import hero1 from '../../assets/hero/hero-1.jpg';
 import hero2 from '../../assets/hero/hero-2.jpg';
@@ -13,20 +14,10 @@ import hero3 from '../../assets/hero/hero-3.jpg';
 const Hero: React.FC = () => {
     const { t } = useTranslation();
     const { config } = useSiteConfig();
-    const location = useLocation();
+    const { getPath } = useSitePath();
 
     if (!config) return null;
     const [currentSlide, setCurrentSlide] = useState(0);
-
-    // Get slug from current URL path
-    const params = location.pathname.split('/');
-    const slug = params[1] || config.siteName.toLowerCase().replace(/\s+/g, '-');
-
-    // Construct paths relative to the current site slug
-    const getPath = (path: string) => {
-        if (path === '/') return `/${slug}`;
-        return `/${slug}${path}`;
-    };
 
     // Use config.heroImages if available, otherwise fallback to default images
     const defaultImages = [hero1, hero2, hero3];
@@ -57,7 +48,7 @@ const Hero: React.FC = () => {
     };
 
     return (
-        <Box sx={{ width: '100%', position: 'relative', overflow: 'hidden', height: { xs: '600px', md: '800px', lg: '90vh' } }}>
+        <Box sx={{ width: '100%', position: 'relative', overflow: 'hidden', height: { xs: '600px', md: '800px', lg: '800px' } }}>
             {/* Background Carousel */}
             {slides.map((slide, index) => (
                 <Box
@@ -111,14 +102,14 @@ const Hero: React.FC = () => {
                         sx={{
                             fontWeight: 900,
                             textTransform: 'uppercase',
-                            color: 'secondary.main',
+                            color: 'common.white',
                             mb: { xs: 2, md: 3 },
                             fontSize: { xs: '2.5rem', sm: '3.5rem', md: '4.5rem', lg: '5.5rem' },
                             lineHeight: 1.1,
                         }}
                     >
                         {/* {slides[currentSlide].title} <br /> */}
-                        <Box component="span" sx={{ color: 'secondary.main', display: 'inline-block' }}>
+                        <Box component="span" sx={{ color: 'common.white', display: 'inline-block' }}>
                             {slides[currentSlide].highlight.split(' ').slice(0, -1).join(' ')}
                         </Box>
                         {' '}
@@ -131,7 +122,7 @@ const Hero: React.FC = () => {
                         sx={{
                             mb: { xs: 4, md: 6 },
                             maxWidth: '600px',
-                            color: 'secondary.main',
+                            color: 'grey.300',
                             fontWeight: 200,
                             fontSize: { xs: '1rem', sm: '1.25rem', md: '1.5rem' },
                             lineHeight: 1.6,
@@ -153,12 +144,13 @@ const Hero: React.FC = () => {
                                 px: 5,
                                 py: 2,
                                 fontSize: '1.1rem',
-                                color: 'secondary.main',
+                                color: 'primary.contrastText',
                                 boxShadow: 'none',
                                 '&:hover': {
                                     boxShadow: 'none',
                                     transform: 'translateY(-2px)',
-                                    color: 'secondary.main'
+                                    color: 'primary.contrastText',
+                                    backgroundColor: 'primary.dark',
                                 },
                                 transition: 'all 0.3s',
                             }}
@@ -180,12 +172,12 @@ const Hero: React.FC = () => {
                                 px: 5,
                                 py: 2,
                                 fontSize: '1.1rem',
-                                color: 'secondary.main',
-                                borderColor: 'white',
+                                color: 'common.white',
+                                borderColor: 'common.white',
                                 '&:hover': {
                                     borderColor: 'primary.main',
                                     color: 'primary.main',
-                                    backgroundColor: 'hinerit'
+                                    backgroundColor: 'rgba(255,255,255,0.08)'
                                 }
                             }}
                         >
@@ -262,7 +254,7 @@ const Hero: React.FC = () => {
                     <Typography
                         variant="caption"
                         sx={{
-                            color: 'secondary.main',
+                            color: 'grey.300',
                             fontSize: '0.75rem',
                             letterSpacing: 1,
                             lineHeight: 1.6,

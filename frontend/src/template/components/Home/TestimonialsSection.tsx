@@ -8,7 +8,7 @@ const TestimonialsSection: React.FC = () => {
     const { t } = useTranslation();
     const { config } = useSiteConfig();
 
-    if (!config) return null;
+    if (!config || !config.enabledSections.testimonials || !config.testimonials || config.testimonials.length === 0) return null;
 
     const testimonials = [
         {
@@ -37,23 +37,21 @@ const TestimonialsSection: React.FC = () => {
         },
     ];
 
-    // Use config.testimonials if available and enabled, otherwise use translation-based testimonials
-    const displayTestimonials = (config.enabledSections.testimonials && config.testimonials.length > 0)
-        ? config.testimonials
-        : testimonials;
+    // Use config.testimonials
+    const displayTestimonials = config.testimonials;
 
     return (
-        <Box sx={{ py: { xs: 8, md: 12 }, backgroundColor: 'grey.50' }}>
+        <Box sx={{ py: { xs: 8, md: 12 }, backgroundColor: (theme) => theme.palette.mode === 'dark' ? 'background.default' : 'grey.50' }}>
             <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3, md: 4 } }}>
                 {/* Header */}
                 <Box sx={{ textAlign: 'center', mb: 8 }}>
                     <Typography variant="overline" sx={{ color: 'primary.main', fontWeight: 'bold', letterSpacing: 2 }}>
                         {t('home.testimonials.overline')}
                     </Typography>
-                    <Typography variant="h3" sx={{ fontWeight: 'bold', mt: 1, mb: 2 }}>
+                    <Typography variant="h3" className="section-main-title" sx={{ fontWeight: 'bold', mt: 1, mb: 2 }}>
                         {t('home.testimonials.title')}
                     </Typography>
-                    <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 'md', mx: 'auto' }}>
+                    <Typography variant="body1" className="section-main-subtitle" sx={{ maxWidth: 'md', mx: 'auto' }}>
                         {t('home.testimonials.subtitle')}
                     </Typography>
                 </Box>
@@ -73,7 +71,7 @@ const TestimonialsSection: React.FC = () => {
                             sx={{
                                 p: 4,
                                 borderRadius: 4,
-                                backgroundColor: 'white',
+                                backgroundColor: 'background.paper',
                                 border: '1px solid',
                                 borderColor: 'divider',
                                 position: 'relative',

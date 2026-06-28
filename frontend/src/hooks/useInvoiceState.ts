@@ -27,6 +27,7 @@ export const useInvoiceState = (initialStudioData: StudioInfo) => {
         items: [{ id: generateId(), description: '', quantity: 1, unitPrice: 0, total: 0 }],
         taxRate: 20,
         includeTax: false,
+        amountPaid: 0,
         studio: initialStudioData
     });
 
@@ -59,7 +60,9 @@ export const useInvoiceState = (initialStudioData: StudioInfo) => {
             items: prev.items.map(item => {
                 if (item.id === id) {
                     const updatedItem = { ...item, [field]: value };
-                    updatedItem.total = updatedItem.quantity * updatedItem.unitPrice;
+                    const qty = Number(updatedItem.quantity);
+                    const price = Number(updatedItem.unitPrice);
+                    updatedItem.total = (isNaN(qty) ? 0 : qty) * (isNaN(price) ? 0 : price);
                     return updatedItem;
                 }
                 return item;
@@ -82,8 +85,14 @@ export const useInvoiceState = (initialStudioData: StudioInfo) => {
     };
 
     const totals = useMemo(() => {
-        const subtotal = (invoice.items || []).reduce((sum, item) => sum + (item.total || 0), 0);
-        const taxAmount = invoice.includeTax ? (subtotal * (invoice.taxRate || 0)) / 100 : 0;
+        const subtotal = (invoice.items || []).reduce((sum, item) => {
+            const t = Number(item.total);
+            return sum + (isNaN(t) ? 0 : t);
+        }, 0);
+        
+        const rawTaxRate = Number(invoice.taxRate);
+        const taxRate = isNaN(rawTaxRate) ? 0 : rawTaxRate;
+        const taxAmount = invoice.includeTax ? (subtotal * taxRate) / 100 : 0;
         const grandTotal = subtotal + taxAmount;
 
         return { subtotal, taxAmount, grandTotal };
@@ -103,6 +112,7 @@ export const useInvoiceState = (initialStudioData: StudioInfo) => {
             items: [{ id: generateId(), description: '', quantity: 1, unitPrice: 0, total: 0 }],
             taxRate: 20,
             includeTax: false,
+            amountPaid: 0,
             studio: initialStudioData
         });
     };

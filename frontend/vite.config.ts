@@ -18,6 +18,10 @@ export default defineConfig(({ mode }) => {
         devOptions: {
           enabled: true
         },
+        workbox: {
+          // The admin bundle is currently larger than Workbox's default 2 MiB limit.
+          maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+        },
         manifest: {
           name: 'VANDA STUDIO Admin',
           short_name: 'VANDA STUDIO',
@@ -60,4 +64,3 @@ export default defineConfig(({ mode }) => {
     },
   };
 });
-

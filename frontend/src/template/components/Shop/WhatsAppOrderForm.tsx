@@ -14,6 +14,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import { useTranslation } from 'react-i18next';
 import { useCart } from '@/template/context/CartContext';
+import { useSiteConfig } from '@/context/SiteConfigContext';
 
 interface WhatsAppOrderFormProps {
     open: boolean;
@@ -23,6 +24,7 @@ interface WhatsAppOrderFormProps {
 const WhatsAppOrderForm: React.FC<WhatsAppOrderFormProps> = ({ open, onClose }) => {
     const { t } = useTranslation();
     const { items, cartTotal } = useCart();
+    const { config } = useSiteConfig();
     const [name, setName] = useState('');
     const [phone, setPhone] = useState('');
     const [errors, setErrors] = useState({ name: false, phone: false });
@@ -50,8 +52,8 @@ const WhatsAppOrderForm: React.FC<WhatsAppOrderFormProps> = ({ open, onClose }) 
 
         // Encode and redirect
         const encodedMessage = encodeURIComponent(message);
-        // Replace with the actual business phone number
-        const phoneNumber = "237698399985"; // Placeholder, should be configurable
+        // Use the configured phone number
+        const phoneNumber = config?.phone ? config.phone.replace(/\D/g, '') : "237698399985";
         const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
 
         window.open(whatsappUrl, '_blank');
@@ -87,7 +89,7 @@ const WhatsAppOrderForm: React.FC<WhatsAppOrderFormProps> = ({ open, onClose }) 
                         helperText={errors.phone ? t('shop.orderForm.phoneRequired') : ""}
                     />
 
-                    <Box sx={{ p: 2, bgcolor: 'grey.50', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
+                    <Box sx={{ p: 2, bgcolor: (theme) => theme.palette.mode === 'dark' ? 'background.default' : 'grey.50', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
                         <Typography variant="subtitle2" gutterBottom fontWeight="bold">
                             {t('shop.orderForm.yourOrder')}
                         </Typography>

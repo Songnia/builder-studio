@@ -96,10 +96,14 @@ const FlashInfo: React.FC = () => {
                         variant="contained"
                         size="medium" // Reduced size
                         onClick={() => {
-                            const message = config.flashInfo.whatsappMessage;
-                            const phoneNumber = config.phone.replace(/\D/g, ''); // Clean phone number
-                            const encodedMessage = encodeURIComponent(message);
-                            window.open(`https://wa.me/${phoneNumber}?text=${encodedMessage}`, '_blank');
+                            if (config.flashInfo.redirectUrl) {
+                                window.open(config.flashInfo.redirectUrl, '_blank');
+                            } else {
+                                const message = config.flashInfo.whatsappMessage;
+                                const phoneNumber = config.phone.replace(/\D/g, ''); // Clean phone number
+                                const encodedMessage = encodeURIComponent(message);
+                                window.open(`https://wa.me/${phoneNumber}?text=${encodedMessage}`, '_blank');
+                            }
                         }}
                         sx={{
                             backgroundColor: 'primary.main', // Yellow background

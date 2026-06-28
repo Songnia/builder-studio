@@ -29,7 +29,7 @@ const ServicesSection: React.FC = () => {
     const { t } = useTranslation();
     const { config } = useSiteConfig();
 
-    if (!config) return null;
+    if (!config || !config.enabledSections.services || !config.services || config.services.length === 0) return null;
 
     // Default images for services
     const defaultServiceImages = [shootingImage, postProductionImage, formationImage, locationImage];
@@ -73,21 +73,19 @@ const ServicesSection: React.FC = () => {
         },
     ];
 
-    // Use config.services if available and enabled, otherwise use translation-based services
-    const displayServices = (config.enabledSections.services && config.services.length > 0)
-        ? config.services.map((service, index) => ({
-            id: parseInt(service.id),
-            title: service.title,
-            description: service.description,
-            details: service.features,
-            image: service.image || defaultServiceImages[index % defaultServiceImages.length],
-            ctaText: 'Contactez-nous',
-            whatsappMessage: `Je suis intéressé par ${service.title}`
-        }))
-        : services;
+    // Use config.services
+    const displayServices = config.services.map((service, index) => ({
+        id: parseInt(service.id) || index,
+        title: service.title,
+        description: service.description,
+        details: service.features || [],
+        image: service.image || defaultServiceImages[index % defaultServiceImages.length],
+        ctaText: 'Contactez-nous',
+        whatsappMessage: `Je suis intéressé par ${service.title}`
+    }));
 
     const handleWhatsAppClick = (message: string) => {
-        const phoneNumber = config.phone.replace(/\s/g, '') || '237698399985';
+        const phoneNumber = config.phone.replace(/\D/g, '') || '237698399985';
         const encodedMessage = encodeURIComponent(message);
         window.open(`https://wa.me/${phoneNumber}?text=${encodedMessage}`, '_blank');
     };
@@ -99,6 +97,7 @@ const ServicesSection: React.FC = () => {
                 <Box sx={{ mb: { xs: 6, md: 8 }, textAlign: 'center' }}>
                     <Typography
                         variant="h3"
+                        className="section-main-title"
                         sx={{
                             fontWeight: 'bold',
                             mb: 2,
@@ -107,7 +106,11 @@ const ServicesSection: React.FC = () => {
                     >
                         {t('home.services.title')}
                     </Typography>
-                    <Typography variant="h6" color="text.secondary" sx={{ maxWidth: 'md', mx: 'auto' }}>
+                    <Typography
+                        variant="h6"
+                        className="section-main-subtitle"
+                        sx={{ maxWidth: 'md', mx: 'auto' }}
+                    >
                         {t('home.services.subtitle')}
                     </Typography>
                 </Box>
@@ -161,6 +164,7 @@ const ServicesSection: React.FC = () => {
                                 <Box sx={{ flex: '1 1 auto', width: { xs: '100%', md: '55%' } }}>
                                     <Typography
                                         variant="h4"
+                                        className="section-main-title"
                                         sx={{
                                             fontWeight: 'bold',
                                             mb: 2,
@@ -171,7 +175,7 @@ const ServicesSection: React.FC = () => {
                                     </Typography>
                                     <Typography
                                         variant="body1"
-                                        color="text.primary"
+                                        className="section-main-text"
                                         sx={{ mb: 3, fontSize: { xs: '0.95rem', md: '1.1rem' } }}
                                     >
                                         {service.description}
@@ -183,10 +187,10 @@ const ServicesSection: React.FC = () => {
                                                 key={idx}
                                                 component="li"
                                                 variant="body2"
+                                                className="section-main-muted"
                                                 sx={{
                                                     mb: 1,
                                                     fontSize: { xs: '0.9rem', md: '1rem' },
-                                                    color: 'text.secondary',
                                                 }}
                                             >
                                                 {detail}
@@ -202,19 +206,20 @@ const ServicesSection: React.FC = () => {
                                         sx={{
                                             display: 'inline-flex',
                                             alignItems: 'center',
-                                            gap: 1,
-                                            color: 'text.secondary',
-                                            backgroundColor: 'secondary.main', // Transparent primary
-                                            px: 1,
-                                            py: 0.5,
-                                            fontStyle: 'italic',
-                                            fontWeight: 'medium',
-                                            fontSize: '1rem',
+                                            gap: 1.5,
+                                            color: 'primary.contrastText',
+                                            backgroundColor: 'primary.main',
+                                            px: 3,
+                                            py: 1.25,
+                                            borderRadius: '9999px',
+                                            fontWeight: 'bold',
+                                            fontSize: '0.9rem',
                                             cursor: 'pointer',
-                                            transition: 'background-color 0.3s',
+                                            transition: 'transform 0.2s, box-shadow 0.2s',
+                                            boxShadow: '0 2px 8px var(--primary-color)33',
                                             '&:hover': {
-                                                backgroundColor: 'primary.main',
-                                                color:'secondary.main'
+                                                transform: 'translateY(-1px)',
+                                                boxShadow: '0 4px 12px var(--primary-color)55',
                                             }
                                         }}
                                     >

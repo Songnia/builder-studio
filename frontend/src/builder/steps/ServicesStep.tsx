@@ -1,13 +1,14 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Plus, X, Briefcase, Edit2, Check, Upload, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { SaveButton } from '@/builder/components/SaveButton';
 import type { SiteConfig, Service } from '@/types/builder';
+import { uploadBuilderMedia } from '@/services/mediaService';
 
 interface ServicesStepProps {
   config: SiteConfig;
@@ -34,26 +35,40 @@ export function ServicesStep({
   const [services, setServices] = useState(config.services);
   const [editingService, setEditingService] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [serviceToDelete, setServiceToDelete] = useState<string | null>(null);
+  const [serviceDeleteConfirmOpen, setServiceDeleteConfirmOpen] = useState(false);
   const [newService, setNewService] = useState({
     title: '',
     description: '',
     features: [''],
     image: ''
   });
+  const [isUploading, setIsUploading] = useState(false);
   const newImageInputRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    setServices(config.services);
+  }, [config.services]);
+
   // --- Handlers ---
-  const handleImageUpload = (
+  const handleImageUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
     setter: (url: string) => void
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      if (ev.target?.result) setter(ev.target.result as string);
-    };
-    reader.readAsDataURL(file);
+
+    setIsUploading(true);
+    try {
+      const url = await uploadBuilderMedia(file, 'services');
+      setter(url);
+      setIsDirty(true);
+    } catch (err) {
+      console.error('Service image upload failed:', err);
+      alert('Erreur lors de l\'upload de l\'image du service.');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleAddService = () => {
@@ -76,6 +91,19 @@ export function ServicesStep({
     onRemoveService(id);
     setServices(prev => prev.filter(s => s.id !== id));
     setIsDirty(true);
+  };
+
+  const initiateRemoveService = (id: string) => {
+    setServiceToDelete(id);
+    setServiceDeleteConfirmOpen(true);
+  };
+
+  const confirmRemoveService = () => {
+    if (serviceToDelete) {
+      handleRemoveService(serviceToDelete);
+      setServiceToDelete(null);
+      setServiceDeleteConfirmOpen(false);
+    }
   };
 
   const handleUpdateService = (id: string, updates: Partial<Service>) => {
@@ -176,12 +204,19 @@ export function ServicesStep({
                   ) : (
                     <button
                       type="button"
+                      disabled={isUploading}
                       onClick={() => newImageInputRef.current?.click()}
-                      className="w-full border-2 border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center gap-2 hover:border-green-400 hover:bg-green-50 transition-colors"
+                      className={`w-full border-2 border-dashed rounded-lg p-6 flex flex-col items-center gap-2 transition-colors ${
+                        isUploading 
+                        ? 'border-green-300 bg-green-50/20 cursor-wait' 
+                        : 'border-gray-300 hover:border-green-400 hover:bg-green-50'
+                      }`}
                     >
-                      <Upload className="w-8 h-8 text-gray-400" />
-                      <span className="text-sm text-gray-500">Cliquez pour ajouter une image</span>
-                      <span className="text-xs text-gray-400">PNG, JPG jusqu'à 10 MB</span>
+                      <Upload className={`w-8 h-8 ${isUploading ? 'text-green-400 animate-pulse' : 'text-gray-400'}`} />
+                      <span className="text-sm text-gray-500">
+                        {isUploading ? 'Upload en cours...' : 'Cliquez pour ajouter une image'}
+                      </span>
+                      {!isUploading && <span className="text-xs text-gray-400">PNG, JPG jusqu'à 10 MB</span>}
                     </button>
                   )}
                 </div>
@@ -212,14 +247,14 @@ export function ServicesStep({
                 {/* Features */}
                 <div className="space-y-2">
                   <Label>Inclus dans ce service</Label>
-                  {newService.features.map((feature, index) => (
+                  {newService.features?.map((feature, index) => (
                     <div key={index} className="flex gap-2">
                       <Input
                         value={feature}
                         onChange={(e) => updateFeature(index, e.target.value)}
                         placeholder={`Élément ${index + 1}`}
                       />
-                      {newService.features.length > 1 && (
+                      {(newService.features?.length || 0) > 1 && (
                         <Button 
                           variant="outline" 
                           size="icon"
@@ -301,7 +336,7 @@ export function ServicesStep({
                             variant="ghost" 
                             size="icon"
                             className="h-9 w-9 rounded-full bg-gray-50 hover:bg-red-50 hover:text-red-600"
-                            onClick={() => handleRemoveService(service.id)}
+                            onClick={() => initiateRemoveService(service.id)}
                           >
                             <X className="w-4 h-4" />
                           </Button>
@@ -310,9 +345,9 @@ export function ServicesStep({
                       
                       <p className="text-gray-600 text-sm leading-relaxed mb-4">{service.description}</p>
                       
-                      {service.features.length > 0 && (
+                      {(service.features || []).length > 0 && (
                         <ul className="flex flex-wrap justify-center sm:justify-start gap-x-4 gap-y-2">
-                          {service.features.map((feature, i) => (
+                          {(service.features || []).map((feature, i) => (
                             <li key={i} className="flex items-center gap-2 text-xs font-medium text-gray-500 bg-gray-50 px-2 py-1 rounded">
                               <Check className="w-3 h-3 text-green-500" />
                               {feature}
@@ -359,6 +394,38 @@ export function ServicesStep({
           </Button>
         </div>
       </div>
+
+      {/* Service Delete Confirmation Dialog */}
+      <Dialog open={serviceDeleteConfirmOpen} onOpenChange={setServiceDeleteConfirmOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-gray-900">
+              Supprimer le service ?
+            </DialogTitle>
+            <DialogDescription className="text-sm text-gray-500 mt-2">
+              Êtes-vous sûr de vouloir supprimer ce service ? Cette action est irréversible.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 mt-6">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setServiceToDelete(null);
+                setServiceDeleteConfirmOpen(false);
+              }}
+            >
+              Annuler
+            </Button>
+            <Button
+              variant="destructive"
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={confirmRemoveService}
+            >
+              Supprimer
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -374,22 +441,28 @@ function EditServiceForm({
   onCancel: () => void;
 }) {
   const [formData, setFormData] = useState({
-    title: service.title,
-    description: service.description,
-    features: service.features,
+    title: service.title || '',
+    description: service.description || '',
+    features: service.features || [],
     image: service.image || ''
   });
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      if (ev.target?.result)
-        setFormData(prev => ({ ...prev, image: ev.target!.result as string }));
-    };
-    reader.readAsDataURL(file);
+
+    setIsUploading(true);
+    try {
+      const url = await uploadBuilderMedia(file, 'services');
+      setFormData(prev => ({ ...prev, image: url }));
+    } catch (err) {
+      console.error('Service image upload failed:', err);
+      alert('Erreur lors de l\'upload de l\'image.');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const addFeature = () => {
@@ -455,11 +528,18 @@ function EditServiceForm({
         ) : (
           <button
             type="button"
+            disabled={isUploading}
             onClick={() => fileInputRef.current?.click()}
-            className="w-full border-2 border-dashed border-gray-300 rounded-lg p-4 flex flex-col items-center gap-2 hover:border-green-400 hover:bg-green-50 transition-colors"
+            className={`w-full border-2 border-dashed rounded-lg p-4 flex flex-col items-center gap-2 transition-colors ${
+              isUploading 
+              ? 'border-green-300 bg-green-50/20 cursor-wait' 
+              : 'border-gray-300 hover:border-green-400 hover:bg-green-50'
+            }`}
           >
-            <Upload className="w-6 h-6 text-gray-400" />
-            <span className="text-sm text-gray-500">Ajouter une image</span>
+            <Upload className={`w-6 h-6 ${isUploading ? 'text-green-400 animate-pulse' : 'text-gray-400'}`} />
+            <span className="text-sm text-gray-500">
+              {isUploading ? 'Upload en cours...' : 'Ajouter une image'}
+            </span>
           </button>
         )}
       </div>
@@ -486,7 +566,7 @@ function EditServiceForm({
       {/* Features */}
       <div className="space-y-2">
         <Label>Éléments inclus</Label>
-        {formData.features.map((feature, index) => (
+        {(formData.features || []).map((feature, index) => (
           <div key={index} className="flex gap-2">
             <Input
               value={feature}

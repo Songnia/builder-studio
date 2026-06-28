@@ -2,19 +2,43 @@ import React from 'react';
 import { Box, Chip, styled } from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
 import { useTranslation } from 'react-i18next';
+import { useSiteConfig } from '@/context/SiteConfigContext';
 
 const FilterChips: React.FC<FilterChipsProps> = ({ selectedCategory, onSelectCategory }) => {
     const { t } = useTranslation();
+    const { config } = useSiteConfig();
 
-    const categories = [
-        { key: 'All Work', label: t('portfolio.categories.all') },
-        { key: 'Mariages', label: t('portfolio.categories.weddings') },
-        { key: 'Grossesse', label: t('portfolio.categories.maternity') },
-        { key: 'Bébés & Enfants', label: t('portfolio.categories.babies') },
-        { key: 'Corporate', label: t('portfolio.categories.corporate') },
-        { key: 'Events', label: t('portfolio.categories.events') },
-        { key: 'Studio', label: t('portfolio.categories.studio') },
-    ];
+    const categories = React.useMemo(() => {
+        const list = [{ key: 'All Work', label: t('portfolio.categories.all') }];
+        
+        const configCats = config?.portfolioCategories || [
+            "Mariages",
+            "Portraits",
+            "Grossesse",
+            "Bébés & Enfants",
+            "Corporate",
+            "Événements",
+            "Mode",
+            "Produit",
+            "Nature",
+            "Architecture"
+        ];
+        
+        configCats.forEach(cat => {
+            let label = cat;
+            if (cat === 'Mariages') label = t('portfolio.categories.weddings');
+            else if (cat === 'Grossesse') label = t('portfolio.categories.maternity');
+            else if (cat === 'Bébés & Enfants') label = t('portfolio.categories.babies');
+            else if (cat === 'Corporate') label = t('portfolio.categories.corporate');
+            else if (cat === 'Événements' || cat === 'Events') label = t('portfolio.categories.events');
+            else if (cat === 'Studio') label = t('portfolio.categories.studio');
+            else if (cat === 'Portraits') label = t('portfolio.categories.portraits', { defaultValue: 'Portraits' });
+            
+            list.push({ key: cat, label });
+        });
+        
+        return list;
+    }, [config, t]);
 
     return (
         <Box

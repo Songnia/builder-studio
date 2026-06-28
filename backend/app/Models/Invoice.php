@@ -21,6 +21,7 @@ class Invoice extends Model
         'tax_rate',
         'include_tax',
         'total_amount',
+        'amount_paid',
         'studio_info',
         'status',
         'currency'

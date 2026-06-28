@@ -12,6 +12,7 @@ import * as Tabs from '@radix-ui/react-tabs';
 import * as Dialog from '@radix-ui/react-dialog';
 import { FileText, PlusCircle, Maximize, X, Share2, Eye, Loader2 } from 'lucide-react';
 import ShareDialog from '@/components/Delivery/ShareDialog';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const MOCK_STUDIO_DATA = {
     logoUrl: '/logo.png',
@@ -21,8 +22,16 @@ const MOCK_STUDIO_DATA = {
     phone: '+221 00 000 00 00'
 };
 
+type InvoiceTab = 'list' | 'create';
+
+function getTabFromPath(pathname: string): InvoiceTab {
+    return pathname === '/admin/invoices/new' ? 'create' : 'list';
+}
+
 const InvoiceBuilder: React.FC = () => {
-    const [activeTab, setActiveTab] = useState(localStorage.getItem('vanda_invoice_active_tab') || 'list');
+    const location = useLocation();
+    const navigate = useNavigate();
+    const [activeTab, setActiveTab] = useState<InvoiceTab>(() => getTabFromPath(location.pathname));
     const [isSaving, setIsSaving] = useState(false);
     const {
         invoice,
@@ -40,8 +49,8 @@ const InvoiceBuilder: React.FC = () => {
     const isEditing = !!(invoice as any).id;
 
     useEffect(() => {
-        localStorage.setItem('vanda_invoice_active_tab', activeTab);
-    }, [activeTab]);
+        setActiveTab(getTabFromPath(location.pathname));
+    }, [location.pathname]);
 
     // Charger les informations du photographe depuis la config du site
     useEffect(() => {
@@ -70,12 +79,18 @@ const InvoiceBuilder: React.FC = () => {
 
     const handleEditInvoice = (invData: any) => {
         setFullInvoice(invData);
-        setActiveTab('create');
+        navigate('/admin/invoices/new');
     };
 
     const handleCreateNew = () => {
         resetInvoice();
-        setActiveTab('create');
+        navigate('/admin/invoices/new');
+    };
+
+    const handleTabChange = (value: string) => {
+        const nextTab = value as InvoiceTab;
+        setActiveTab(nextTab);
+        navigate(nextTab === 'create' ? '/admin/invoices/new' : '/admin/invoices');
     };
 
     const handleSave = async () => {
@@ -109,6 +124,7 @@ const InvoiceBuilder: React.FC = () => {
             tax_rate: invoice.taxRate,
             include_tax: invoice.includeTax,
             total_amount: totals.grandTotal,
+            amount_paid: invoice.amountPaid || 0,
             studio_info: JSON.stringify(invoice.studio)
         };
 
@@ -122,7 +138,7 @@ const InvoiceBuilder: React.FC = () => {
                 toast.success("Facture enregistrée !");
             }
             resetInvoice();
-            setActiveTab('list');
+            navigate('/admin/invoices');
         } catch (error) {
             console.error(error);
             toast.error("Erreur lors de l'enregistrement.");
@@ -140,9 +156,9 @@ const InvoiceBuilder: React.FC = () => {
                 </div>
             </div>
 
-            <Tabs.Root value={activeTab} onValueChange={setActiveTab} className="max-w-7xl mx-auto">
+            <Tabs.Root value={activeTab} onValueChange={handleTabChange} className="max-w-7xl mx-auto">
                 <Tabs.List className="flex gap-4 md:gap-8 mb-6 md:mb-10 border-b border-slate-200 overflow-x-auto no-scrollbar scroll-smooth">
-                    <Tabs.Trigger 
+                    <Tabs.Trigger
                         value="list"
                         className={`pb-4 text-[11px] md:text-[13px] font-bold uppercase tracking-wider transition-all relative whitespace-nowrap ${activeTab === 'list' ? 'text-green-600' : 'text-slate-500 hover:text-slate-800'}`}
                     >
@@ -151,7 +167,7 @@ const InvoiceBuilder: React.FC = () => {
                             <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-green-600 rounded-t-full" />
                         )}
                     </Tabs.Trigger>
-                    <Tabs.Trigger 
+                    <Tabs.Trigger
                         value="create"
                         className={`pb-4 text-[11px] md:text-[13px] font-bold uppercase tracking-wider transition-all relative whitespace-nowrap ${activeTab === 'create' ? 'text-green-600' : 'text-slate-500 hover:text-slate-800'}`}
                     >
@@ -163,8 +179,8 @@ const InvoiceBuilder: React.FC = () => {
                 </Tabs.List>
 
                 <Tabs.Content value="list" className="outline-none">
-                    <InvoiceList 
-                        onCreateNew={handleCreateNew} 
+                    <InvoiceList
+                        onCreateNew={handleCreateNew}
                         onEdit={handleEditInvoice}
                     />
                 </Tabs.Content>
@@ -227,21 +243,24 @@ const InvoiceBuilder: React.FC = () => {
                             </section>
 
                             <section className="bg-white p-6 md:p-8 rounded-[2rem] md:rounded-3xl border border-slate-100 shadow-sm">
-                                <InvoiceSummary 
-                                    totals={totals} 
-                                    taxRate={invoice.taxRate} 
+                                <InvoiceSummary
+                                    totals={totals}
+                                    taxRate={invoice.taxRate}
                                     includeTax={invoice.includeTax}
                                     onToggleTax={(val) => updateMetadata('includeTax', val)}
                                     onUpdateTaxRate={(val) => updateMetadata('taxRate', val)}
                                 />
                                 <div className="mt-8 pt-8 border-t border-slate-100 flex flex-col sm:flex-row gap-3">
-                                    <button 
-                                        onClick={() => setActiveTab('list')}
+                                    <button
+                                        onClick={() => {
+                                            resetInvoice();
+                                            navigate('/admin/invoices');
+                                        }}
                                         className="w-full sm:w-auto px-6 py-4 rounded-2xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-all text-base order-2 sm:order-1"
                                     >
                                         Annuler
                                     </button>
-                                    <button 
+                                    <button
                                         onClick={handleSave}
                                         disabled={isSaving}
                                         className="flex-1 bg-green-600 text-white px-8 py-4 rounded-2xl hover:bg-green-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-all shadow-xl shadow-green-100 font-bold text-base flex items-center justify-center gap-3 order-1 sm:order-2"

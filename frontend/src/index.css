@@ -182,3 +182,62 @@
 .animate-float {
   animation: float 6s ease-in-out infinite;
 }
+
+/* Classes de groupement pour le système de design formel */
+
+/* Section Principale */
+.section-main-title {
+  color: var(--text-color) !important;
+}
+
+.section-main-subtitle {
+  color: var(--subtitle-color) !important;
+}
+
+.section-main-text {
+  color: var(--text-color) !important;
+}
+
+.section-main-muted {
+  color: var(--subtitle-color) !important;
+}
+
+/* Section Alternative */
+.section-alt-title {
+  color: var(--text-alt-color) !important;
+}
+
+.section-alt-subtitle {
+  color: var(--subtitle-alt-color) !important;
+}
+
+.section-alt-text {
+  color: var(--text-alt-color) !important;
+}
+
+.section-alt-muted {
+  color: var(--subtitle-alt-color) !important;
+}
+
+/* Polices de caractères dynamiques */
+.template-wrapper {
+  font-family: var(--secondary-font), sans-serif !important;
+}
+
+.template-wrapper h1,
+.template-wrapper h2,
+.template-wrapper h3,
+.template-wrapper h4,
+.template-wrapper h5,
+.template-wrapper h6,
+.template-wrapper .font-primary {
+  font-family: var(--primary-font), serif !important;
+}
+
+.template-wrapper button,
+.template-wrapper input,
+.template-wrapper select,
+.template-wrapper textarea,
+.template-wrapper .font-secondary {
+  font-family: var(--secondary-font), sans-serif !important;
+}

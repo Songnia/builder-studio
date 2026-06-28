@@ -19,6 +19,7 @@ export interface StudioInfo {
     email: string;
     address: string;
     phone: string;
+    primaryColor?: string;
 }
 
 export interface InvoiceData {
@@ -31,4 +32,7 @@ export interface InvoiceData {
     taxRate: number;
     includeTax: boolean;
     studio: StudioInfo;
+    amountPaid?: number;
+    totalAmount?: number;
+    status?: string;
 }

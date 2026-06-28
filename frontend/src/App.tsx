@@ -67,6 +67,7 @@ function BuilderApp() {
     addPhoto,
     addPhotos,
     removePhoto,
+    updatePhoto,
     addService,
     removeService,
     updateService,
@@ -129,9 +130,11 @@ function BuilderApp() {
         return (
           <PortfolioStep
             config={config}
+            onUpdate={updateConfig}
             onAddPhoto={addPhoto}
             onAddPhotos={addPhotos}
             onRemovePhoto={removePhoto}
+            onUpdatePhoto={updatePhoto}
             onNext={nextStep}
             onPrev={prevStep}
             onSave={saveConfig}
@@ -273,6 +276,7 @@ function App() {
                   <Route path="/admin/dashboard" element={<AdminDashboard />} />
                   <Route path="/admin/new-delivery" element={<NewDelivery />} />
                   <Route path="/admin/gallery/:uuid" element={<GalleryManagement />} />
+                  <Route path="/admin/invoices" element={<InvoiceBuilder />} />
                   <Route path="/admin/invoices/new" element={<InvoiceBuilder />} />
                   <Route path="/admin/site-builder" element={<SiteBuilder />} />
                 </Route>
@@ -280,7 +284,7 @@ function App() {
 
               {/* Builder standalone */}
               <Route element={<ProtectedRoute />}>
-                <Route path="/builder" element={<BuilderApp />} />
+                <Route path="/builder" element={<Navigate to="/admin/site-builder" replace />} />
               </Route>
 
               {/* Galerie client partagée — formats: /:slug/g/:uuid et /g/:uuid */}

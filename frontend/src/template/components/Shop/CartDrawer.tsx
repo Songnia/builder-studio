@@ -120,7 +120,7 @@ const CartDrawer: React.FC = () => {
 
                     {/* Footer */}
                     {items.length > 0 && (
-                        <Box sx={{ p: 3, borderTop: '1px solid', borderColor: 'divider', backgroundColor: 'grey.50' }}>
+                        <Box sx={{ p: 3, borderTop: '1px solid', borderColor: 'divider', backgroundColor: (theme) => theme.palette.mode === 'dark' ? 'background.default' : 'grey.50' }}>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                                 <Typography variant="subtitle1">{t('shop.cart.subtotal')}</Typography>
                                 <Typography variant="subtitle1" fontWeight="bold">{cartTotal.toLocaleString()} Fcfa</Typography>

@@ -46,6 +46,11 @@ export interface SiteConfig {
   accentColor: string;
   backgroundColor: string;
   textColor: string;
+  subtitleColor: string;
+
+  // Typographie
+  primaryFont?: string;
+  secondaryFont?: string;
 
   // Contact
   email: string;
@@ -74,6 +79,7 @@ export interface SiteConfig {
   services: Service[];
   pricingPlans: PricingPlan[];
   testimonials: Testimonial[];
+  portfolioCategories?: string[];
 
   // Sections activées
   enabledSections: {
@@ -93,6 +99,7 @@ export interface SiteConfig {
     buttonText: string;
     whatsappMessage: string;
     backgroundImage?: string;
+    redirectUrl?: string;
   };
 }
 
@@ -114,6 +121,9 @@ export const defaultSiteConfig: SiteConfig = {
   accentColor: "#f0e100",
   backgroundColor: "#ffffff",
   textColor: "#1a1a1a",
+  subtitleColor: "#79747e",
+  primaryFont: "Playfair Display",
+  secondaryFont: "Inter",
 
   email: "contact@monstudio.com",
   phone: "+237 6 00 00 00 00",
@@ -135,6 +145,18 @@ export const defaultSiteConfig: SiteConfig = {
 
   heroImages: [],
   photos: [],
+  portfolioCategories: [
+    "Mariages",
+    "Portraits",
+    "Grossesse",
+    "Bébés & Enfants",
+    "Corporate",
+    "Événements",
+    "Mode",
+    "Produit",
+    "Nature",
+    "Architecture"
+  ],
   services: [
     {
       id: "1",
@@ -224,7 +246,8 @@ export const defaultSiteConfig: SiteConfig = {
     subtitle: "Profitez de -20% sur votre séance portrait ce mois-ci !",
     buttonText: "En profiter",
     whatsappMessage: "Bonjour ! Je souhaiterais profiter de l'offre spéciale de -20% sur la séance portrait.",
-    backgroundImage: ""
+    backgroundImage: "",
+    redirectUrl: ""
   }
 };
 

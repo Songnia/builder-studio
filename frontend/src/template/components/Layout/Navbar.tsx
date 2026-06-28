@@ -4,11 +4,12 @@ import MenuIcon from '@mui/icons-material/Menu';
 import SearchIcon from '@mui/icons-material/Search';
 // import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
 import LanguageIcon from '@mui/icons-material/Language';
-import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 // import { useCart } from '@/template/context/CartContext';
 // import { authService } from '../../services/authService'; // Removed for public template
 import { useSiteConfig } from '@/context/SiteConfigContext';
+import { useSitePath } from '@/template/hooks/useSitePath';
 import logo from '@/template/assets/logo/vanda_logo.png';
 
 
@@ -20,11 +21,11 @@ const Navbar: React.FC<NavbarProps> = ({ basePath }) => {
     const { t, i18n } = useTranslation();
     const { config } = useSiteConfig();
     // const navigate = useNavigate();
-    const location = useLocation();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [mobileOpen, setMobileOpen] = useState(false);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const { getPath } = useSitePath(basePath);
 
     // Early return ONLY after ALL hooks
     if (!config) return null;
@@ -51,22 +52,11 @@ const Navbar: React.FC<NavbarProps> = ({ basePath }) => {
         handleLanguageClose();
     };
 
-    // Use slug-based navigation
-    const params = location.pathname.split('/');
-    const slug = basePath || params[1] || config.siteName.toLowerCase().replace(/\s+/g, '-');
-    // Note: In the real app, we might want to get the slug from useSiteConfig or context, 
-    // but SiteConfig doesn't always have the slug explicitly unless we added it.
-    // Enhanced SiteConfigContext gets it from URL parameters.
-
-    // Construct paths relative to the current site slug
-    const getPath = (path: string) => {
-        if (path === '/') return `/${slug}`;
-        return `/${slug}${path}`;
-    };
+    const showPortfolio = config?.enabledSections.portfolio && config?.photos && config.photos.length > 0;
 
     const navItems = [
         { label: t('navbar.home'), path: '/' },
-        { label: t('navbar.portfolio'), path: '/portfolio' },
+        ...(showPortfolio ? [{ label: t('navbar.portfolio'), path: '/portfolio' }] : []),
         { label: t('navbar.about'), path: '/about' },
         { label: t('navbar.contact'), path: '/contact' },
     ];
@@ -118,7 +108,7 @@ const Navbar: React.FC<NavbarProps> = ({ basePath }) => {
     );
 
     return (
-        <AppBar position="sticky" color="default" elevation={0} sx={{ borderBottom: '1px solid', borderColor: 'divider', backgroundColor: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(8px)' }}>
+        <AppBar position="sticky" color="default" elevation={0} sx={{ borderBottom: '1px solid', borderColor: 'divider', backgroundColor: (theme) => theme.palette.mode === 'dark' ? theme.palette.background.default : 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(8px)' }}>
             <Toolbar sx={{ justifyContent: 'space-between' }}>
                 {/* Left: Hamburger (Mobile) or Spacer (Desktop) */}
                 {isMobile ? (

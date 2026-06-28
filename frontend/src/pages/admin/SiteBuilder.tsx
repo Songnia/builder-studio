@@ -21,6 +21,7 @@ const SiteBuilder: React.FC = () => {
         addPhoto,
         addPhotos,
         removePhoto,
+        updatePhoto,
         addService,
         removeService,
         updateService,
@@ -56,7 +57,7 @@ const SiteBuilder: React.FC = () => {
             case 1: return <InfoStep config={config} onUpdate={updateConfig} onNext={nextStep} onPrev={prevStep} onSave={saveConfig} isSaving={isSaving} />;
             case 2: return <BrandingStep config={config} onUpdate={updateConfig} onNext={nextStep} onPrev={prevStep} onSave={saveConfig} isSaving={isSaving} />;
             case 3: return <HeroStep config={config} onUpdate={updateConfig} onNext={nextStep} onPrev={prevStep} onSave={saveConfig} isSaving={isSaving} />;
-            case 4: return <PortfolioStep config={config} onAddPhoto={addPhoto} onAddPhotos={addPhotos} onRemovePhoto={removePhoto} onNext={nextStep} onPrev={prevStep} onSave={saveConfig} isSaving={isSaving} />;
+            case 4: return <PortfolioStep config={config} onUpdate={updateConfig} onAddPhoto={addPhoto} onAddPhotos={addPhotos} onRemovePhoto={removePhoto} onUpdatePhoto={updatePhoto} onNext={nextStep} onPrev={prevStep} onSave={saveConfig} isSaving={isSaving} />;
             case 5: return <ServicesStep config={config} onAddService={addService} onRemoveService={removeService} onUpdateService={updateService} onNext={nextStep} onPrev={prevStep} onSave={saveConfig} isSaving={isSaving} />;
             case 6: return <PricingStep config={config} onAddPlan={addPricingPlan} onRemovePlan={removePricingPlan} onUpdatePlan={updatePricingPlan} onNext={nextStep} onPrev={prevStep} onSave={saveConfig} isSaving={isSaving} />;
             case 7: return <TestimonialsStep config={config} onAddTestimonial={addTestimonial} onRemoveTestimonial={removeTestimonial} onUpdateTestimonial={updateTestimonial} onNext={nextStep} onPrev={prevStep} onSave={saveConfig} isSaving={isSaving} />;

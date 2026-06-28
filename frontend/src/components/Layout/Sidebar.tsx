@@ -20,7 +20,7 @@ const navItems = [
         icon: Package,
     },
     {
-        path: '/admin/invoices/new',
+        path: '/admin/invoices',
         label: 'Facturation',
         icon: FileText,
     },

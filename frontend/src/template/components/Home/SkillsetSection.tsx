@@ -20,7 +20,7 @@ const SkillsetSection: React.FC = () => {
     ];
 
     return (
-        <Box sx={{ py: { xs: 8, md: 12 }, backgroundColor: 'primary.main', color: 'text.secondary', overflow: 'hidden' }}>
+        <Box sx={{ py: { xs: 8, md: 12 }, backgroundColor: 'background.paper', color: 'text.primary', overflow: 'hidden' }}>
             <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3, md: 4 } }}>
                 <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: { xs: 8, md: 8 }, alignItems: 'center' }}>
 
@@ -30,7 +30,7 @@ const SkillsetSection: React.FC = () => {
                             <Typography variant="overline" sx={{ color: 'primary.main', letterSpacing: 3, fontWeight: 'bold' }}>
                                 {t('home.skillset.overline')}
                             </Typography>
-                            <Typography variant="h2" sx={{ fontWeight: 900, mt: 2, mb: 3, lineHeight: 1.1, fontSize: { xs: '2.5rem', md: '3.5rem' } }}>
+                            <Typography variant="h2" className="section-main-title" sx={{ fontWeight: 900, mt: 2, mb: 3, lineHeight: 1.1, fontSize: { xs: '2.5rem', md: '3.5rem' } }}>
                                 {t('home.skillset.title')}
                             </Typography>
                             <Box sx={{ width: 100, height: 4, backgroundColor: 'primary.main', mb: 6 }} />
@@ -42,10 +42,10 @@ const SkillsetSection: React.FC = () => {
                                     <Box sx={{ mb: 2, color: 'primary.main' }}>
                                         {skill.icon}
                                     </Box>
-                                    <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
+                                    <Typography variant="h6" className="section-main-title" sx={{ fontWeight: 'bold', mb: 1 }}>
                                         {skill.title}
                                     </Typography>
-                                    <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.6 }}>
+                                    <Typography variant="body2" className="section-main-muted" sx={{ color: 'text.secondary', lineHeight: 1.6 }}>
                                         {skill.desc}
                                     </Typography>
                                 </Box>

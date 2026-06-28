@@ -1,11 +1,15 @@
 import React from 'react';
 import { Fab, Zoom, Box, Typography } from '@mui/material';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
+import { useSiteConfig } from '@/context/SiteConfigContext';
 
 const WhatsAppFAB: React.FC = () => {
+    const { config } = useSiteConfig();
+
     const handleClick = () => {
-        const message = "Hello, I am interested in the 1000f promo";
-        const url = `https://wa.me/237698399985?text=${encodeURIComponent(message)}`;
+        const phoneNumber = config?.phone?.replace(/\D/g, '') || '237698399985';
+        const message = "Bonjour, je souhaite faire une réservation.";
+        const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
         window.open(url, '_blank');
     };
 

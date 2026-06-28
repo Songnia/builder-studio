@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Box, Container, Typography } from '@mui/material';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useSiteConfig } from '@/context/SiteConfigContext';
 import FilterChips from '../components/Portfolio/FilterChips';
 import MasonryGrid from '../components/Portfolio/MasonryGrid';
 import WhatsAppFAB from '../components/Common/WhatsAppFAB';
@@ -11,6 +12,9 @@ const Portfolio: React.FC = () => {
     const location = useLocation();
     const [selectedCategory, setSelectedCategory] = useState('All Work');
     const [visibleCount, setVisibleCount] = useState(100); // Show all items by default on Portfolio page
+    const { config } = useSiteConfig();
+
+    const showPortfolio = config?.enabledSections.portfolio && config?.photos && config.photos.length > 0;
 
     useEffect(() => {
         if (location.state && location.state.selectedCategory) {
@@ -51,16 +55,26 @@ const Portfolio: React.FC = () => {
                         {t('portfolio.subtitle')}
                     </Typography>
                 </Box>
-                <Box sx={{ mb: { xs: 3, md: 4 } }}>
-                    <FilterChips
-                        selectedCategory={selectedCategory}
-                        onSelectCategory={handleCategoryChange}
-                    />
-                </Box>
-                <MasonryGrid
-                    selectedCategory={selectedCategory}
-                    visibleCount={visibleCount}
-                />
+                {showPortfolio ? (
+                    <>
+                        <Box sx={{ mb: { xs: 3, md: 4 } }}>
+                            <FilterChips
+                                selectedCategory={selectedCategory}
+                                onSelectCategory={handleCategoryChange}
+                            />
+                        </Box>
+                        <MasonryGrid
+                            selectedCategory={selectedCategory}
+                            visibleCount={visibleCount}
+                        />
+                    </>
+                ) : (
+                    <Box sx={{ py: 8, textAlign: 'center' }}>
+                        <Typography variant="body1" color="text.secondary">
+                            Aucune photo disponible pour le moment.
+                        </Typography>
+                    </Box>
+                )}
             </Container>
             <WhatsAppFAB />
         </Box>

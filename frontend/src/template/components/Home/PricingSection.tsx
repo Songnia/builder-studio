@@ -9,7 +9,7 @@ const PricingSection: React.FC = () => {
     const { t } = useTranslation();
     const { config } = useSiteConfig();
 
-    if (!config) return null;
+    if (!config || !config.enabledSections.pricing || !config.pricingPlans || config.pricingPlans.length === 0) return null;
 
     const packages = [
         {
@@ -38,17 +38,15 @@ const PricingSection: React.FC = () => {
         },
     ];
 
-    // Use config.pricingPlans if available and enabled, otherwise use translation-based packages
-    const displayPackages = (config.enabledSections.pricing && config.pricingPlans.length > 0)
-        ? config.pricingPlans.map(plan => ({
-            title: plan.name,
-            price: plan.price,
-            description: plan.description,
-            features: plan.features,
-            buttonText: 'Réserver',
-            highlight: plan.recommended || false
-        }))
-        : packages;
+    // Use config.pricingPlans
+    const displayPackages = config.pricingPlans.map(plan => ({
+        title: plan.name,
+        price: plan.price,
+        description: plan.description,
+        features: plan.features || [],
+        buttonText: 'Réserver',
+        highlight: plan.recommended || false
+    }));
 
     return (
         <Box id="pricing-section" sx={{ py: { xs: 8, md: 12 }, backgroundColor: 'secondary.main' }}>
@@ -58,10 +56,10 @@ const PricingSection: React.FC = () => {
                     <Typography variant="overline" sx={{ color: 'primary.main', fontWeight: 'bold', letterSpacing: 2 }}>
                         {t('home.pricing.overline')}
                     </Typography>
-                    <Typography variant="h3" sx={{ fontWeight: 'bold', mt: 1, mb: 2 }}>
+                    <Typography variant="h3" className="section-alt-title" sx={{ fontWeight: 'bold', mt: 1, mb: 2 }}>
                         {t('home.pricing.title')}
                     </Typography>
-                    <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 'md', mx: 'auto' }}>
+                    <Typography variant="body1" className="section-alt-subtitle" sx={{ maxWidth: 'md', mx: 'auto' }}>
                         {t('home.pricing.subtitle')}
                     </Typography>
                 </Box>
@@ -88,7 +86,7 @@ const PricingSection: React.FC = () => {
                             >
                                 {pkg.highlight && (
                                     <Chip
-                                        icon={<StarIcon sx={{ color: 'secondary.main' }} />}
+                                        icon={<StarIcon sx={{ color: 'primary.contrastText !important' }} />}
                                         label={t('home.pricing.recommended')}
                                         color="primary"
                                         sx={{
@@ -97,7 +95,7 @@ const PricingSection: React.FC = () => {
                                             left: '50%',
                                             transform: 'translateX(-50%)',
                                             fontWeight: 'bold',
-                                            color: 'secondary.main',
+                                            color: 'primary.contrastText',
                                         }}
                                     />
                                 )}
@@ -116,9 +114,9 @@ const PricingSection: React.FC = () => {
                                         {pkg.features.map((feature, idx) => (
                                             <ListItem key={idx} disablePadding sx={{ mb: 1.5 }}>
                                                 <ListItemIcon sx={{ minWidth: 36 }}>
-                                                    <CheckCircleIcon sx={{ color: pkg.highlight ? 'primary.main' : 'secondary' }} />
+                                                    <CheckCircleIcon sx={{ color: 'primary.main' }} />
                                                 </ListItemIcon>
-                                                <ListItemText primary={feature} primaryTypographyProps={{ variant: 'body2' }} />
+                                                <ListItemText primary={feature} primaryTypographyProps={{ variant: 'body2', color: 'text.secondary' }} />
                                             </ListItem>
                                         ))}
                                     </List>
@@ -134,7 +132,7 @@ const PricingSection: React.FC = () => {
                                                 title: pkg.title,
                                                 price: pkg.price
                                             });
-                                            const phoneNumber = config.phone.replace(/\s/g, '') || '237698399985';
+                                            const phoneNumber = config.phone.replace(/\D/g, '') || '237698399985';
                                             const encodedMessage = encodeURIComponent(message);
                                             window.open(`https://wa.me/${phoneNumber}?text=${encodedMessage}`, '_blank');
                                         }}
@@ -142,8 +140,14 @@ const PricingSection: React.FC = () => {
                                             py: 1.5,
                                             fontWeight: 'bold',
                                             borderRadius: 2,
-                                            color: pkg.highlight ? 'secondary.main' : 'none',
-                                            boxShadow: pkg.highlight ? '0 8px 16px primary.main' : 'none',
+                                            color: pkg.highlight ? 'primary.contrastText' : 'primary.main',
+                                            borderWidth: 2,
+                                            borderColor: 'primary.main',
+                                            '&:hover': {
+                                                borderWidth: 2,
+                                                borderColor: 'primary.main',
+                                                backgroundColor: pkg.highlight ? 'primary.dark' : 'primary.transparent',
+                                            }
                                         }}
                                     >
                                         {pkg.buttonText}
