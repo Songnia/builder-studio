@@ -12,6 +12,14 @@ import SiteBuilder from '@/pages/admin/SiteBuilder';
 import AdminLayout from '@/components/Layout/AdminLayout';
 import ClientGalleryView from '@/pages/client/ClientGalleryView';
 
+// Super Admin
+import RequireSuperAdmin from '@/components/Auth/RequireSuperAdmin';
+import SuperAdminLayout from '@/components/Layout/SuperAdminLayout';
+import SuperAdminDashboard from '@/pages/superadmin/SuperAdminDashboard';
+import PhotographersList from '@/pages/superadmin/PhotographersList';
+import SubscriptionPlans from '@/pages/superadmin/SubscriptionPlans';
+import SuperAdminSettings from '@/pages/superadmin/SuperAdminSettings';
+
 function AppAdmin() {
     return (
         <ThemeProvider theme={theme}>
@@ -34,6 +42,17 @@ function AppAdmin() {
                             <Route path="/admin/invoices/new" element={<InvoiceBuilder />} />
                             <Route path="/admin/site-builder" element={<SiteBuilder />} />
                             <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
+                        </Route>
+                    </Route>
+
+                    {/* Super Admin Protégé */}
+                    <Route element={<RequireSuperAdmin />}>
+                        <Route element={<SuperAdminLayout />}>
+                            <Route path="/superadmin/dashboard" element={<SuperAdminDashboard />} />
+                            <Route path="/superadmin/photographers" element={<PhotographersList />} />
+                            <Route path="/superadmin/plans" element={<SubscriptionPlans />} />
+                            <Route path="/superadmin/settings" element={<SuperAdminSettings />} />
+                            <Route path="/superadmin" element={<Navigate to="/superadmin/dashboard" replace />} />
                         </Route>
                     </Route>
 

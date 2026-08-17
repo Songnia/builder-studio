@@ -7,7 +7,7 @@ import { useEffect } from 'react';
 interface UpgradeDialogProps {
     open: boolean;
     onClose: () => void;
-    feature: 'photos' | 'galleries' | 'domain' | 'branding';
+    feature: 'photos' | 'galleries' | 'domain' | 'branding' | 'publish';
     currentPlan?: 'starter' | 'pro' | 'studio';
 }
 
@@ -54,6 +54,14 @@ export function UpgradeDialog({ open, onClose, feature, currentPlan = 'starter' 
                     currentLimit: 'Avec watermark',
                     proLimit: 'Sans watermark',
                     icon: <Star className="w-12 h-12 text-blue-600" />
+                };
+            case 'publish':
+                return {
+                    title: '🚀 Publiez votre site',
+                    message: 'La publication de votre site nécessite un abonnement actif.',
+                    currentLimit: 'Brouillon',
+                    proLimit: 'En ligne',
+                    icon: <Rocket className="w-12 h-12 text-blue-600" />
                 };
             default:
                 return {
@@ -146,7 +154,7 @@ export function UpgradeDialog({ open, onClose, feature, currentPlan = 'starter' 
                     </Button>
                     <Button
                         onClick={() => {
-                            navigate('/pricing');
+                            navigate('/admin/subscription');
                             onClose();
                         }}
                         className="flex-1 bg-blue-600 hover:bg-blue-700"

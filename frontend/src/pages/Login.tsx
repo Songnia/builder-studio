@@ -41,9 +41,12 @@ const Login: React.FC = () => {
             const response = await authService.login({ email, password });
 
             // Smart Redirect:
+            // If superadmin -> Super Admin Dashboard
             // If user has a site built -> Admin Dashboard (Delivery)
             // If user is new -> Site Builder
-            if (response.has_site) {
+            if (response.user.role === 'superadmin') {
+                navigate('/superadmin/dashboard');
+            } else if (response.has_site) {
                 navigate('/admin/dashboard');
             } else {
                 navigate('/admin/site-builder');

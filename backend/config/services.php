@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'maketou' => [
+        'base_url' => env('MAKETOU_BASE_URL', 'https://api.maketou.net'),
+        'api_key' => env('MAKETOU_API_KEY'),
+    ],
+
 ];

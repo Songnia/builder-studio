@@ -58,6 +58,13 @@ export function AdminNavbar({ onMenuClick }: AdminNavbarProps) {
         };
 
         fetchConfig();
+
+        const handleUserUpdate = () => {
+            setUser(authService.getCurrentUser());
+        };
+        
+        window.addEventListener('userUpdated', handleUserUpdate);
+        return () => window.removeEventListener('userUpdated', handleUserUpdate);
     }, []);
 
     useEffect(() => {
@@ -228,8 +235,11 @@ export function AdminNavbar({ onMenuClick }: AdminNavbarProps) {
                             <CreditCard className="w-4 h-4" />
                             <span>Mon abonnement</span>
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="gap-2 cursor-pointer">
-                            <User className="w-4 h-4" />
+                        <DropdownMenuItem 
+                            className="gap-2 cursor-not-allowed text-slate-300 focus:bg-transparent"
+                            title="Bientôt disponible"
+                        >
+                            <User className="w-4 h-4 text-slate-300" />
                             <span>Mon Profil</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem className="gap-2 cursor-pointer">

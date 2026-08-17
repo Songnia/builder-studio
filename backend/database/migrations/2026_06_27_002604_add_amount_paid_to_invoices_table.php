@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('invoices', function (Blueprint $table) {
-            $table->decimal('amount_paid', 15, 2)->default(0)->after('total_amount');
-        });
+        if (!Schema::hasColumn('invoices', 'amount_paid')) {
+            Schema::table('invoices', function (Blueprint $table) {
+                $table->decimal('amount_paid', 15, 2)->default(0)->after('total_amount');
+            });
+        }
     }
 
     /**
@@ -21,8 +23,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('invoices', function (Blueprint $table) {
-            $table->dropColumn('amount_paid');
-        });
+        if (Schema::hasColumn('invoices', 'amount_paid')) {
+            Schema::table('invoices', function (Blueprint $table) {
+                $table->dropColumn('amount_paid');
+            });
+        }
     }
 };

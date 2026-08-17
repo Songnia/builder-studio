@@ -30,6 +30,14 @@ export const authService = {
         return user ? JSON.parse(user) : null;
     },
 
+    updateCurrentUser(userData: any) {
+        const currentUser = this.getCurrentUser() || {};
+        const updatedUser = { ...currentUser, ...userData };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        window.dispatchEvent(new Event('userUpdated'));
+        return updatedUser;
+    },
+
     isAuthenticated() {
         return !!localStorage.getItem('auth_token');
     }

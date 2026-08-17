@@ -11,11 +11,24 @@ import AdminDashboard from '@/pages/admin/AdminDashboard';
 import NewDelivery from '@/pages/admin/NewDelivery';
 import GalleryManagement from '@/pages/admin/GalleryManagement';
 import InvoiceBuilder from '@/pages/admin/InvoiceBuilder';
+import ProfilePage from '@/pages/admin/ProfilePage';
+import Subscription from '@/pages/admin/Subscription';
 import Login from '@/pages/Login';
 import SignUp from '@/pages/SignUp';
 import ProtectedRoute from '@/components/Auth/ProtectedRoute';
 import SiteBuilder from '@/pages/admin/SiteBuilder';
 import AdminLayout from '@/components/Layout/AdminLayout';
+
+// ============================================
+// SUPER ADMIN IMPORTS
+// ============================================
+import RequireSuperAdmin from '@/components/Auth/RequireSuperAdmin';
+import SuperAdminLayout from '@/components/Layout/SuperAdminLayout';
+import SuperAdminDashboard from '@/pages/superadmin/SuperAdminDashboard';
+import PhotographersList from '@/pages/superadmin/PhotographersList';
+import SubscriptionPlans from '@/pages/superadmin/SubscriptionPlans';
+import TransactionsList from '@/pages/superadmin/TransactionsList';
+import SuperAdminSettings from '@/pages/superadmin/SuperAdminSettings';
 
 // ============================================
 // CLIENT IMPORTS
@@ -274,11 +287,26 @@ function App() {
               <Route element={<ProtectedRoute />}>
                 <Route element={<AdminLayout />}>
                   <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                  <Route path="/admin/profile" element={<ProfilePage />} />
                   <Route path="/admin/new-delivery" element={<NewDelivery />} />
                   <Route path="/admin/gallery/:uuid" element={<GalleryManagement />} />
                   <Route path="/admin/invoices" element={<InvoiceBuilder />} />
                   <Route path="/admin/invoices/new" element={<InvoiceBuilder />} />
                   <Route path="/admin/site-builder" element={<SiteBuilder />} />
+                  <Route path="/admin/subscription" element={<Subscription />} />
+                </Route>
+              </Route>
+
+              {/* Super Admin Protégé */}
+              <Route element={<RequireSuperAdmin />}>
+                <Route element={<SuperAdminLayout />}>
+                  <Route path="/superadmin/dashboard" element={<SuperAdminDashboard />} />
+                  <Route path="/superadmin/transactions" element={<TransactionsList />} />
+                  <Route path="/superadmin/profile" element={<ProfilePage />} />
+                  <Route path="/superadmin/photographers" element={<PhotographersList />} />
+                  <Route path="/superadmin/plans" element={<SubscriptionPlans />} />
+                  <Route path="/superadmin/settings" element={<SuperAdminSettings />} />
+                  <Route path="/superadmin" element={<Navigate to="/superadmin/dashboard" replace />} />
                 </Route>
               </Route>
 

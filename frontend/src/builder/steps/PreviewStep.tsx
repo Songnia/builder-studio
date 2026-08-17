@@ -11,6 +11,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { siteConfigService } from '@/services/siteConfigService';
 import { useToast } from '@/components/ui/use-toast';
 import type { SiteConfig } from '@/types/builder';
+import { UpgradeDialog } from '@/components/common/UpgradeDialog';
 
 interface PreviewStepProps {
   config: SiteConfig;
@@ -29,13 +30,11 @@ export function PreviewStep({ config, onReset, onPrev }: PreviewStepProps) {
   const [siteName, setSiteName] = useState(config.siteName);
   const [slug, setSlug] = useState('');
   const [isPublished, setIsPublished] = useState(false);
-  const [saveStep, setSaveStep] = useState<1 | 2 | 3>(1);
-  const [selectedPlan, setSelectedPlan] = useState('starter');
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
 
   useEffect(() => {
     checkExistingConfig();
-    const storedPlan = localStorage.getItem('selectedPlan');
-    if (storedPlan) setSelectedPlan(storedPlan);
+    checkExistingConfig();
   }, []);
 
   const checkExistingConfig = async () => {
@@ -58,7 +57,11 @@ export function PreviewStep({ config, onReset, onPrev }: PreviewStepProps) {
       toast({ title: "Nom du site requis", description: "Veuillez entrer un nom pour votre site.", variant: "destructive" });
       return;
     }
-    setSaveStep(2);
+    if (!existingId) {
+      handleSave();
+    } else {
+      handleSave();
+    }
   };
 
   const handleSave = async () => {
@@ -71,8 +74,8 @@ export function PreviewStep({ config, onReset, onPrev }: PreviewStepProps) {
       } else {
         const finalSlug = slug || siteName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
         await siteConfigService.create(config, siteName, finalSlug);
-        toast({ title: "Site créé !", description: "Votre site a été enregistré avec succès." });
-        setSaveStep(3);
+        toast({ title: "Site créé !", description: "Votre site a été enregistré avec succès. Vous pouvez maintenant le publier !" });
+        navigate('/admin/dashboard');
       }
     } catch (error: any) {
       toast({ title: "Erreur", description: error.response?.data?.message || "Une erreur est survenue.", variant: "destructive" });
@@ -81,14 +84,11 @@ export function PreviewStep({ config, onReset, onPrev }: PreviewStepProps) {
     }
   };
 
-  const getPlanInfo = () => {
-    switch (selectedPlan) {
-      case 'pro': return { name: 'PRO', price: '15 000 FCFA', link: 'https://avkshop.mychariow.shop/vanda-pro/checkout' };
-      case 'studio': return { name: 'STUDIO', price: '45 000 FCFA', link: 'https://avkshop.mychariow.shop/vanda-studio/checkout' };
-      default: return { name: 'STARTER', price: '5 000 FCFA', link: 'https://avkshop.mychariow.shop/vanda-starter/checkout' };
-    }
+  const handlePublishClick = () => {
+    // Si le site n'est pas encore enregistré, on force l'enregistrement d'abord ?
+    // Ou bien on affiche simplement le UpgradeDialog qui redirige vers Subscription
+    setShowUpgradeDialog(true);
   };
-  const planInfo = getPlanInfo();
 
   const getPreviewWidth = () => {
     switch (previewDevice) {
@@ -162,101 +162,6 @@ export function PreviewStep({ config, onReset, onPrev }: PreviewStepProps) {
 
       {/* Récapitulatif + Formulaire de sauvegarde */}
       <Card id="recap-section" className="p-6">
-        {saveStep === 3 ? (
-          // ÉTAPE 3 : CONFIRMATION
-          <div className="py-8 text-center space-y-4">
-            <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-              <Check className="w-8 h-8 text-green-600" />
-            </div>
-            <h3 className="text-xl font-bold text-gray-900">Paiement enregistré !</h3>
-            <p className="text-gray-500 max-w-sm mx-auto">
-              Votre site sera accessible dans quelques minutes. Nous vérifions actuellement votre transaction avant l'activation finale.
-            </p>
-            <div className="bg-blue-50 text-blue-800 p-3 rounded-lg text-sm mt-4">
-              Un message de confirmation vous sera envoyé dès que votre site sera en ligne.
-            </div>
-            <Button
-              className="w-full bg-green-600 hover:bg-green-700 mt-4"
-              onClick={() => navigate('/admin/dashboard')}
-            >
-              Compris, aller au tableau de bord
-            </Button>
-          </div>
-        ) : !existingId && saveStep === 2 ? (
-          // ÉTAPE 2 : PAIEMENT
-          <div className="space-y-6">
-            <h3 className="font-semibold text-lg">Finaliser votre commande</h3>
-
-            <div className="bg-muted/50 p-4 rounded-lg flex justify-between items-center border border-border">
-              <div>
-                <p className="text-sm text-muted-foreground">Plan sélectionné</p>
-                <p className="font-bold text-lg text-primary">{planInfo.name}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-sm text-muted-foreground">Total à payer</p>
-                <p className="font-bold text-lg">{planInfo.price}</p>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <Label className="text-base font-semibold flex items-center gap-2">
-                <CreditCard className="w-4 h-4" /> Paiement en ligne sécurisé
-              </Label>
-              <Button
-                variant="outline"
-                className="w-full justify-between h-auto py-4 border-primary/20 hover:bg-primary/5 hover:border-primary/50 group"
-                onClick={() => window.open(planInfo.link, '_blank')}
-              >
-                <div className="text-left">
-                  <span className="font-semibold block">Payer via Chariow</span>
-                  <span className="text-xs text-muted-foreground">Carte bancaire, Mobile Money</span>
-                </div>
-                <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-primary" />
-              </Button>
-            </div>
-
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">Ou hors ligne</span>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <Label className="text-base font-semibold flex items-center gap-2">
-                <Smartphone className="w-4 h-4" /> Transfert Direct
-              </Label>
-              <Alert>
-                <AlertTitle className="mb-2">Envoyez {planInfo.price} aux numéros suivants :</AlertTitle>
-                <AlertDescription className="space-y-1">
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium text-orange-500">Orange Money</span>
-                    <code className="bg-muted px-2 py-1 rounded">686 265 447</code>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium text-green-500">MTN Mobile Money</span>
-                    <code className="bg-muted px-2 py-1 rounded">654 725 521</code>
-                  </div>
-                </AlertDescription>
-              </Alert>
-            </div>
-
-            <div className="flex gap-3 pt-2">
-              <Button variant="ghost" onClick={() => setSaveStep(1)} disabled={loading}>
-                Retour
-              </Button>
-              <Button onClick={handleSave} disabled={loading} className="flex-1 bg-primary hover:bg-primary/90">
-                {loading
-                  ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Validation...</>
-                  : <><Check className="mr-2 h-4 w-4" />J'ai effectué le paiement</>
-                }
-              </Button>
-            </div>
-          </div>
-        ) : (
-          // ÉTAPE 1 : RÉCAPITULATIF + CONFIG
           <>
             <h3 className="font-semibold mb-4">
               {existingId ? "Mettre à jour le site" : "Récapitulatif de votre site"}
@@ -310,22 +215,35 @@ export function PreviewStep({ config, onReset, onPrev }: PreviewStepProps) {
                 <p className="text-xs text-gray-500">Laissez vide pour générer automatiquement.</p>
               </div>
 
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="publish-mode"
-                  checked={isPublished}
-                  onCheckedChange={setIsPublished}
-                  disabled={!!existingId}
-                />
-                <Label htmlFor="publish-mode">Publier immédiatement</Label>
+              <div className="flex flex-col space-y-2 pt-4 border-t">
+                <Label>Statut du site</Label>
+                <div className="flex items-center justify-between bg-gray-50 p-4 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-3 h-3 rounded-full ${isPublished ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                    <span className="font-medium">{isPublished ? 'En ligne' : 'Brouillon (Non publié)'}</span>
+                  </div>
+                  {!isPublished && existingId && (
+                    <Button onClick={handlePublishClick} size="sm" className="bg-blue-600 hover:bg-blue-700">
+                      <Rocket className="w-4 h-4 mr-2" />
+                      Publier
+                    </Button>
+                  )}
+                  {!isPublished && !existingId && (
+                    <span className="text-xs text-gray-500">Enregistrez le site d'abord pour le publier</span>
+                  )}
+                </div>
               </div>
             </div>
           </>
-        )}
       </Card>
 
+      <UpgradeDialog
+        open={showUpgradeDialog}
+        onClose={() => setShowUpgradeDialog(false)}
+        feature="publish"
+      />
+
       {/* Barre de navigation */}
-      {saveStep !== 3 && (
         <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 pt-6 border-t border-gray-100">
           <Button
             variant="outline"
@@ -334,31 +252,19 @@ export function PreviewStep({ config, onReset, onPrev }: PreviewStepProps) {
           >
             Retour
           </Button>
-          {saveStep === 1 && (
             <div className="flex flex-col sm:flex-row gap-3 order-1 sm:order-2">
-              {existingId ? (
                 <Button
                   onClick={handleSave}
                   disabled={loading}
                   className="bg-primary hover:bg-primary/90 gap-2 h-11 sm:h-10 w-full sm:w-auto font-bold"
                 >
                   {loading
-                    ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Mise à jour...</>
-                    : <><Save className="w-4 h-4" />Mettre à jour</>
+                    ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{existingId ? "Mise à jour..." : "Enregistrement..."}</>
+                    : <><Save className="w-4 h-4" />{existingId ? "Mettre à jour" : "Enregistrer"}</>
                   }
                 </Button>
-              ) : (
-                <Button
-                  onClick={handleNext}
-                  className="bg-primary hover:bg-primary/90 gap-2 h-11 sm:h-10 w-full sm:w-auto font-bold"
-                >
-                  Suivant <ArrowRight className="w-4 h-4" />
-                </Button>
-              )}
             </div>
-          )}
         </div>
-      )}
     </div>
   );
 }
