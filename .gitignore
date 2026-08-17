@@ -1,9 +1,26 @@
+# =====================================================
+# VANDA STUDIO — .gitignore
+# =====================================================
+
+# Environment files (never commit real secrets)
+.env
+.env.*
+!.env.example
+!**/.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.p8
+id_rsa
+id_rsa.pub
+.~lock.*#
+
 # Backend (Laravel)
 /backend/vendor/
 /backend/node_modules/
-/backend/.env
-/backend/.env.backup
 /backend/.phpunit.result.cache
+/backend/.phpunit.cache/
 /backend/Homestead.json
 /backend/Homestead.yaml
 /backend/npm-debug.log
@@ -26,15 +43,29 @@
 /backend/bootstrap/cache/*
 !/backend/bootstrap/cache/.gitignore
 
+# Backend archives / backups
+/backend/*.zip
+/backend/*.log
+/backend/server.log
+/backend/app.zip
+/backend/bootstrap.zip
+/backend/config.zip
+/backend/database.zip
+/backend/resources.zip
+/backend/routes.zip
+/backend/storage.zip
+
 # Frontend (React/Vite)
 /frontend/node_modules/
 /frontend/dist/
+/frontend/dist-*
 /frontend/dist-ssr/
+/frontend/dev-dist/
 /frontend/.vite/
-/frontend/.env
-/frontend/.env.local
 /frontend/.env.production
 /frontend/.env.development
+/frontend/.env.local
+/frontend/.env
 /frontend/coverage/
 /frontend/.nyc_output/
 /frontend/.cache/
@@ -42,6 +73,13 @@
 /frontend/.DS_Store
 /frontend/*.log
 /frontend/.turbo
+/frontend/imports_list.txt
+
+# Stale / duplicated snapshots
+/VANDA_UPDATE_IMAGES_FIX/
+/frontProduction2026/
+/startjobs-main/
+/frontend/new vertion of landing page/
 
 # IDE & OS
 .idea/
@@ -69,11 +107,19 @@ coverage/
 *.tmp
 *.temp
 .cache/
+tmp/
+temp/
 
-# Database
+# Databases
 *.sqlite
 *.sqlite-journal
+*.sqlite3
 *.db
+*.sql
+*.dump
+*.backup
+*.bak
+*.orig
 
 # Uploaded files (configurable - comment out if you want to track uploads)
 /backend/storage/app/public/uploads/*
