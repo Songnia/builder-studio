@@ -3,17 +3,13 @@
 namespace Tests\Feature;
 
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 
 class GalleryCreationTest extends TestCase
 {
-    // Use RefreshDatabase to reset db state, but be careful if user has persistent data they want to keep.
-    // Given the context of "debugging", I probably shouldn't wipe their DB via RefreshDatabase unless I'm sure it's a test environment.
-    // I will NOT use RefreshDatabase trait to avoid wiping the user's dev database, 
-    // instead I'll create a user and clean up, or just rely on manual cleanup if needed.
-    // Check .env first? No, I'll just rely on creating a unique user.
+    // The base TestCase uses RefreshDatabase, so the test schema is rebuilt
+    // in a dedicated test database (sqlite :memory: in CI) and never touches
+    // the local development database.
 
     public function test_gallery_creation()
     {
