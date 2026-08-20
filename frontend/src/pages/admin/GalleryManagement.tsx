@@ -6,6 +6,7 @@ import { IconButton, CircularProgress } from '@mui/material';
 import { toast } from 'sonner';
 import Masonry, { ResponsiveMasonry } from 'react-responsive-masonry';
 import { galleryService } from '../../services/galleryService';
+import type { Gallery } from '../../types/gallery';
 
 const GalleryManagement: React.FC = () => {
     const { uuid } = useParams<{ uuid: string }>();
@@ -19,7 +20,7 @@ const GalleryManagement: React.FC = () => {
             setPageLoading(true);
             try {
                 const g = await galleryService.getGalleryByUUID(uuid);
-                setGallery(g);
+                setGallery(g.gallery);
             } catch (error) {
                 console.error("Failed to fetch gallery", error);
             } finally {

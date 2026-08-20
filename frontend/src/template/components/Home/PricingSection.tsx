@@ -11,33 +11,6 @@ const PricingSection: React.FC = () => {
 
     if (!config || !config.enabledSections.pricing || !config.pricingPlans || config.pricingPlans.length === 0) return null;
 
-    const packages = [
-        {
-            title: t('home.pricing.packages.discovery.title'),
-            price: t('home.pricing.packages.discovery.price'),
-            description: t('home.pricing.packages.discovery.description'),
-            features: t('home.pricing.packages.discovery.features', { returnObjects: true }) as string[],
-            buttonText: t('home.pricing.packages.discovery.button'),
-            highlight: false,
-        },
-        {
-            title: t('home.pricing.packages.premium.title'),
-            price: t('home.pricing.packages.premium.price'),
-            description: t('home.pricing.packages.premium.description'),
-            features: t('home.pricing.packages.premium.features', { returnObjects: true }) as string[],
-            buttonText: t('home.pricing.packages.premium.button'),
-            highlight: true,
-        },
-        {
-            title: t('home.pricing.packages.ultimate.title'),
-            price: t('home.pricing.packages.ultimate.price'),
-            description: t('home.pricing.packages.ultimate.description'),
-            features: t('home.pricing.packages.ultimate.features', { returnObjects: true }) as string[],
-            buttonText: t('home.pricing.packages.ultimate.button'),
-            highlight: false,
-        },
-    ];
-
     // Use config.pricingPlans
     const displayPackages = config.pricingPlans.map(plan => ({
         title: plan.name,

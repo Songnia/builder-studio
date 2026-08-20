@@ -54,10 +54,12 @@ class MediaController extends Controller
         ]);
 
         $path = $request->input('path');
+        $user = $request->user();
+        $expectedPrefix = "builder-media/{$user->id}/";
 
-        // Sécurité : on ne supprime que dans le dossier builder-media
-        if (!str_starts_with($path, 'builder-media/')) {
-            return response()->json(['error' => 'Unauthorized path'], 403);
+        // Security check: path must belong to authenticated user's directory and prohibit directory traversal
+        if (!str_starts_with($path, $expectedPrefix) || str_contains($path, '..')) {
+            return response()->json(['error' => 'Unauthorized path access'], 403);
         }
 
         Storage::disk('public')->delete($path);

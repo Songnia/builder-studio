@@ -20,8 +20,21 @@ class GalleryController extends Controller
                   }]);
         }])->firstOrFail();
 
-        // Check for PIN protection logic here or in middleware
-        // For now returning public data
+        // Check for PIN protection logic
+        if (!empty($gallery->pin_code)) {
+            $providedPin = $request->header('X-Gallery-PIN') 
+                ?? $request->input('pin') 
+                ?? $request->header('X-PIN');
+
+            if (!$providedPin || (string)$providedPin !== (string)$gallery->pin_code) {
+                return response()->json([
+                    'requires_pin' => true,
+                    'message' => 'Invalid or missing gallery PIN code',
+                    'title' => $gallery->title,
+                    'uuid' => $gallery->uuid,
+                ], 403);
+            }
+        }
 
         // Get photographer slug
         $photographerSlug = $gallery->user->siteConfigs()->where('is_published', true)->first()?->slug 

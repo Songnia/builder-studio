@@ -1,7 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import theme from '@/theme/theme';
-import { useBuilder } from '@/hooks/useBuilder';
 import { getSubdomainInfo } from '@/utils/subdomain';
 
 // ============================================
@@ -40,21 +39,7 @@ import ClientGalleryView from '@/pages/client/ClientGalleryView';
 // ============================================
 import LandingPage from '@/pages/LandingPage';
 import PricingPage from '@/pages/PricingPage';
-
-// ============================================
-// BUILDER IMPORTS
-// ============================================
-import { BuilderLayout } from '@/builder/BuilderLayout';
-import { WelcomeStep } from '@/builder/steps/WelcomeStep';
-import { InfoStep } from '@/builder/steps/InfoStep';
-import { BrandingStep } from '@/builder/steps/BrandingStep';
-import { HeroStep } from '@/builder/steps/HeroStep';
-import { PortfolioStep } from '@/builder/steps/PortfolioStep';
-import { ServicesStep } from '@/builder/steps/ServicesStep';
-import { PricingStep } from '@/builder/steps/PricingStep';
-import { TestimonialsStep } from '@/builder/steps/TestimonialsStep';
-import { ContactStep } from '@/builder/steps/ContactStep';
-import { PreviewStep } from '@/builder/steps/PreviewStep';
+import SeoPageView from '@/pages/seo/SeoPageView';
 
 // ============================================
 // TEMPLATE IMPORTS  
@@ -69,171 +54,6 @@ import TemplateAbout from '@/template/pages/About';
 // PUBLIC PAGES IMPORTS (Default Site) - Removed as they do not exist
 // The template /:slug handles public sites
 
-/**
- * Composant Builder (Wizard de configuration)
- */
-function BuilderApp() {
-  const {
-    config,
-    currentStep,
-    updateConfig,
-    addPhoto,
-    addPhotos,
-    removePhoto,
-    updatePhoto,
-    addService,
-    removeService,
-    updateService,
-    addPricingPlan,
-    removePricingPlan,
-    updatePricingPlan,
-    addTestimonial,
-    removeTestimonial,
-    updateTestimonial,
-    nextStep,
-    prevStep,
-    goToStep,
-    resetConfig,
-    isSaving,
-    saveConfig
-  } = useBuilder();
-
-  const renderStep = () => {
-    switch (currentStep) {
-      case 0:
-        return <WelcomeStep onNext={nextStep} />;
-
-      case 1:
-        return (
-          <InfoStep
-            config={config}
-            onUpdate={updateConfig}
-            onNext={nextStep}
-            onPrev={prevStep}
-            onSave={saveConfig}
-            isSaving={isSaving}
-          />
-        );
-
-      case 2:
-        return (
-          <BrandingStep
-            config={config}
-            onUpdate={updateConfig}
-            onNext={nextStep}
-            onPrev={prevStep}
-            onSave={saveConfig}
-            isSaving={isSaving}
-          />
-        );
-
-      case 3:
-        return (
-          <HeroStep
-            config={config}
-            onUpdate={updateConfig}
-            onNext={nextStep}
-            onPrev={prevStep}
-            onSave={saveConfig}
-            isSaving={isSaving}
-          />
-        );
-
-      case 4:
-        return (
-          <PortfolioStep
-            config={config}
-            onUpdate={updateConfig}
-            onAddPhoto={addPhoto}
-            onAddPhotos={addPhotos}
-            onRemovePhoto={removePhoto}
-            onUpdatePhoto={updatePhoto}
-            onNext={nextStep}
-            onPrev={prevStep}
-            onSave={saveConfig}
-            isSaving={isSaving}
-          />
-        );
-
-      case 5:
-        return (
-          <ServicesStep
-            config={config}
-            onAddService={addService}
-            onRemoveService={removeService}
-            onUpdateService={updateService}
-            onNext={nextStep}
-            onPrev={prevStep}
-            onSave={saveConfig}
-            isSaving={isSaving}
-          />
-        );
-
-      case 6:
-        return (
-          <PricingStep
-            config={config}
-            onAddPlan={addPricingPlan}
-            onRemovePlan={removePricingPlan}
-            onUpdatePlan={updatePricingPlan}
-            onNext={nextStep}
-            onPrev={prevStep}
-            onSave={saveConfig}
-            isSaving={isSaving}
-          />
-        );
-
-      case 7:
-        return (
-          <TestimonialsStep
-            config={config}
-            onAddTestimonial={addTestimonial}
-            onRemoveTestimonial={removeTestimonial}
-            onUpdateTestimonial={updateTestimonial}
-            onNext={nextStep}
-            onPrev={prevStep}
-            onSave={saveConfig}
-            isSaving={isSaving}
-          />
-        );
-
-      case 8:
-        return (
-          <ContactStep
-            config={config}
-            onUpdate={updateConfig}
-            onNext={nextStep}
-            onPrev={prevStep}
-            onSave={saveConfig}
-            isSaving={isSaving}
-          />
-        );
-
-      case 9:
-        return (
-          <PreviewStep
-            config={config}
-            onReset={resetConfig}
-            onPrev={prevStep}
-          />
-        );
-
-      default:
-        return <WelcomeStep onNext={nextStep} />;
-    }
-  };
-
-  return (
-    <BuilderLayout
-      currentStep={currentStep}
-      onStepChange={goToStep}
-      onNext={nextStep}
-      onPrev={prevStep}
-    >
-      {renderStep()}
-    </BuilderLayout>
-  );
-}
 
 /**
  * APP PRINCIPALE UNIFIÉE
@@ -282,6 +102,7 @@ function App() {
               <Route path="/auth/register" element={<SignUp />} />
               <Route path="/login" element={<Navigate to="/auth/login" replace />} />
               <Route path="/signup" element={<Navigate to="/auth/register" replace />} />
+              <Route path="/profile" element={<Navigate to="/admin/profile" replace />} />
 
               {/* Admin protégé */}
               <Route element={<ProtectedRoute />}>
@@ -333,6 +154,17 @@ function App() {
             <>
               <Route path="/" element={<LandingPage />} />
               <Route path="/pricing" element={<PricingPage />} />
+
+              {/* Programmatic SEO Marketing Routes */}
+              <Route path="/tools/:slug" element={<SeoPageView />} />
+              <Route path="/features/:slug" element={<SeoPageView />} />
+              <Route path="/solutions/:slug" element={<SeoPageView />} />
+              <Route path="/for" element={<SeoPageView />} />
+              <Route path="/for/:slug" element={<SeoPageView />} />
+              <Route path="/templates/:slug" element={<SeoPageView />} />
+              <Route path="/guides/:slug" element={<SeoPageView />} />
+              <Route path="/alternatives" element={<SeoPageView />} />
+              <Route path="/alternatives/:slug" element={<SeoPageView />} />
 
               {/* Sites photographes via chemin (fallback dev local) */}
               <Route path="/:slug" element={<TemplateLayout />}>

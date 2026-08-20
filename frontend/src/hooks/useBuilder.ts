@@ -242,7 +242,7 @@ export function useBuilder() {
 
       if (configIdRef.current !== null) {
         // Update existing config
-        const result = await siteConfigService.update(
+        await siteConfigService.update(
           configIdRef.current,
           preparedConfig,
           preparedConfig.siteName

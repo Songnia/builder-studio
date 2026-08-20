@@ -10,33 +10,6 @@ const TestimonialsSection: React.FC = () => {
 
     if (!config || !config.enabledSections.testimonials || !config.testimonials || config.testimonials.length === 0) return null;
 
-    const testimonials = [
-        {
-            id: 1,
-            name: t('home.testimonials.items.1.name'),
-            role: t('home.testimonials.items.1.role'),
-            content: t('home.testimonials.items.1.content'),
-            rating: 5,
-            avatar: 'https://source.unsplash.com/random/100x100?couple',
-        },
-        {
-            id: 2,
-            name: t('home.testimonials.items.2.name'),
-            role: t('home.testimonials.items.2.role'),
-            content: t('home.testimonials.items.2.content'),
-            rating: 5,
-            avatar: 'https://source.unsplash.com/random/100x100?man',
-        },
-        {
-            id: 3,
-            name: t('home.testimonials.items.3.name'),
-            role: t('home.testimonials.items.3.role'),
-            content: t('home.testimonials.items.3.content'),
-            rating: 5,
-            avatar: 'https://source.unsplash.com/random/100x100?woman',
-        },
-    ];
-
     // Use config.testimonials
     const displayTestimonials = config.testimonials;
 

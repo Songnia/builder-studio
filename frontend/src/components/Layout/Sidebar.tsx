@@ -77,25 +77,18 @@ export function Sidebar({ className, showLogo = true }: SidebarProps) {
             {/* Navigation */}
             <nav className="flex-1 py-6 px-3 space-y-1">
                 {navItems.map((item, index) => (
-                    item.path === '/admin/profile' ? (
-                        <div key={index} title="Bientôt disponible" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 cursor-not-allowed border-l-4 border-transparent">
-                            <item.icon className="w-5 h-5 opacity-50" />
-                            <span className="font-medium text-sm">{item.label}</span>
-                        </div>
-                    ) : (
-                        <NavLink
-                            key={index}
-                            to={item.path}
-                            className={({ isActive }) => cn(
-                                "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group",
-                                "text-slate-600 hover:bg-white hover:text-slate-900 border-l-4 border-transparent",
-                                isActive && "bg-white text-slate-900 shadow-sm border-l-[#4caf50]"
-                            )}
-                        >
-                            <item.icon className="w-5 h-5" />
-                            <span className="font-medium text-sm">{item.label}</span>
-                        </NavLink>
-                    )
+                    <NavLink
+                        key={index}
+                        to={item.path}
+                        className={({ isActive }) => cn(
+                            "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group",
+                            "text-slate-600 hover:bg-white hover:text-slate-900 border-l-4 border-transparent",
+                            isActive && "bg-white text-slate-900 shadow-sm border-l-[#4caf50]"
+                        )}
+                    >
+                        <item.icon className="w-5 h-5" />
+                        <span className="font-medium text-sm">{item.label}</span>
+                    </NavLink>
                 ))}
             </nav>
         </div>

@@ -1,5 +1,4 @@
 import { PenLine, Sparkles } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { StepIndicator } from './StepIndicator';
 import { builderSteps } from '@/types/builder';
 import vandaLogo from '@/template/assets/logo/vanda_logo.png';

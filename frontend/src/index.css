@@ -68,10 +68,10 @@
      STARTJOBS THEME SCOPE (SUPER ADMIN ONLY)
      ============================================================ */
   .superadmin-app {
-    --color-primary:          #1D4ED8;    /* blue-700 */
-    --color-primary-light:    #3B82F6;
-    --color-primary-dark:     #1E3A8A;
-    --color-primary-dim:      #EFF6FF;
+    --color-primary:          #4CAF50;    /* green Vanda */
+    --color-primary-light:    #81C784;
+    --color-primary-dark:     #2E7D32;
+    --color-primary-dim:      #E8F5E9;
     --color-secondary:        #059669;
     --color-secondary-light:  #34D399;
     --color-secondary-dim:    #ECFDF5;
@@ -91,15 +91,15 @@
     --shadow-lg:  0 10px 15px rgba(15,23,42,0.07), 0 4px 6px rgba(15,23,42,0.04);
     --shadow-xl:  0 20px 25px rgba(15,23,42,0.08), 0 8px 10px rgba(15,23,42,0.04);
     --shadow-2xl: 0 25px 50px rgba(15,23,42,0.12);
-    --shadow-primary: 0 4px 14px rgba(29,78,216,0.25), 0 1px 3px rgba(29,78,216,0.15);
-    --shadow-glow:    0 0 20px rgba(59,130,246,0.35), 0 0 40px rgba(59,130,246,0.15);
+    --shadow-primary: 0 4px 14px rgba(76,175,80,0.25), 0 1px 3px rgba(76,175,80,0.15);
+    --shadow-glow:    0 0 20px rgba(76,175,80,0.35), 0 0 40px rgba(76,175,80,0.15);
   }
 
   .dark .superadmin-app {
-    --color-primary:          #60A5FA;   /* blue-400 */
-    --color-primary-light:    #93C5FD;
-    --color-primary-dark:     #3B82F6;
-    --color-primary-dim:      #1E3A5F;
+    --color-primary:          #4CAF50;   /* green Vanda */
+    --color-primary-light:    #81C784;
+    --color-primary-dark:     #388E3C;
+    --color-primary-dim:      #1B3E20;
     --color-secondary:        #34D399;
     --color-secondary-light:  #6EE7B7;
     --color-secondary-dim:    #064E3B;
@@ -119,8 +119,8 @@
     --shadow-lg:  0 10px 15px rgba(0,0,0,0.6), 0 4px 6px rgba(0,0,0,0.45);
     --shadow-xl:  0 20px 25px rgba(0,0,0,0.65), 0 8px 10px rgba(0,0,0,0.5);
     --shadow-2xl: 0 25px 50px rgba(0,0,0,0.7);
-    --shadow-primary: 0 4px 14px rgba(96,165,250,0.3), 0 1px 3px rgba(96,165,250,0.2);
-    --shadow-glow:    0 0 20px rgba(96,165,250,0.4), 0 0 40px rgba(96,165,250,0.2);
+    --shadow-primary: 0 4px 14px rgba(76,175,80,0.3), 0 1px 3px rgba(76,175,80,0.2);
+    --shadow-glow:    0 0 20px rgba(76,175,80,0.4), 0 0 40px rgba(76,175,80,0.2);
   }
 
   /* Linear Theme Scope - Only applies when class .linear-theme is present */
@@ -363,4 +363,46 @@
 .dark .superadmin-app .card-static:hover {
   border-color: #3f3f46;
   /* zinc-700 */
+}
+
+/* CapCut Onboarding Arrow Draw Animation */
+@keyframes drawArrow {
+  from {
+    stroke-dashoffset: 100;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-drawArrow {
+  animation: drawArrow 400ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Marquee scrolling animations */
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes marquee-reverse {
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0%); }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 30s linear infinite;
+}
+
+.animate-marquee-reverse {
+  display: flex;
+  width: max-content;
+  animation: marquee-reverse 30s linear infinite;
+}
+
+.animate-marquee:hover,
+.animate-marquee-reverse:hover {
+  animation-play-state: paused;
 }

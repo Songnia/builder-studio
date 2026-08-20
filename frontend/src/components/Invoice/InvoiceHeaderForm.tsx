@@ -94,7 +94,7 @@ const InvoiceHeaderForm: React.FC<HeaderFormProps> = ({ invoice, onUpdateMetadat
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
-                        <label className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 block tracking-wider">Nom du Studio / Photographe</label>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 block tracking-wider">Nom du Studio / Créateur</label>
                         <input
                             type="text"
                             value={invoice.studio.photographerName || ''}

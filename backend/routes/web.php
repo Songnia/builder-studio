@@ -1,13 +1,32 @@
 <?php
 
 use App\Http\Controllers\PublicMediaController;
+use App\Http\Controllers\SeoController;
+use App\Http\Controllers\Seo\MarketingPageController;
 use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| Web Routes - Dynamic Multi-Domain
+| Web Routes - Dynamic Multi-Domain & Programmatic SEO Infrastructure
 |--------------------------------------------------------------------------
 */
+
+// SEO Technical Infrastructure (Sitemaps & Robots.txt)
+Route::get('/sitemap.xml', [SeoController::class, 'sitemapIndex']);
+Route::get('/sitemap-{group}.xml', [SeoController::class, 'sitemapGroup'])->where('group', '[a-z_]+');
+Route::get('/robots.txt', [SeoController::class, 'robots']);
+
+// Programmatic SEO Marketing Routes (SSR Blade views)
+Route::get('/pricing', [MarketingPageController::class, 'show']);
+Route::get('/for', [MarketingPageController::class, 'show']);
+Route::get('/for/{slug}', [MarketingPageController::class, 'show']);
+Route::get('/tools/{slug}', [MarketingPageController::class, 'show']);
+Route::get('/features/{slug}', [MarketingPageController::class, 'show']);
+Route::get('/solutions/{slug}', [MarketingPageController::class, 'show']);
+Route::get('/templates/{slug}', [MarketingPageController::class, 'show']);
+Route::get('/guides/{slug}', [MarketingPageController::class, 'show']);
+Route::get('/alternatives', [MarketingPageController::class, 'show']);
+Route::get('/alternatives/{slug}', [MarketingPageController::class, 'show']);
 
 // 1. API Domain
 Route::domain('api.vanda-studio.org')->group(function () {
@@ -19,11 +38,10 @@ Route::domain('api.vanda-studio.org')->group(function () {
     })->where('any', '.*');
 });
 
-// 2. Fallback pour tout le reste (géré par le .htaccess vers landing ou app)
-// Si une requête arrive ici, c'est qu'Apache n'a pas pu servir le fichier index.html
+// 2. Fallback
 Route::fallback(function () {
-    // Si on est sur un sous-domaine de photographe, on devrait idéalement 
-    // laisser le .htaccess servir le index.html du dossier landing
-    // Mais au cas où, on peut renvoyer une erreur 404 propre ou rediriger.
-    return response()->json(['error' => 'Route not found or Domain not configured'], 404);
+    if (file_exists(public_path('landing/index.html'))) {
+        return response()->file(public_path('landing/index.html'));
+    }
+    return response()->json(['error' => 'Route not found'], 404);
 });

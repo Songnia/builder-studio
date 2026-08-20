@@ -7,7 +7,6 @@ import {
     Share2,
     Copy,
     Check,
-    MessageCircle,
     Mail,
     FileDown,
     Loader2,

@@ -265,7 +265,7 @@ const SuperAdminSettings: React.FC = () => {
                     <div className="flex items-center justify-between p-3 hover:bg-slate-50 rounded-xl transition-colors">
                         <div>
                             <h3 className="font-bold text-slate-700">Ouverture des Inscriptions</h3>
-                            <p className="text-sm text-slate-500">Permet aux nouveaux photographes de créer un compte librement.</p>
+                            <p className="text-sm text-slate-500">Permet aux nouveaux créatifs de créer un compte librement.</p>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer shrink-0">
                             <input type="checkbox" name="allow_registrations" checked={settings.allow_registrations} onChange={handleChange} className="sr-only peer" />
@@ -293,7 +293,7 @@ const SuperAdminSettings: React.FC = () => {
                     <div className="flex items-center justify-between p-3 hover:bg-slate-50 rounded-xl transition-colors">
                         <div>
                             <h3 className="font-bold text-slate-700">Notifier les Administrateurs</h3>
-                            <p className="text-sm text-slate-500">Envoie un email de notification lors de l'inscription d'un nouveau photographe.</p>
+                            <p className="text-sm text-slate-500">Envoie un email de notification lors de l'inscription d'un nouveau créatif.</p>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer shrink-0">
                             <input type="checkbox" name="notify_admins_on_registration" checked={settings.notify_admins_on_registration} onChange={handleChange} className="sr-only peer" />
@@ -320,7 +320,7 @@ const SuperAdminSettings: React.FC = () => {
                         <label className="text-sm font-bold text-slate-700">Balise Title Globale</label>
                         <input
                             type="text" name="seo_title" value={settings.seo_title} onChange={handleChange}
-                            placeholder="ex: Vanda Studio - La plateforme pour photographes"
+                            placeholder="ex: Vanda Studio - La plateforme pour créatifs"
                             className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 bg-slate-50 focus:bg-white transition-colors"
                         />
                         <p className="text-xs font-medium text-slate-400 ml-1">Titre principal affiché dans les onglets du navigateur et les résultats Google.</p>

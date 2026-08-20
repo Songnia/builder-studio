@@ -230,16 +230,16 @@ export function AdminNavbar({ onMenuClick }: AdminNavbarProps) {
 
                         <DropdownMenuItem
                             className="gap-2 cursor-pointer"
-                            onClick={() => navigate('/pricing')}
+                            onClick={() => navigate('/admin/subscription')}
                         >
                             <CreditCard className="w-4 h-4" />
                             <span>Mon abonnement</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem 
-                            className="gap-2 cursor-not-allowed text-slate-300 focus:bg-transparent"
-                            title="Bientôt disponible"
+                            className="gap-2 cursor-pointer"
+                            onClick={() => navigate('/admin/profile')}
                         >
-                            <User className="w-4 h-4 text-slate-300" />
+                            <User className="w-4 h-4" />
                             <span>Mon Profil</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem className="gap-2 cursor-pointer">

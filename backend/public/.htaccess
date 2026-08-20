@@ -33,6 +33,10 @@
     RewriteCond %{REQUEST_URI} !^/app/
     RewriteRule ^(.*)$ app/$1 [L]
 
+    # 2b. Programmatic SEO Routes & Infrastructure -> Laravel index.php
+    RewriteCond %{REQUEST_URI} ^/(sitemap.*\.xml|robots\.txt|pricing|for|for/.*|tools/.*|features/.*|solutions/.*|templates/.*|guides/.*|alternatives|alternatives/.*)$ [NC]
+    RewriteRule ^ index.php [L]
+
     # 3. Main domain + photographer subdomains -> /landing
     RewriteCond %{HTTP_HOST} !^api\.vanda-studio\.org$ [NC]
     RewriteCond %{HTTP_HOST} !^app\.vanda-studio\.org$ [NC]

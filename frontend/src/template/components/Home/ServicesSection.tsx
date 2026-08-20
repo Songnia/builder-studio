@@ -15,16 +15,6 @@ const postProductionImage = 'https://images.unsplash.com/photo-1517694712202-14d
 const formationImage = 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=500';
 const locationImage = 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=500';
 
-interface Service {
-    id: number;
-    title: string;
-    description: string;
-    details: string[];
-    image: string;
-    ctaText: string;
-    whatsappMessage: string;
-}
-
 const ServicesSection: React.FC = () => {
     const { t } = useTranslation();
     const { config } = useSiteConfig();
@@ -33,45 +23,6 @@ const ServicesSection: React.FC = () => {
 
     // Default images for services
     const defaultServiceImages = [shootingImage, postProductionImage, formationImage, locationImage];
-
-    const services: Service[] = [
-        {
-            id: 1,
-            title: t('home.services.shooting.title'),
-            description: t('home.services.shooting.description'),
-            details: t('home.services.shooting.details', { returnObjects: true }) as string[],
-            image: shootingImage,
-            ctaText: t('home.services.shooting.cta'),
-            whatsappMessage: t('home.services.shooting.whatsapp'),
-        },
-        {
-            id: 2,
-            title: t('home.services.postProduction.title'),
-            description: t('home.services.postProduction.description'),
-            details: t('home.services.postProduction.details', { returnObjects: true }) as string[],
-            image: postProductionImage,
-            ctaText: t('home.services.postProduction.cta'),
-            whatsappMessage: t('home.services.postProduction.whatsapp'),
-        },
-        {
-            id: 3,
-            title: t('home.services.training.title'),
-            description: t('home.services.training.description'),
-            details: t('home.services.training.details', { returnObjects: true }) as string[],
-            image: formationImage,
-            ctaText: t('home.services.training.cta'),
-            whatsappMessage: t('home.services.training.whatsapp'),
-        },
-        {
-            id: 4,
-            title: t('home.services.rental.title'),
-            description: t('home.services.rental.description'),
-            details: t('home.services.rental.details', { returnObjects: true }) as string[],
-            image: locationImage,
-            ctaText: t('home.services.rental.cta'),
-            whatsappMessage: t('home.services.rental.whatsapp'),
-        },
-    ];
 
     // Use config.services
     const displayServices = config.services.map((service, index) => ({

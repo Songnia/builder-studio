@@ -30,13 +30,24 @@ class SettingController extends Controller
 
     public function update(Request $request)
     {
+        $request->validate([
+            'site_name' => 'nullable|string|max:255',
+            'contact_email' => 'nullable|email|max:255',
+            'seo_title' => 'nullable|string|max:255',
+            'seo_description' => 'nullable|string|max:1000',
+            'logo' => 'nullable|image|mimes:png,jpg,jpeg,webp,svg|max:2048',
+        ]);
+
         $currentSettings = Cache::get('superadmin_settings', $this->defaultSettings);
         
         $newSettings = array_merge($currentSettings, $request->only(array_keys($this->defaultSettings)));
 
         if ($request->hasFile('logo')) {
-            $path = $request->file('logo')->store('public/global');
-            $newSettings['logo'] = url(\Storage::url($path));
+            $file = $request->file('logo');
+            $extension = strtolower($file->getClientOriginalExtension() ?: 'png');
+            $filename = \Illuminate\Support\Str::uuid() . '.' . $extension;
+            $path = $file->storeAs('global', $filename, 'public');
+            $newSettings['logo'] = \App\Support\PublicMedia::url('global/' . $filename);
         }
 
         Cache::forever('superadmin_settings', $newSettings);

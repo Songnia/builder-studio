@@ -10,8 +10,7 @@ import { api } from '@/services/api';
 import { siteConfigService } from '@/services/siteConfigService';
 import * as Tabs from '@radix-ui/react-tabs';
 import * as Dialog from '@radix-ui/react-dialog';
-import { FileText, PlusCircle, Maximize, X, Share2, Eye, Loader2 } from 'lucide-react';
-import ShareDialog from '@/components/Delivery/ShareDialog';
+import { X, Eye, Loader2 } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 const MOCK_STUDIO_DATA = {

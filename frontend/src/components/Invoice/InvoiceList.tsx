@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { api } from '@/services/api';
-import { FileText, Trash2, Eye, Share2, MoreHorizontal, FileDown, Printer, AlertTriangle } from 'lucide-react';
+import { FileText, Trash2, Eye, Share2, MoreHorizontal, FileDown, Printer } from 'lucide-react';
 import DeleteConfirmDialog from '@/components/Common/DeleteConfirmDialog';
 import { toast } from 'sonner';
 import { pdf } from '@react-pdf/renderer';

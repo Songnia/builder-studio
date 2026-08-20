@@ -112,7 +112,7 @@ const SubscriptionPlans: React.FC = () => {
             <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
                 <div>
                     <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight mb-1">Forfaits SaaS</h1>
-                    <p className="text-slate-500 font-medium">Gérez les offres d'abonnement proposées aux photographes</p>
+                    <p className="text-slate-500 font-medium">Gérez les offres d'abonnement proposées aux créatifs</p>
                 </div>
                 <button 
                     onClick={() => handleOpenModal()}
@@ -199,7 +199,7 @@ const SubscriptionPlans: React.FC = () => {
                         <Plus className="w-8 h-8 text-green-500" />
                     </div>
                     <h3 className="text-xl font-bold text-slate-800 mb-2">Aucun forfait configuré</h3>
-                    <p className="text-slate-500 font-medium max-w-md mx-auto">Créez votre première offre d'abonnement pour permettre aux photographes de s'inscrire et d'utiliser la plateforme.</p>
+                    <p className="text-slate-500 font-medium max-w-md mx-auto">Créez votre première offre d'abonnement pour permettre aux créatifs de s'inscrire et d'utiliser la plateforme.</p>
                     <button 
                         onClick={() => handleOpenModal()}
                         className="mt-6 bg-slate-900 text-white px-6 py-3 rounded-xl font-bold hover:bg-slate-800 shadow-lg shadow-slate-900/10 transition-all active:scale-95 inline-flex items-center gap-2"

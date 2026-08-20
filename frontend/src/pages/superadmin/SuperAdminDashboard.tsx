@@ -68,7 +68,7 @@ const SuperAdminDashboard: React.FC = () => {
     }
 
     const cards = [
-        { title: 'Total Photographes', value: stats.metrics.total_photographers, icon: Users, color: '#4f46e5', bg: 'rgba(79, 70, 229, 0.1)', sub: 'Inscrits sur la plateforme' },
+        { title: 'Total Créateurs', value: stats.metrics.total_photographers, icon: Users, color: '#4f46e5', bg: 'rgba(79, 70, 229, 0.1)', sub: 'Inscrits sur la plateforme' },
         { title: 'Abonnements Actifs', value: stats.metrics.active_subscriptions, icon: CreditCard, color: '#6366f1', bg: 'rgba(99, 102, 241, 0.1)', sub: 'Forfaits SaaS en cours' },
         { title: 'CA Mensuel (SaaS)', value: `${stats.metrics.monthly_revenue} Fcfa`, icon: TrendingUp, color: '#10b981', bg: 'rgba(16, 185, 129, 0.1)', sub: 'Revenus récurrents' },
         { title: 'Galeries Créées', value: stats.metrics.total_galleries, icon: Image, color: '#84cc16', bg: 'rgba(132, 204, 22, 0.1)', sub: 'Hébergées sur nos serveurs' },
@@ -174,7 +174,7 @@ const SuperAdminDashboard: React.FC = () => {
                                 strokeWidth={4} 
                                 fillOpacity={1} 
                                 fill="url(#colorPhoto)" 
-                                name="Photographes"
+                                name="Créatifs"
                                 style={{ filter: 'url(#shadowGlow)' }} 
                             />
                             <Area 

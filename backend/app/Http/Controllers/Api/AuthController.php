@@ -20,6 +20,10 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
+            if (isset($user->is_active) && !$user->is_active) {
+                Auth::logout();
+                return response()->json(['message' => 'Votre compte est désactivé. Veuillez contacter le support.'], 403);
+            }
             $token = $user->createToken('admin-token')->plainTextToken;
             
             // Check if user has at least one site config
@@ -47,6 +51,7 @@ class AuthController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
+            'is_active' => true,
         ]);
 
         $token = $user->createToken('auth-token')->plainTextToken;

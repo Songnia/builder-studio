@@ -11,7 +11,7 @@ export function WelcomeStep({ onNext }: WelcomeStepProps) {
     {
       icon: Camera,
       title: "Galerie Portfolio",
-      description: "Présentez vos meilleures photos avec une galerie élégante et filtrable par catégories."
+      description: "Présentez vos meilleures réalisations avec une galerie élégante et filtrable par catégories."
     },
     {
       icon: Palette,

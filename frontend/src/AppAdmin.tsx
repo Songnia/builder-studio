@@ -9,6 +9,8 @@ import Login from '@/pages/Login';
 import SignUp from '@/pages/SignUp';
 import ProtectedRoute from '@/components/Auth/ProtectedRoute';
 import SiteBuilder from '@/pages/admin/SiteBuilder';
+import ProfilePage from '@/pages/admin/ProfilePage';
+import Subscription from '@/pages/admin/Subscription';
 import AdminLayout from '@/components/Layout/AdminLayout';
 import ClientGalleryView from '@/pages/client/ClientGalleryView';
 
@@ -31,6 +33,7 @@ function AppAdmin() {
                     <Route path="/auth/register" element={<SignUp />} />
                     <Route path="/login" element={<Navigate to="/auth/login" replace />} />
                     <Route path="/signup" element={<Navigate to="/auth/register" replace />} />
+                    <Route path="/profile" element={<Navigate to="/admin/profile" replace />} />
 
                     {/* Admin protégé */}
                     <Route element={<ProtectedRoute />}>
@@ -41,6 +44,8 @@ function AppAdmin() {
                             <Route path="/admin/invoices" element={<InvoiceBuilder />} />
                             <Route path="/admin/invoices/new" element={<InvoiceBuilder />} />
                             <Route path="/admin/site-builder" element={<SiteBuilder />} />
+                            <Route path="/admin/profile" element={<ProfilePage />} />
+                            <Route path="/admin/subscription" element={<Subscription />} />
                             <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
                         </Route>
                     </Route>
@@ -52,6 +57,7 @@ function AppAdmin() {
                             <Route path="/superadmin/photographers" element={<PhotographersList />} />
                             <Route path="/superadmin/plans" element={<SubscriptionPlans />} />
                             <Route path="/superadmin/settings" element={<SuperAdminSettings />} />
+                            <Route path="/superadmin/profile" element={<ProfilePage />} />
                             <Route path="/superadmin" element={<Navigate to="/superadmin/dashboard" replace />} />
                         </Route>
                     </Route>

@@ -18,8 +18,7 @@ const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({
     onConfirm,
     title,
     description,
-    confirmValue,
-    itemName
+    confirmValue
 }) => {
     const [inputValue, setInputValue] = useState('');
     const [isDeleting, setIsDeleting] = useState(false);

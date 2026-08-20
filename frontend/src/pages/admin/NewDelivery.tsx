@@ -14,7 +14,6 @@ import { toast } from 'sonner';
 import DualUploadZone from '../../components/Delivery/DualUploadZone';
 import ShareDialog from '../../components/Delivery/ShareDialog';
 import { galleryService } from '../../services/galleryService';
-import type { GalleryImage } from '../../types/gallery';
 
 const NewDelivery: React.FC = () => {
     const navigate = useNavigate();
@@ -22,13 +21,10 @@ const NewDelivery: React.FC = () => {
     const [description, setDescription] = useState('');
     const [clientPhone, setClientPhone] = useState('');
     const [images, setImages] = useState<File[]>([]);
-    const [zipFile, setZipFile] = useState<File | null>(null);
     const [uploading, setUploading] = useState(false);
     const [shareDialogOpen, setShareDialogOpen] = useState(false);
     const [createdUuid, setCreatedUuid] = useState('');
 
-    const [zipUploading, setZipUploading] = useState(false);
-    const [zipProgress, setZipProgress] = useState(0);
     const [imagesUploading, setImagesUploading] = useState(false);
     const [imagesProgress, setImagesProgress] = useState(0);
     const [uploadStatus, setUploadStatus] = useState('');
@@ -56,25 +52,6 @@ const NewDelivery: React.FC = () => {
                 return prev + 10;
             });
         }, 150);
-    };
-
-    const handleZipSelected = (files: File[]) => {
-        if (files.length > 0) {
-            setZipFile(files[0]);
-            // Simulate upload progress
-            setZipUploading(true);
-            setZipProgress(0);
-            const interval = setInterval(() => {
-                setZipProgress((prev) => {
-                    if (prev >= 100) {
-                        clearInterval(interval);
-                        setZipUploading(false);
-                        return 100;
-                    }
-                    return prev + 10;
-                });
-            }, 200);
-        }
     };
 
     const BATCH_SIZE = 10; // Upload 10 images at a time to stay under server limits
@@ -126,17 +103,6 @@ const NewDelivery: React.FC = () => {
                 }
             }
             setImagesProgress(100);
-
-            // Step 3: Upload ZIP if provided (non-blocking)
-            if (zipFile) {
-                setUploadStatus('Upload du fichier ZIP...');
-                try {
-                    await galleryService.uploadZipToGallery(galleryUuid, zipFile);
-                } catch (zipError) {
-                    console.warn('ZIP upload failed (non-blocking):', zipError);
-                    failedFiles.push(`Fichier ZIP: ${zipFile.name}`);
-                }
-            }
 
             setCreatedUuid(galleryUuid);
             setUploading(false);
@@ -277,8 +243,7 @@ const NewDelivery: React.FC = () => {
                             variant="outlined"
                             onClick={() => navigate('/admin/dashboard')}
                             disabled={uploading}
-                            fullWidth={{ xs: true, sm: false }}
-                            sx={{ h: 56 }}
+                            sx={{ h: 56, width: { xs: '100%', sm: 'auto' } }}
                         >
                             Annuler
                         </Button>
@@ -288,8 +253,7 @@ const NewDelivery: React.FC = () => {
                             color="primary"
                             startIcon={!uploading && <SaveIcon />}
                             disabled={uploading}
-                            fullWidth={{ xs: true, sm: false }}
-                            sx={{ fontWeight: 'bold', h: 56, backgroundColor: '#10b981', '&:hover': { backgroundColor: '#059669' } }}
+                            sx={{ fontWeight: 'bold', h: 56, backgroundColor: '#10b981', width: { xs: '100%', sm: 'auto' }, '&:hover': { backgroundColor: '#059669' } }}
                         >
                             {uploading ? (
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>

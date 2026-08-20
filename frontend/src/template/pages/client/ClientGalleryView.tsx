@@ -88,7 +88,7 @@ const ClientGalleryView: React.FC = () => {
                         Galerie introuvable
                     </Typography>
                     <Typography variant="body1" color="text.secondary" sx={{ mt: 2 }}>
-                        Vérifiez le lien ou contactez le photographe
+                        Vérifiez le lien ou contactez le studio / créateur
                     </Typography>
                 </Container>
                 <Footer />

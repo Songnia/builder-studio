@@ -29,14 +29,18 @@ export const galleryService = {
         return response.data.data.map(mapGalleryFromApi);
     },
 
-    // Get gallery by UUID (Public)
-    getGalleryByUUID: async (uuid: string): Promise<Gallery | null> => {
+    // Get gallery by UUID (Public, supports PIN)
+    getGalleryByUUID: async (uuid: string, pin?: string): Promise<{ gallery: Gallery | null; requiresPin?: boolean; errorMsg?: string }> => {
         try {
-            const response = await api.get(`/client/gallery/${uuid}`);
-            return mapGalleryFromApi(response.data);
-        } catch (error) {
+            const headers = pin ? { 'X-Gallery-PIN': pin } : {};
+            const response = await api.get(`/client/gallery/${uuid}`, { headers });
+            return { gallery: mapGalleryFromApi(response.data) };
+        } catch (error: any) {
+            if (error?.response?.status === 403 && error?.response?.data?.requires_pin) {
+                return { gallery: null, requiresPin: true, errorMsg: pin ? 'Code PIN incorrect' : undefined };
+            }
             console.error('Failed to fetch gallery', error);
-            return null;
+            return { gallery: null };
         }
     },
 
@@ -99,13 +103,13 @@ export const galleryService = {
 
     // Get selected (liked) images
     getSelectedImages: async (uuid: string): Promise<GalleryImage[]> => {
-        const gallery = await galleryService.getGalleryByUUID(uuid);
+        const { gallery } = await galleryService.getGalleryByUUID(uuid);
         return gallery ? gallery.images.filter(img => img.isLiked) : [];
     },
 
     // Get stats for a gallery
     getGalleryStats: async (uuid: string): Promise<{ totalImages: number; likedCount: number }> => {
-        const gallery = await galleryService.getGalleryByUUID(uuid);
+        const { gallery } = await galleryService.getGalleryByUUID(uuid);
         if (!gallery) return { totalImages: 0, likedCount: 0 };
 
         return {

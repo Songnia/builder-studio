@@ -38,9 +38,9 @@ const GalleryContent: React.FC<{ gallery: Gallery; onUpdateGallery: (g: Gallery)
         if (uuid) {
             galleryService.toggleImageLike(uuid, imageId);
             // Refresh gallery
-            const updatedGallery = await galleryService.getGalleryByUUID(uuid);
-            if (updatedGallery) {
-                onUpdateGallery(updatedGallery);
+            const result = await galleryService.getGalleryByUUID(uuid);
+            if (result.gallery) {
+                onUpdateGallery(result.gallery);
             }
         }
     };
@@ -354,25 +354,50 @@ const ClientGalleryView: React.FC = () => {
     const { uuid } = useParams<{ uuid: string }>();
     const [gallery, setGallery] = useState<Gallery | null>(null);
     const [loading, setLoading] = useState(true);
+    const [requiresPin, setRequiresPin] = useState(false);
+    const [pinInput, setPinInput] = useState('');
+    const [pinError, setPinError] = useState('');
+    const [activePin, setActivePin] = useState<string | undefined>();
 
-    useEffect(() => {
-        const fetchGallery = async () => {
-            if (uuid) {
-                setLoading(true);
-                try {
-                    const g = await galleryService.getGalleryByUUID(uuid);
-                    setGallery(g);
-                } catch (error) {
-                    console.error("Failed to fetch gallery", error);
-                } finally {
-                    setLoading(false);
+    const fetchGallery = async (pinToTry?: string) => {
+        if (!uuid) return;
+        setLoading(true);
+        setPinError('');
+        try {
+            const res = await galleryService.getGalleryByUUID(uuid, pinToTry);
+            if (res.requiresPin) {
+                setRequiresPin(true);
+                if (res.errorMsg) {
+                    setPinError(res.errorMsg);
+                }
+            } else if (res.gallery) {
+                setGallery(res.gallery);
+                setRequiresPin(false);
+                if (pinToTry) {
+                    setActivePin(pinToTry);
                 }
             }
-        };
+        } catch (error) {
+            console.error("Failed to fetch gallery", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
         fetchGallery();
     }, [uuid]);
 
-    if (loading) {
+    const handlePinSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!pinInput.trim()) {
+            setPinError('Veuillez saisir votre code PIN.');
+            return;
+        }
+        fetchGallery(pinInput.trim());
+    };
+
+    if (loading && !requiresPin) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[80vh] gap-4 w-full">
                 <div className="relative w-12 h-12">
@@ -384,6 +409,101 @@ const ClientGalleryView: React.FC = () => {
         );
     }
 
+    if (requiresPin && !gallery) {
+        return (
+            <Box
+                sx={{
+                    minHeight: '80vh',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    p: 3,
+                    background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+                    color: 'white',
+                }}
+            >
+                <Container maxWidth="xs">
+                    <Box
+                        component="form"
+                        onSubmit={handlePinSubmit}
+                        sx={{
+                            backgroundColor: 'rgba(30, 41, 59, 0.7)',
+                            backdropFilter: 'blur(16px)',
+                            borderRadius: '16px',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            p: 4,
+                            textAlign: 'center',
+                            boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                width: 64,
+                                height: 64,
+                                borderRadius: '50%',
+                                backgroundColor: 'rgba(79, 70, 229, 0.2)',
+                                color: '#818cf8',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                mx: 'auto',
+                                mb: 3,
+                            }}
+                        >
+                            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 002-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                        </Box>
+
+                        <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>
+                            Galerie Protégée
+                        </Typography>
+                        
+                        <Typography variant="body2" sx={{ color: '#94a3b8', mb: 3 }}>
+                            Cette galerie est privée. Veuillez saisir le code PIN fourni par votre studio / créateur pour accéder aux fichiers.
+                        </Typography>
+
+                        {pinError && (
+                            <Alert severity="error" sx={{ mb: 2, borderRadius: '8px' }}>
+                                {pinError}
+                            </Alert>
+                        )}
+
+                        <input
+                            type="password"
+                            maxLength={10}
+                            placeholder="Code PIN"
+                            value={pinInput}
+                            onChange={(e) => setPinInput(e.target.value)}
+                            className="w-full px-4 py-3 bg-slate-950/80 border border-slate-700 rounded-lg text-white text-center text-xl tracking-widest focus:outline-none focus:border-indigo-500 transition mb-4 placeholder:text-slate-600 placeholder:text-base placeholder:tracking-normal"
+                            autoFocus
+                        />
+
+                        <Button
+                            type="submit"
+                            fullWidth
+                            variant="contained"
+                            disabled={loading}
+                            sx={{
+                                py: 1.5,
+                                borderRadius: '8px',
+                                background: 'linear-gradient(to right, #6366f1, #4f46e5)',
+                                textTransform: 'none',
+                                fontSize: '1rem',
+                                fontWeight: 600,
+                                '&:hover': {
+                                    background: 'linear-gradient(to right, #4f46e5, #4338ca)',
+                                },
+                            }}
+                        >
+                            {loading ? <CircularProgress size={24} color="inherit" /> : 'Accéder aux photos'}
+                        </Button>
+                    </Box>
+                </Container>
+            </Box>
+        );
+    }
+
     if (!gallery) {
         return (
             <Container maxWidth="lg" sx={{ py: 8, textAlign: 'center' }}>
@@ -391,7 +511,7 @@ const ClientGalleryView: React.FC = () => {
                     Galerie introuvable
                 </Typography>
                 <Typography variant="body1" color="text.secondary" sx={{ mt: 2 }}>
-                    Vérifiez le lien ou contactez le photographe
+                    Vérifiez le lien ou contactez le studio / créateur
                 </Typography>
             </Container>
         );
@@ -399,7 +519,13 @@ const ClientGalleryView: React.FC = () => {
 
     return (
         <SiteConfigProvider slug={gallery.photographerSlug}>
-            <GalleryContent gallery={gallery} onUpdateGallery={setGallery} />
+            <GalleryContent 
+                gallery={gallery} 
+                onUpdateGallery={async () => {
+                    const { gallery: updated } = await galleryService.getGalleryByUUID(uuid!, activePin);
+                    if (updated) setGallery(updated);
+                }} 
+            />
         </SiteConfigProvider>
     );
 };

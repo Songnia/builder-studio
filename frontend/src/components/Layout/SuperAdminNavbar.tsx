@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { LogOut, ChevronDown, Settings, Globe, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {

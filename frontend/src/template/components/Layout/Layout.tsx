@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, ThemeProvider, CssBaseline, CircularProgress, Typography } from '@mui/material';
+import { Box, ThemeProvider, CssBaseline, Typography } from '@mui/material';
 import { Outlet } from 'react-router-dom';
 import { I18nextProvider } from 'react-i18next';
 import { SiteConfigProvider, useSiteConfig } from '@/context/SiteConfigContext';

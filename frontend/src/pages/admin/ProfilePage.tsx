@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, User, Shield, Eye, EyeOff, Save, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';

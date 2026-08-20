@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../../services/authService';
 import { galleryService } from '../../services/galleryService';
+import { siteConfigService } from '@/services/siteConfigService';
 import { api } from '@/services/api';
 import type { Gallery } from '../../types/gallery';
 import {
@@ -14,14 +15,19 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Trash2, Share2, Heart, Download, Star, Youtube, Users, MessageSquare, MessageCircle, Image as ImageIcon } from 'lucide-react';
+import { 
+    Eye, Trash2, Share2, Heart, Youtube, Users, 
+    MessageSquare, MessageCircle, Image as ImageIcon, Sparkles, X, 
+    CheckCircle2, Circle, Globe, ArrowRight, FolderPlus, FileText 
+} from 'lucide-react';
 import ShareDialog from '../../components/Delivery/ShareDialog';
 import { usePlanLimits } from '@/hooks/usePlanLimits';
 import { UpgradeDialog } from '@/components/common/UpgradeDialog';
+import { CapCutOnboardingSpotlight } from '@/components/onboarding/CapCutOnboardingSpotlight';
 
 const GalleryThumbnail = ({ url }: { url: string }) => {
     const [error, setError] = useState(false);
-    
+
     if (error || !url) {
         return (
             <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-full border-2 border-[#2E7D32] bg-white/20 backdrop-blur-md flex items-center justify-center text-white/90 shadow-sm shrink-0">
@@ -29,11 +35,11 @@ const GalleryThumbnail = ({ url }: { url: string }) => {
             </div>
         );
     }
-    
+
     return (
-        <img 
-            src={url} 
-            alt="thumbnail" 
+        <img
+            src={url}
+            alt="thumbnail"
             className="w-8 h-8 sm:w-12 sm:h-12 rounded-full border-2 border-[#2E7D32] object-cover shrink-0"
             onError={() => setError(true)}
         />
@@ -44,6 +50,9 @@ const AdminDashboard: React.FC = () => {
     const navigate = useNavigate();
     const [galleries, setGalleries] = useState<Gallery[]>([]);
     const [invoices, setInvoices] = useState<any[]>([]);
+    const [siteConfig, setSiteConfig] = useState<any>(null);
+    const [onboardingDismissed, setOnboardingDismissed] = useState(false);
+    const [activeStepIndex, setActiveStepIndex] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'livraisons' | 'factures'>('livraisons');
     const [shareDialogOpen, setShareDialogOpen] = useState(false);
@@ -57,6 +66,34 @@ const AdminDashboard: React.FC = () => {
     const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
     const [upgradeFeature, setUpgradeFeature] = useState<'photos' | 'galleries' | 'domain' | 'branding'>('galleries');
 
+    const handleCapcutSkip = () => {
+        const isPublished = Boolean(siteConfig?.is_published);
+        const hasGallery = galleries.length > 0;
+        const hasInvoice = invoices.length > 0;
+        const completedCount = (isPublished ? 1 : 0) + (hasGallery ? 1 : 0) + (hasInvoice ? 1 : 0);
+
+        // Require at least 2 completed actions before allowing complete dismissal
+        if (completedCount >= 2) {
+            setOnboardingDismissed(true);
+            return;
+        }
+
+        // Loop through remaining uncompleted step indices
+        const uncompletedIndices: number[] = [];
+        if (!isPublished) uncompletedIndices.push(0);
+        if (!hasGallery) uncompletedIndices.push(1);
+        if (!hasInvoice) uncompletedIndices.push(2);
+
+        if (uncompletedIndices.length <= 1) {
+            setOnboardingDismissed(true);
+            return;
+        }
+
+        const currentPos = uncompletedIndices.indexOf(activeStepIndex);
+        const nextPos = (currentPos + 1) % uncompletedIndices.length;
+        setActiveStepIndex(uncompletedIndices[nextPos]);
+    };
+
     useEffect(() => {
         setUser(authService.getCurrentUser());
         loadDashboardData();
@@ -65,17 +102,31 @@ const AdminDashboard: React.FC = () => {
     const loadDashboardData = async () => {
         setIsLoading(true);
         try {
-            const [galleriesData, invoicesResponse] = await Promise.all([
+            const [galleriesData, invoicesResponse, configsData] = await Promise.all([
                 galleryService.getAllGalleries(),
-                api.get('/admin/invoices').catch(() => ({ data: [] })) // Handle case if billing is not setup properly yet
+                api.get('/admin/invoices').catch(() => ({ data: [] })),
+                siteConfigService.getMyConfigs().catch(() => [])
             ]);
             setGalleries(galleriesData);
-            
+
             // Sort invoices by date desc
             const sortedInvoices = (invoicesResponse.data || []).sort((a: any, b: any) =>
                 new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
             );
             setInvoices(sortedInvoices);
+
+            if (Array.isArray(configsData) && configsData.length > 0) {
+                const cfg = configsData[0];
+                setSiteConfig(cfg);
+
+                if (!cfg.is_published) {
+                    setActiveStepIndex(0);
+                } else if (galleriesData.length === 0) {
+                    setActiveStepIndex(1);
+                } else if (sortedInvoices.length === 0) {
+                    setActiveStepIndex(2);
+                }
+            }
         } catch (error) {
             console.error("Failed to load dashboard data", error);
         } finally {
@@ -165,6 +216,141 @@ const AdminDashboard: React.FC = () => {
                 </p>
             </div>
 
+            {/* Onboarding Checklist Card */}
+            {!onboardingDismissed && ((!siteConfig?.is_published) || galleries.length === 0 || invoices.length === 0) && (
+                <div data-onboarding-id="onboarding-banner" className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden border border-slate-700/50">
+                    <div className="absolute -right-16 -top-16 w-64 h-64 bg-green-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                    
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-2xl bg-green-500/20 border border-green-500/30 flex items-center justify-center text-green-400">
+                                <Sparkles className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-bold tracking-tight">Bienvenue sur Vanda Studio</h3>
+                                <p className="text-xs sm:text-sm text-slate-400">Complétez ces étapes clés pour lancer votre activité créative.</p>
+                            </div>
+                        </div>
+                        <button 
+                            onClick={() => setOnboardingDismissed(true)}
+                            className="text-slate-400 hover:text-white transition-colors p-1 rounded-lg hover:bg-slate-800"
+                            title="Masquer"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div className="space-y-2 mb-6">
+                        <div className="flex justify-between text-xs text-slate-300 font-medium">
+                            <span>Progression de l'onboarding</span>
+                            <span className="text-green-400 font-semibold">
+                                {Math.round((((siteConfig?.is_published ? 1 : 0) + (galleries.length > 0 ? 1 : 0) + (invoices.length > 0 ? 1 : 0)) / 3) * 100)}%
+                            </span>
+                        </div>
+                        <div className="w-full bg-slate-700/60 rounded-full h-2 overflow-hidden p-0.5 border border-slate-600/30">
+                            <div 
+                                className="bg-gradient-to-r from-green-500 to-emerald-400 h-full rounded-full transition-all duration-500"
+                                style={{ width: `${Math.round((((siteConfig?.is_published ? 1 : 0) + (galleries.length > 0 ? 1 : 0) + (invoices.length > 0 ? 1 : 0)) / 3) * 100)}%` }}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Checklist Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {/* Step 1 */}
+                        <div 
+                            data-onboarding-id="step-publish-site"
+                            onClick={() => navigate('/admin/site-builder')}
+                            className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between space-y-3 ${
+                                siteConfig?.is_published 
+                                    ? 'bg-slate-800/40 border-green-500/30 hover:border-green-500/50' 
+                                    : 'bg-slate-800/80 border-slate-700 hover:border-slate-500'
+                            }`}
+                        >
+                            <div className="flex items-start justify-between">
+                                <div className="flex items-center gap-2.5">
+                                    {siteConfig?.is_published ? (
+                                        <CheckCircle2 className="w-5 h-5 text-green-400 shrink-0" />
+                                    ) : (
+                                        <Circle className="w-5 h-5 text-slate-400 shrink-0" />
+                                    )}
+                                    <span className="font-semibold text-sm">1. Publier votre site</span>
+                                </div>
+                                <Globe className="w-4 h-4 text-slate-400" />
+                            </div>
+                            <p className="text-xs text-slate-400">
+                                {siteConfig?.is_published ? "Votre site est en ligne !" : siteConfig ? "Site enregistré. Prêt à être publié." : "Personnalisez et publiez votre site vitrine."}
+                            </p>
+                            <div className="flex items-center text-xs font-semibold text-green-400 gap-1 pt-1">
+                                <span>{siteConfig?.is_published ? "Modifier le site" : "Configurer mon site"}</span>
+                                <ArrowRight className="w-3.5 h-3.5" />
+                            </div>
+                        </div>
+
+                        {/* Step 2 */}
+                        <div 
+                            data-onboarding-id="step-first-delivery"
+                            onClick={() => navigate('/admin/new-delivery')}
+                            className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between space-y-3 ${
+                                galleries.length > 0 
+                                    ? 'bg-slate-800/40 border-green-500/30 hover:border-green-500/50' 
+                                    : 'bg-slate-800/80 border-slate-700 hover:border-slate-500'
+                            }`}
+                        >
+                            <div className="flex items-start justify-between">
+                                <div className="flex items-center gap-2.5">
+                                    {galleries.length > 0 ? (
+                                        <CheckCircle2 className="w-5 h-5 text-green-400 shrink-0" />
+                                    ) : (
+                                        <Circle className="w-5 h-5 text-slate-400 shrink-0" />
+                                    )}
+                                    <span className="font-semibold text-sm">2. Première livraison</span>
+                                </div>
+                                <FolderPlus className="w-4 h-4 text-slate-400" />
+                            </div>
+                            <p className="text-xs text-slate-400">
+                                {galleries.length > 0 ? `${galleries.length} livraison(s) créée(s)` : "Créez et partagez une galerie photo pour un client."}
+                            </p>
+                            <div className="flex items-center text-xs font-semibold text-green-400 gap-1 pt-1">
+                                <span>{galleries.length > 0 ? "Ajouter une livraison" : "Créer une livraison"}</span>
+                                <ArrowRight className="w-3.5 h-3.5" />
+                            </div>
+                        </div>
+
+                        {/* Step 3 */}
+                        <div 
+                            data-onboarding-id="step-first-invoice"
+                            onClick={() => navigate('/admin/invoices/new')}
+                            className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between space-y-3 ${
+                                invoices.length > 0 
+                                    ? 'bg-slate-800/40 border-green-500/30 hover:border-green-500/50' 
+                                    : 'bg-slate-800/80 border-slate-700 hover:border-slate-500'
+                            }`}
+                        >
+                            <div className="flex items-start justify-between">
+                                <div className="flex items-center gap-2.5">
+                                    {invoices.length > 0 ? (
+                                        <CheckCircle2 className="w-5 h-5 text-green-400 shrink-0" />
+                                    ) : (
+                                        <Circle className="w-5 h-5 text-slate-400 shrink-0" />
+                                    )}
+                                    <span className="font-semibold text-sm">3. Émettre une facture</span>
+                                </div>
+                                <FileText className="w-4 h-4 text-slate-400" />
+                            </div>
+                            <p className="text-xs text-slate-400">
+                                {invoices.length > 0 ? `${invoices.length} facture(s) générée(s)` : "Générez des devis et factures professionnelles."}
+                            </p>
+                            <div className="flex items-center text-xs font-semibold text-green-400 gap-1 pt-1">
+                                <span>{invoices.length > 0 ? "Créer une facture" : "Générer ma 1ère facture"}</span>
+                                <ArrowRight className="w-3.5 h-3.5" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Stats Cards */}
             <div className="grid grid-cols-2 sm:flex sm:flex-row gap-3 sm:gap-4 justify-start">
                 {/* Livraisons Card */}
@@ -175,7 +361,7 @@ const AdminDashboard: React.FC = () => {
                             {galleries.length} <span className="text-xs sm:text-lg font-normal font-sans text-white/80 uppercase">Total</span>
                         </div>
                     </div>
-                    
+
                     {/* Avatars / Thumbnails */}
                     <div className="flex -space-x-3 sm:-space-x-4 mt-4 sm:mt-6 mb-6 sm:mb-8">
                         {galleries.slice(0, 4).map((g, i) => (
@@ -183,7 +369,7 @@ const AdminDashboard: React.FC = () => {
                         ))}
                     </div>
 
-                    <Button 
+                    <Button
                         className="bg-white/20 hover:bg-white/30 text-white rounded-full w-full justify-center transition-colors border-none text-xs sm:text-sm px-2"
                         onClick={() => {
                             if (checkLimit('galleries', galleries.length)) {
@@ -219,7 +405,7 @@ const AdminDashboard: React.FC = () => {
                         )}
                     </div>
 
-                    <Button 
+                    <Button
                         className="bg-white/20 hover:bg-white/30 text-white rounded-full w-full justify-center transition-colors border-none text-xs sm:text-sm px-2"
                         onClick={() => navigate('/admin/invoices/new')}
                     >
@@ -231,7 +417,7 @@ const AdminDashboard: React.FC = () => {
 
             {/* Tabs */}
             <div className="flex border-b border-slate-200 mt-8">
-                <button 
+                <button
                     className={`flex-1 py-4 text-center font-bold tracking-wide uppercase transition-colors relative ${activeTab === 'livraisons' ? 'text-green-700' : 'text-slate-400 hover:text-slate-600'}`}
                     onClick={() => setActiveTab('livraisons')}
                 >
@@ -240,7 +426,7 @@ const AdminDashboard: React.FC = () => {
                         <div className="absolute bottom-0 left-0 w-full h-1 bg-green-700 rounded-t-full"></div>
                     )}
                 </button>
-                <button 
+                <button
                     className={`flex-1 py-4 text-center font-bold tracking-wide uppercase transition-colors relative ${activeTab === 'factures' ? 'text-green-700' : 'text-slate-400 hover:text-slate-600'}`}
                     onClick={() => setActiveTab('factures')}
                 >
@@ -369,12 +555,11 @@ const AdminDashboard: React.FC = () => {
                                             {Number(invoice.total_amount).toLocaleString('fr-FR')} <span className="text-xs">FCFA</span>
                                         </TableCell>
                                         <TableCell className="text-right">
-                                            <Badge 
-                                                className={`shadow-none font-medium rounded-full px-2 sm:px-3 border ${
-                                                    invoice.status === 'paid' ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100' :
-                                                    invoice.status === 'partial' ? 'bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100' :
-                                                    'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
-                                                }`}
+                                            <Badge
+                                                className={`shadow-none font-medium rounded-full px-2 sm:px-3 border ${invoice.status === 'paid' ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100' :
+                                                        invoice.status === 'partial' ? 'bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100' :
+                                                            'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
+                                                    }`}
                                             >
                                                 {invoice.status === 'paid' ? 'Payée' : invoice.status === 'partial' ? 'Partielle' : 'Impayée'}
                                             </Badge>
@@ -398,7 +583,7 @@ const AdminDashboard: React.FC = () => {
                         <h3 className="text-xl font-bold text-slate-900">Rejoignez-nous sur Youtube</h3>
                         <p className="text-slate-500 text-sm max-w-xs mx-auto mt-2">Découvrez des vidéos pratiques pour apprendre à utiliser VANDA STUDIO</p>
                     </div>
-                    <Button 
+                    <Button
                         className="bg-black text-white hover:bg-slate-800 rounded-full px-8"
                         onClick={() => window.open('https://youtube.com/@wscale2026?si=RUc9Khgr9eWy0SXq', '_blank')}
                     >
@@ -415,7 +600,7 @@ const AdminDashboard: React.FC = () => {
                         <h3 className="text-xl font-bold text-slate-900">Rejoignez notre Hub</h3>
                         <p className="text-slate-500 text-sm max-w-xs mx-auto mt-2">Rejoignez la communauté d'entraide des créateurs VANDA STUDIO</p>
                     </div>
-                    <Button 
+                    <Button
                         className="bg-[#4caf50] text-white hover:bg-[#45a049] rounded-full px-8 font-medium"
                         onClick={() => window.open('https://chat.whatsapp.com/HgkhHmTrhkq0efVrmhgOb6', '_blank')}
                     >
@@ -424,9 +609,9 @@ const AdminDashboard: React.FC = () => {
                 </div>
 
                 {/* Suggestions */}
-                <a 
-                    href="https://wa.me/237686265447" 
-                    target="_blank" 
+                <a
+                    href="https://wa.me/237686265447"
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow cursor-pointer block"
                 >
@@ -440,9 +625,9 @@ const AdminDashboard: React.FC = () => {
                 </a>
 
                 {/* WhatsApp */}
-                <a 
-                    href="https://whatsapp.com/channel/0029Vb8UoyiK5cDK8xak292B" 
-                    target="_blank" 
+                <a
+                    href="https://whatsapp.com/channel/0029Vb8UoyiK5cDK8xak292B"
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow cursor-pointer block"
                 >
@@ -470,6 +655,44 @@ const AdminDashboard: React.FC = () => {
                 onClose={() => setUpgradeDialogOpen(false)}
                 feature={upgradeFeature}
                 currentPlan={currentPlan}
+            />
+
+            {/* CapCut-Like In-Product Onboarding Spotlight */}
+            <CapCutOnboardingSpotlight
+                steps={[
+                    {
+                        id: 'publish-site',
+                        targetId: 'step-publish-site',
+                        title: 'Publie ton premier site',
+                        explanation: 'Rends ton portfolio visible auprès de tes futurs clients en un clic.',
+                        type: 'action',
+                        preferredPlacement: 'bottom'
+                    },
+                    {
+                        id: 'first-delivery',
+                        targetId: 'step-first-delivery',
+                        title: 'Livre tes premières photos',
+                        explanation: 'Crée une galerie sécurisée et livre ton travail avec style.',
+                        type: 'action',
+                        preferredPlacement: 'bottom'
+                    },
+                    {
+                        id: 'first-invoice',
+                        targetId: 'step-first-invoice',
+                        title: 'Émets ta première facture',
+                        explanation: 'Génère tes devis et factures pro conformes.',
+                        type: 'action',
+                        preferredPlacement: 'bottom'
+                    }
+                ]}
+                currentStepIndex={activeStepIndex}
+                isActive={
+                    !onboardingDismissed &&
+                    ((siteConfig?.is_published ? 1 : 0) + (galleries.length > 0 ? 1 : 0) + (invoices.length > 0 ? 1 : 0)) < 2
+                }
+                onSkip={handleCapcutSkip}
+                onClose={() => setOnboardingDismissed(true)}
+                onNextStep={() => {}}
             />
         </div>
     );

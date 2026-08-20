@@ -25,30 +25,15 @@ class GalleryController extends Controller
 
     public function store(Request $request)
     {
-        // Custom debug logging
-        $logFile = storage_path('logs/custom_debug.log');
-        $timestamp = date('Y-m-d H:i:s');
-        file_put_contents($logFile, "[$timestamp] Request hit store\n", FILE_APPEND);
-        file_put_contents($logFile, "[$timestamp] Input: " . json_encode($request->all()) . "\n", FILE_APPEND);
-        file_put_contents($logFile, "[$timestamp] Files: " . json_encode($_FILES) . "\n", FILE_APPEND);
-
-        try {
-            // Validation should not be in try-catch to allow 422 response
-            $validated = $request->validate([
-                'title' => 'required|string|max:255',
-                'description' => 'nullable|string',
-                'client_phone' => 'nullable|string|max:20',
-                'pin_code' => 'nullable|string|max:4',
-                'zip_file' => 'sometimes|file', 
-                'photos' => 'sometimes|array',
-                'photos.*' => 'file|image|mimes:jpeg,jpg,png|max:5120',
-            ]);
-            file_put_contents($logFile, "[$timestamp] Validation passed\n", FILE_APPEND);
-
-        } catch (\Illuminate\Validation\ValidationException $e) {
-             file_put_contents($logFile, "[$timestamp] Validation FAILED: " . json_encode($e->errors()) . "\n", FILE_APPEND);
-             throw $e;
-        }
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'client_phone' => 'nullable|string|max:20',
+            'pin_code' => 'nullable|string|max:4',
+            'zip_file' => 'sometimes|file|mimes:zip,rar,7z,tar|max:102400',
+            'photos' => 'sometimes|array',
+            'photos.*' => 'file|image|mimes:jpeg,jpg,png,webp|max:10240',
+        ]);
 
         try {
             $gallery = Gallery::create([
@@ -136,7 +121,7 @@ class GalleryController extends Controller
             ->firstOrFail();
 
         $validated = $request->validate([
-            'zip_file' => 'required|file',
+            'zip_file' => 'required|file|mimes:zip,rar,7z,tar|max:102400',
         ]);
 
         $file = $request->file('zip_file');

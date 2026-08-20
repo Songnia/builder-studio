@@ -18,9 +18,11 @@ class SubscriptionPlanSeeder extends Seeder
                 'name' => 'STARTER',
                 'price' => 5000,
                 'features' => [
-                    'Accès au constructeur de site',
-                    'Jusqu\'à 20 photos',
-                    '4 galeries par mois',
+                    'Accès au constructeur de site (builder pas-à-pas)',
+                    'Jusqu\'à 20 photos dans le portfolio',
+                    '4 galeries clients actives par mois',
+                    'Livraison de galeries par lien sécurisé',
+                    'Facturation & devis en FCFA',
                     'Sous-domaine Vanda Studio',
                     'Support par email'
                 ],
@@ -29,27 +31,33 @@ class SubscriptionPlanSeeder extends Seeder
             ],
             [
                 'name' => 'PRO',
-                'price' => 15000,
+                'price' => 11000,
                 'features' => [
                     'Toutes les fonctionnalités Starter',
-                    'Jusqu\'à 500 photos',
-                    '20 galeries par mois',
+                    'Jusqu\'à 500 photos dans le portfolio',
+                    '20 galeries clients actives par mois',
                     'Domaine personnalisé inclus',
-                    'Sans watermark Vanda Studio'
+                    'Sans watermark Vanda Studio',
+                    'Paiement en ligne en FCFA (Mobile Money & carte)',
+                    'Acomptes & soldes sur devis et factures',
+                    'Support e-mail prioritaire'
                 ],
                 'is_active' => true,
                 'maketou_product_id' => 'vanda-pro',
             ],
             [
                 'name' => 'STUDIO',
-                'price' => 45000,
+                'price' => 25000,
                 'features' => [
                     'Toutes les fonctionnalités PRO',
-                    'Photos illimitées',
-                    'Galeries illimitées',
+                    'Photos portfolio illimitées',
+                    'Galeries clients illimitées',
                     'API et Webhooks',
+                    'Statistiques avancées',
                     'Support prioritaire 24/7',
-                    'Statistiques avancées'
+                    'Accès anticipé aux nouvelles fonctionnalités',
+                    'Export des données & sauvegardes',
+                    'Onboarding dédié'
                 ],
                 'is_active' => true,
                 'maketou_product_id' => 'vanda-studio',

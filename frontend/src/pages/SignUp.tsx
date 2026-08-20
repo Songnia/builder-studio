@@ -53,12 +53,8 @@ const SignUp: React.FC = () => {
                 password,
                 password_confirmation: passwordConfirmation
             });
-            const selectedPlan = localStorage.getItem('selectedPlan');
-            if (selectedPlan) {
-                navigate(`/admin/subscription?auto_checkout=${selectedPlan}`);
-            } else {
-                navigate('/admin/site-builder');
-            }
+            localStorage.removeItem('selectedPlan');
+            navigate('/admin/dashboard');
         } catch (err: any) {
             setError(err.response?.data?.message || 'Une erreur est survenue lors de l\'inscription.');
         } finally {
@@ -264,7 +260,7 @@ const SignUp: React.FC = () => {
                     </Box>
                 </Container>
             </div>
-           {/* <PublicFooter />*/}
+            {/* <PublicFooter />*/}
         </div>
     );
 };

@@ -32,10 +32,10 @@ export function InfoStep({ config, onUpdate, onNext, onPrev, onSave, isSaving }:
     address: config.address,
     city: config.city,
     country: config.country,
+    promoterBiography: config.promoterBiography || '',
     promoterPhilosophy: config.promoterPhilosophy || '',
     promoterPhoto: config.promoterPhoto || ''
   });
-  const [isUploading, setIsUploading] = useState(false);
   const handleChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     setIsDirty(true);
@@ -63,7 +63,6 @@ export function InfoStep({ config, onUpdate, onNext, onPrev, onSave, isSaving }:
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setIsUploading(true);
     try {
       const url = await uploadBuilderMedia(file, 'logo');
       setFormData(prev => ({ ...prev, logo: url }));
@@ -71,8 +70,6 @@ export function InfoStep({ config, onUpdate, onNext, onPrev, onSave, isSaving }:
     } catch (err) {
       console.error('Logo upload failed:', err);
       alert('Erreur lors de l\'upload du logo.');
-    } finally {
-      setIsUploading(false);
     }
   };
 
@@ -289,15 +286,12 @@ export function InfoStep({ config, onUpdate, onNext, onPrev, onSave, isSaving }:
                     const file = e.target.files?.[0];
                     if (!file) return;
 
-                    setIsUploading(true);
                     try {
                       const url = await uploadBuilderMedia(file, 'promoter');
                       handleChange('promoterPhoto', url);
                     } catch (err) {
                       console.error('Promoter photo upload failed:', err);
                       alert('Erreur lors de l\'upload de la photo.');
-                    } finally {
-                      setIsUploading(false);
                     }
                   }}
                   className="cursor-pointer"
@@ -325,7 +319,7 @@ export function InfoStep({ config, onUpdate, onNext, onPrev, onSave, isSaving }:
               id="biography"
               value={formData.promoterBiography}
               onChange={(e) => handleChange('promoterBiography', e.target.value)}
-              placeholder="Parlez de votre parcours, votre expérience, votre passion pour la photographie..."
+              placeholder="Parlez de votre parcours, votre expérience, votre passion pour votre art..."
               rows={5}
               className="resize-none"
             />
@@ -341,12 +335,12 @@ export function InfoStep({ config, onUpdate, onNext, onPrev, onSave, isSaving }:
               id="philosophy"
               value={formData.promoterPhilosophy}
               onChange={(e) => handleChange('promoterPhilosophy', e.target.value)}
-              placeholder="Quelle est votre vision de la photographie ? Votre approche unique ?"
+              placeholder="Quelle est votre vision artistique ? Votre approche créative ?"
               rows={5}
               className="resize-none"
             />
             <p className="text-xs text-gray-500">
-              Partagez votre vision artistique et votre approche de la photographie
+              Partagez votre vision artistique et votre approche créative
             </p>
           </div>
         </div>

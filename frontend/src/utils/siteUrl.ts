@@ -23,7 +23,7 @@ export function getSiteUrl(slug: string): string {
  * Returns the target attribute for the site link.
  * In production, open in a new tab since it's an external domain.
  */
-export function getSiteTarget(slug: string): '_blank' | '_self' {
+export function getSiteTarget(_slug: string): '_blank' | '_self' {
     const domain = import.meta.env.VITE_PUBLIC_DOMAIN;
     return domain ? '_blank' : '_self';
 }

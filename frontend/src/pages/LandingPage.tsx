@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import vandaLogo from '@/template/assets/logo/vanda_logo.png'
+import { useState } from 'react'
+import { SeoNavbar, SeoFooter } from '@/pages/seo/SeoLayout'
 import { motion } from 'framer-motion'
 import {
     Camera,
@@ -9,119 +9,18 @@ import {
     Check,
     ArrowRight,
     Star,
-    Heart,
     Globe,
-    Sparkles,
-    Menu,
-    X
+    Sparkles
 } from 'lucide-react'
 
 const ADMIN_URL = import.meta.env.VITE_ADMIN_URL || 'https://app.vanda-studio.org';
 
 // Navigation Component
-function Navigation() {
-    const [isScrolled, setIsScrolled] = useState(false)
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-
-    useEffect(() => {
-        const handleScroll = () => {
-            setIsScrolled(window.scrollY > 50)
-        }
-        window.addEventListener('scroll', handleScroll)
-        return () => window.removeEventListener('scroll', handleScroll)
-    }, [])
-
-    return (
-        <motion.nav
-            initial={{ y: -100 }}
-            animate={{ y: 0 }}
-            transition={{ duration: 0.6, ease: 'easeOut' }}
-            className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'glass-strong' : 'bg-transparent'
-                }`}
-        >
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex items-center justify-between h-16">
-                    {/* Logo */}
-                    <a href="/" className="flex items-center gap-2 group">
-                        <img
-                            src={vandaLogo}
-                            alt="Vanda Studio Logo"
-                            style={{ height: '50px', objectFit: 'contain' }}
-                        />
-                        <span style={{
-                            fontSize: '1rem',
-                            fontWeight: 800,
-                            background: 'linear-gradient(135deg, #4caf50 0%, #81c784 100%)',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent',
-                            letterSpacing: '-0.5px'
-                        }}>
-                            VANDA STUDIO
-                        </span>
-                    </a>
-
-                    {/* Desktop Navigation */}
-                    <div className="hidden md:flex items-center gap-8">
-                        <a href="#features" className="text-sm text-gray-400 hover:text-white transition-colors">Fonctionnalités</a>
-                        <a href="#how-it-works" className="text-sm text-gray-400 hover:text-white transition-colors">Comment ça marche</a>
-                        <a href="/pricing" className="text-sm text-gray-400 hover:text-white transition-colors">Tarifs</a>
-                        <a href="#testimonials" className="text-sm text-gray-400 hover:text-white transition-colors">Témoignages</a>
-                    </div>
-
-                    {/* CTAs */}
-                    <div className="hidden md:flex items-center gap-4">
-                        <a href={`${ADMIN_URL}/auth/login`} className="text-sm text-gray-400 hover:text-white transition-colors">
-                            Connexion
-                        </a>
-                        <a
-                            href={`${ADMIN_URL}/auth/register`}
-                            className="bg-green-500 hover:bg-green-600 text-black font-medium px-4 py-2 rounded-lg transition-colors"
-                        >
-                            Créer mon site
-                        </a>
-                    </div>
-
-                    {/* Mobile Menu Button */}
-                    <button
-                        className="md:hidden text-white"
-                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                    >
-                        {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-                    </button>
-                </div>
-
-                {/* Mobile Menu */}
-                {isMobileMenuOpen && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="md:hidden glass-strong rounded-xl mt-2 p-4"
-                    >
-                        <div className="flex flex-col gap-4">
-                            <a href="#features" className="text-gray-400 hover:text-white transition-colors">Fonctionnalités</a>
-                            <a href="#how-it-works" className="text-gray-400 hover:text-white transition-colors">Comment ça marche</a>
-                            <a href="#pricing" className="text-gray-400 hover:text-white transition-colors">Tarifs</a>
-                            <a href="#testimonials" className="text-gray-400 hover:text-white transition-colors">Témoignages</a>
-                            <hr className="border-white/10" />
-                            <a href={`${ADMIN_URL}/auth/login`} className="text-gray-400 hover:text-white transition-colors">Connexion</a>
-                            <a
-                                href={`${ADMIN_URL}/auth/register`}
-                                className="bg-green-500 hover:bg-green-600 text-black font-medium px-4 py-2 rounded-lg text-center transition-colors"
-                            >
-                                Créer mon site
-                            </a>
-                        </div>
-                    </motion.div>
-                )}
-            </div>
-        </motion.nav>
-    )
-}
 
 // Hero Section
 function HeroSection() {
     return (
-        <section className="relative min-h-screen flex items-center pt-16 overflow-hidden">
+        <section className="relative pt-6 sm:pt-10 pb-16 lg:pb-24 overflow-hidden">
             {/* Background Effects */}
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(74,222,128,0.08),transparent_50%)]" />
             <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-green-500/10 rounded-full blur-3xl" />
@@ -146,8 +45,8 @@ function HeroSection() {
                         </motion.div>
 
                         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
-                            Créez votre site de{' '}
-                            <span className="gradient-text">photographe professionnel</span>{' '}
+                            Créez votre site professionnel de{' '}
+                            <span className="gradient-text">créatif</span>{' '}
                             en 10 minutes
                         </h1>
 
@@ -159,10 +58,11 @@ function HeroSection() {
                         <div className="flex flex-col sm:flex-row gap-4">
                             <a
                                 href={`${ADMIN_URL}/auth/register`}
-                                className="bg-green-500 hover:bg-green-600 text-black font-semibold px-6 py-3 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                                className="bg-green-500 hover:bg-green-400 text-black font-bold px-7 py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-green-500/25"
                             >
                                 <Camera className="w-5 h-5" />
-                                Créer mon site gratuitement
+                                Commencer maintenant
+                                <ArrowRight className="w-5 h-5" />
                             </a>
                             {/* <button className="border border-white/20 text-white hover:bg-white/5 px-6 py-3 rounded-lg flex items-center justify-center gap-2 transition-colors">
                                 <Layout className="w-5 h-5" />
@@ -191,79 +91,64 @@ function HeroSection() {
                         </motion.div>
                     </motion.div>
 
-                    {/* Right Content - Mockup */}
+                    {/* Right Content - Real App Screenshot */}
                     <motion.div
                         initial={{ opacity: 0, x: 50 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.8, delay: 0.3, ease: 'easeOut' }}
                         className="relative"
                     >
-                        <div className="relative animate-float">
+                        <div className="relative">
                             {/* Glow */}
-                            <div className="absolute inset-0 bg-green-500/20 rounded-2xl blur-2xl" />
+                            <div className="absolute inset-0 bg-green-500/20 rounded-2xl blur-3xl" />
 
-                            {/* Mockup Card */}
-                            <div className="relative glass-strong rounded-2xl p-6 glow-green">
-                                {/* Browser Chrome */}
-                                <div className="flex items-center gap-2 mb-4">
+                            {/* Browser frame */}
+                            <div className="relative glass-strong rounded-2xl p-4 glow-green">
+                                <div className="flex items-center gap-2 mb-3">
                                     <div className="flex gap-1.5">
-                                        <div className="w-3 h-3 rounded-full bg-red-500" />
-                                        <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                                        <div className="w-3 h-3 rounded-full bg-green-500" />
+                                        <div className="w-3 h-3 rounded-full bg-red-500/80" />
+                                        <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
+                                        <div className="w-3 h-3 rounded-full bg-green-500/80" />
                                     </div>
-                                    <div className="flex-1 mx-4">
-                                        <div className="bg-black/30 rounded-md px-3 py-1 text-xs text-gray-500 text-center">
-                                            monstudio.vandastudio.com
+                                    <div className="flex-1 mx-3">
+                                        <div className="bg-black/40 rounded-md px-3 py-1 text-xs text-gray-500 text-center font-mono">
+                                            app.vanda-studio.org/dashboard
                                         </div>
                                     </div>
                                 </div>
-
-                                {/* Mockup Content */}
-                                <div className="space-y-4">
-                                    {/* Hero */}
-                                    <div className="h-32 bg-gradient-to-br from-green-500/20 to-green-600/10 rounded-xl flex items-center justify-center">
-                                        <Camera className="w-12 h-12 text-green-400" />
-                                    </div>
-
-                                    {/* Content Grid */}
-                                    <div className="grid grid-cols-3 gap-3">
-                                        <div className="aspect-square bg-white/5 rounded-lg" />
-                                        <div className="aspect-square bg-white/5 rounded-lg" />
-                                        <div className="aspect-square bg-white/5 rounded-lg" />
-                                    </div>
-
-                                    {/* Text Lines */}
-                                    <div className="space-y-2">
-                                        <div className="h-3 bg-white/10 rounded w-3/4" />
-                                        <div className="h-3 bg-white/10 rounded w-1/2" />
-                                    </div>
-                                </div>
+                                <img
+                                    src="/assets/screenshots/dashboard.png"
+                                    alt="Dashboard Vanda Studio"
+                                    className="w-full rounded-xl"
+                                    style={{ display: 'block' }}
+                                />
                             </div>
 
-                            {/* Floating Elements */}
+                            {/* Floating badge: galerie partagée */}
                             <motion.div
-                                animate={{ y: [0, -10, 0] }}
+                                animate={{ y: [0, -8, 0] }}
                                 transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-                                className="absolute -top-4 -right-4 glass rounded-lg px-3 py-2"
+                                className="absolute -top-4 -right-4 glass rounded-xl px-3 py-2 border border-green-500/30"
                             >
                                 <div className="flex items-center gap-2">
-                                    <div className="w-2 h-2 rounded-full bg-green-500" />
-                                    <span className="text-xs text-gray-300">En ligne</span>
+                                    <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                                    <span className="text-xs text-white font-semibold">Galerie partagée ✓</span>
                                 </div>
                             </motion.div>
 
+                            {/* Floating badge: acompte reçu */}
                             <motion.div
-                                animate={{ y: [0, 10, 0] }}
+                                animate={{ y: [0, 8, 0] }}
                                 transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-                                className="absolute -bottom-4 -left-4 glass rounded-lg px-4 py-3"
+                                className="absolute -bottom-4 -left-4 glass rounded-xl px-4 py-3 border border-green-500/20"
                             >
                                 <div className="flex items-center gap-3">
                                     <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
-                                        <Heart className="w-4 h-4 text-green-400" />
+                                        <Check className="w-4 h-4 text-green-400" />
                                     </div>
                                     <div>
-                                        <div className="text-xs text-gray-400">Nouveau favori</div>
-                                        <div className="text-sm text-white font-medium">Photo #12</div>
+                                        <div className="text-xs text-gray-400">Acompte reçu</div>
+                                        <div className="text-sm text-white font-bold">75 000 FCFA</div>
                                     </div>
                                 </div>
                             </motion.div>
@@ -295,7 +180,7 @@ function SocialProofSection() {
                     className="text-center mb-12"
                 >
                     <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">
-                        Rejoignez <span className="gradient-text">500+ photographes</span> qui ont transformé leur activité
+                        Rejoignez <span className="gradient-text">500+ creatif</span> qui ont transformé leur activité
                     </h2>
                 </motion.div>
 
@@ -347,43 +232,122 @@ function SocialProofSection() {
     )
 }
 
+// Scrolling Target Professions Section (Métiers Cibles)
+function TargetProfessionsStrip() {
+    const professionsRow1 = [
+        { title: 'Photographe', desc: 'Galeries HD, devis & solde', href: '/for/photographe' },
+        { title: 'Graphiste & Designer', desc: 'Portfolio & acomptes Mobile Money', href: '/for/graphiste' },
+        { title: 'Vidéaste & Réalisateur', desc: 'Showreel & contrats de tournage', href: '/for/videaste' },
+        { title: 'Illustrateur', desc: 'Art prints & commandes custom', href: '/for/illustrateur' },
+        { title: 'Maquilleur (MUA)', desc: 'Portfolio beauté & acomptes', href: '/for/maquilleur' },
+    ]
+
+    const professionsRow2 = [
+        { title: 'Wedding Planner', desc: 'Packages mariage & échéanciers', href: '/for/wedding-planner' },
+        { title: "Architecte d'Intérieur", desc: 'Rendus 3D & honoraires', href: '/for/architecte-interieur' },
+        { title: 'Créateur de Contenu', desc: 'Media kit & partenariats', href: '/for' },
+        { title: 'Styliste & Designer Mode', desc: 'Lookbook & commandes sur mesure', href: '/for' },
+        { title: 'Sound Designer & DJ', desc: 'Bookings & devis prestation', href: '/for' },
+    ]
+
+    const row1 = [...professionsRow1, ...professionsRow1]
+    const row2 = [...professionsRow2, ...professionsRow2]
+
+    return (
+        <section className="py-14 overflow-hidden bg-white/[0.015] border-y border-white/5 relative">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8 text-center">
+                <p className="text-xs font-bold uppercase tracking-widest text-green-400 mb-2">Conçu pour vos exigences</p>
+                <h2 className="text-2xl sm:text-4xl font-extrabold text-white">
+                    Taillé sur mesure pour <span className="gradient-text">chaque métier créatif</span>
+                </h2>
+            </div>
+
+            {/* Gradient edge masks */}
+            <div className="relative">
+                <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-[#050B06] to-transparent z-10 pointer-events-none" />
+                <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-[#050B06] to-transparent z-10 pointer-events-none" />
+
+                {/* Marquee Row 1 */}
+                <div className="mb-4 overflow-hidden flex">
+                    <div className="animate-marquee gap-4 pr-4">
+                        {row1.map((p, i) => (
+                            <a
+                                key={`${p.title}-${i}`}
+                                href={p.href}
+                                className="inline-flex items-center px-6 py-4 rounded-2xl bg-white/5 hover:bg-green-500/10 transition-all shrink-0 group border-0"
+                            >
+                                <div>
+                                    <span className="block text-white font-extrabold text-base group-hover:text-green-400 transition-colors">
+                                        {p.title}
+                                    </span>
+                                    <span className="block text-xs text-gray-400 font-medium">{p.desc}</span>
+                                </div>
+                            </a>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Marquee Row 2 (Reverse) */}
+                <div className="overflow-hidden flex">
+                    <div className="animate-marquee-reverse gap-4 pr-4">
+                        {row2.map((p, i) => (
+                            <a
+                                key={`${p.title}-${i}`}
+                                href={p.href}
+                                className="inline-flex items-center px-6 py-4 rounded-2xl bg-white/5 hover:bg-green-500/10 transition-all shrink-0 group border-0"
+                            >
+                                <div>
+                                    <span className="block text-white font-extrabold text-base group-hover:text-green-400 transition-colors">
+                                        {p.title}
+                                    </span>
+                                    <span className="block text-xs text-gray-400 font-medium">{p.desc}</span>
+                                </div>
+                            </a>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </section>
+    )
+}
+
 // Features Section
 function FeaturesSection() {
     const features = [
         {
-            number: '1.0',
-            title: 'Builder Ultra-Rapide',
-            description: 'Votre site professionnel en 10 étapes simples. Pas besoin d\'être développeur.',
+            number: '01',
+            title: 'Site Vitrine No-Code en 10 Minutes',
+            description: 'Un builder visuel guidé étape par étape. Choisissez votre template, ajoutez vos photos, vos tarifs, publiez. Aucune compétence technique requise.',
             icon: Layout,
             items: [
-                'Personnalisez vos couleurs et logo',
-                'Ajoutez vos plus belles photos',
-                'Configurez vos services et tarifs',
-                'Publiez en un clic',
+                'Templates professionnels prêts à l\'emploi',
+                'Domaine personnalisé inclus',
+                'SEO intégré — trouvez-vous sur Google',
+                'Responsive mobile & tablette'
             ],
         },
         {
-            number: '2.0',
-            title: 'Galeries Client Intégrées',
-            description: 'Livrez vos photos comme un pro. Galeries privées, téléchargement ZIP, sélection de favoris.',
+            number: '02',
+            title: 'Galeries Privées & Livraison Sécurisée',
+            description: 'Livrez vos photos et vidéos en haute définition dans un espace privé sécurisé par code PIN. Vos clients sélectionnent leurs favoris et téléchargent directement.',
             icon: Image,
             items: [
-                'Galeries protégées par code PIN',
-                'Téléchargement groupé en ZIP',
-                'Clients sélectionnent leurs favoris',
-                'Partage par lien unique',
+                'Protection par mot de passe ou code PIN',
+                'Téléchargement HD groupé en ZIP',
+                'Sélection de favoris par le client',
+                'Déblocage conditionnel après paiement'
             ],
         },
         {
-            number: '3.0',
-            title: 'Présence Professionnelle',
-            description: 'Un site qui vous ressemble, optimisé pour Google.',
+            number: '03',
+            title: 'Facturation & Paiement d\'Acomptes',
+            description: 'Générez des devis et factures PDF professionnels. Encaissez vos acomptes en ligne via carte bancaire ou Mobile Money (Maketou) dès la signature.',
             icon: Globe,
             items: [
-                'Domaine personnalisé inclus',
-                'SEO optimisé pour les recherches',
-                'Responsive sur tous les appareils',
-                'Multi-langue (FR/EN)',
+                'Devis & factures PDF en 2 clics',
+                'Paiement Mobile Money (FCFA)',
+                'Suivi des acomptes et soldes',
+                'Historique complet des transactions'
             ],
         },
     ]
@@ -401,7 +365,7 @@ function FeaturesSection() {
                         Tout ce qu'il faut pour <span className="gradient-text">réussir en ligne</span>
                     </h2>
                     <p className="text-gray-400 max-w-2xl mx-auto">
-                        Une suite complète d'outils conçue spécialement pour les photographes professionnels.
+                        Une suite complète d'outils conçue pour les créatifs professionnels : photographes, graphistes, illustrateurs, vidéastes...
                     </p>
                 </motion.div>
 
@@ -437,14 +401,23 @@ function FeaturesSection() {
 
                             <div className={index % 2 === 1 ? 'lg:order-1' : ''}>
                                 <div className="relative">
-                                    <div className="absolute inset-0 bg-green-500/10 rounded-2xl blur-xl" />
-                                    <div className="relative glass-strong rounded-2xl p-6">
-                                        <feature.icon className="w-12 h-12 text-green-400 mb-4" />
-                                        <div className="space-y-3">
-                                            {[1, 2, 3].map((i) => (
-                                                <div key={i} className="h-12 bg-white/5 rounded-lg" />
-                                            ))}
+                                    <div className="absolute inset-0 bg-green-500/15 rounded-2xl blur-2xl" />
+                                    <div className="relative glass-strong rounded-2xl overflow-hidden p-3">
+                                        <div className="flex items-center gap-1.5 mb-2 px-1">
+                                            <div className="w-2.5 h-2.5 rounded-full bg-red-500/70" />
+                                            <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/70" />
+                                            <div className="w-2.5 h-2.5 rounded-full bg-green-500/70" />
                                         </div>
+                                        <img
+                                            src={[
+                                                '/assets/screenshots/monsite/star creation site.png',
+                                                '/assets/screenshots/galerie/Partager la galerie.png',
+                                                '/assets/screenshots/facturation/create facture.png'
+                                            ][index]}
+                                            alt={feature.title}
+                                            className="w-full rounded-lg"
+                                            style={{ display: 'block' }}
+                                        />
                                     </div>
                                 </div>
                             </div>
@@ -511,13 +484,26 @@ function HowItWorksSection() {
                                 <div className="hidden md:block absolute top-12 left-full w-full h-px bg-gradient-to-r from-green-500/30 to-transparent" />
                             )}
 
-                            <div className="glass rounded-2xl p-8 h-full hover:border-green-500/30 transition-colors">
-                                <div className="text-4xl font-bold text-green-400/30 mb-4">{step.number}</div>
-                                <div className="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center mb-6">
-                                    <step.icon className="w-6 h-6 text-green-400" />
+                            <div className="glass rounded-2xl overflow-hidden h-full hover:border-green-500/30 transition-colors">
+                                {/* Real screenshot thumbnail */}
+                                <div className="relative">
+                                    <img
+                                        src={[
+                                            '/assets/screenshots/site-internet-danou-studio.png',
+                                            '/assets/screenshots/gallerie-image-soutenance.png',
+                                            '/assets/screenshots/facture-danou-studio.png'
+                                        ][index]}
+                                        alt={step.title}
+                                        className="w-full h-64 sm:h-72 lg:h-64 object-cover object-top"
+                                    />
+                                    <div className="absolute top-3 left-3 w-9 h-9 rounded-full bg-green-500 flex items-center justify-center text-black font-extrabold text-sm">
+                                        {step.number}
+                                    </div>
                                 </div>
-                                <h3 className="text-xl font-bold text-white mb-3">{step.title}</h3>
-                                <p className="text-gray-400">{step.description}</p>
+                                <div className="p-6">
+                                    <h3 className="text-xl font-bold text-white mb-3">{step.title}</h3>
+                                    <p className="text-gray-400 text-sm leading-relaxed">{step.description}</p>
+                                </div>
                             </div>
                         </motion.div>
                     ))}
@@ -531,7 +517,7 @@ function HowItWorksSection() {
                 >
                     <a
                         href="/pricing"
-                        className="bg-green-500 hover:bg-green-600 text-black font-semibold px-6 py-3 rounded-lg inline-flex items-center gap-2 transition-colors"
+                        className="bg-green-500 hover:bg-green-400 text-black font-bold px-7 py-3.5 rounded-xl inline-flex items-center gap-2 transition-all shadow-lg shadow-green-500/25"
                     >
                         Voir les tarifs
                         <ArrowRight className="w-5 h-5" />
@@ -548,83 +534,70 @@ function PricingSection() {
 
     const plans = [
         {
-            id: 'mensuel',
-            name: 'Mensuel',
-            description: 'Flexibilité totale, sans engagement',
-            price: 5000,
-            period: '/mois',
+            id: 'starter',
+            name: 'Starter',
+            tagline: 'Pour démarrer votre studio en ligne',
+            monthly: 5000,
+            yearly: 50000,
+            promoMonthly: 2500,
             features: [
-                'Site Builder complet',
-                'Pages illimitées',
-                'Photos portfolio illimitées',
-                'Galeries illimitées',
-                'Stockage illimité',
-                'Domaine personnalisé',
-                'Sans watermark',
-                'Analytics',
-                'Support prioritaire',
-                'API access',
+                'Site vitrine (builder pas-à-pas)',
+                'Portfolio jusqu\'à 20 photos',
+                '4 galeries clients / mois',
+                'Livraison par lien sécurisé',
+                'Facturation & devis en FCFA',
+                'Sous-domaine Vanda Studio',
             ],
-            cta: 'Commencer',
+            cta: 'Commencer maintenant',
             popular: false,
-            color: 'green',
         },
         {
-            id: 'annuel',
-            name: 'Annuel',
-            description: 'La meilleure valeur, payez moins',
-            price: 50000,
-            period: '/an',
-            badge: 'Économisez 10 000 F',
+            id: 'pro',
+            name: 'Pro',
+            tagline: 'La formule des photographes actifs',
+            monthly: 11000,
+            yearly: 100000,
+            promoMonthly: 5000,
+            badge: 'Le plus populaire',
             features: [
-                'Tout du plan Mensuel',
-                'Pages illimitées',
-                'Photos portfolio illimitées',
-                'Galeries illimitées',
-                'Stockage illimité',
+                'Tout le plan Starter',
                 'Domaine personnalisé',
-                'Sans watermark',
-                'Analytics',
-                'Support prioritaire',
-                'API access',
+                'Sans watermark Vanda Studio',
+                '500 photos · 20 galeries/mois',
+                'Paiement en ligne (Mobile Money & carte)',
+                'Acomptes & soldes sur devis',
             ],
-            cta: 'Choisir Annuel',
+            cta: 'Choisir le plan Pro',
             popular: true,
-            color: 'blue',
+        },
+        {
+            id: 'studio',
+            name: 'Studio',
+            tagline: 'Pour les studios & agences',
+            monthly: 25000,
+            yearly: 250000,
+            promoMonthly: 15000,
+            features: [
+                'Tout le plan Pro',
+                'Photos & galeries illimitées',
+                'API & Webhooks',
+                'Statistiques avancées',
+                'Support prioritaire 24/7',
+                'Onboarding dédié',
+            ],
+            cta: 'Choisir le plan Studio',
+            popular: false,
         },
     ]
 
-    const getColorClasses = (color: string) => {
-        switch (color) {
-            case 'blue':
-                return {
-                    text: 'text-blue-400',
-                    bg: 'bg-blue-500',
-                    border: 'border-blue-500/30',
-                    glow: 'shadow-[0_0_40px_rgba(59,130,246,0.15)]',
-                    button: 'bg-blue-500 hover:bg-blue-600 text-white',
-                    lightBg: 'bg-blue-500/20'
-                };
-            case 'purple':
-                return {
-                    text: 'text-purple-400',
-                    bg: 'bg-purple-500',
-                    border: 'border-purple-500/30',
-                    glow: 'shadow-[0_0_40px_rgba(168,85,247,0.15)]',
-                    button: 'bg-purple-500 hover:bg-purple-600 text-white',
-                    lightBg: 'bg-purple-500/20'
-                };
-            default: // green
-                return {
-                    text: 'text-green-400',
-                    bg: 'bg-green-500',
-                    border: 'border-green-500/30',
-                    glow: 'shadow-[0_0_40px_rgba(74,222,128,0.15)]',
-                    button: 'bg-green-500 hover:bg-green-600 text-black',
-                    lightBg: 'bg-green-500/20'
-                };
-        }
-    };
+    const colors = {
+        text: 'text-green-400',
+        bg: 'bg-green-500',
+        border: 'border-green-500/30',
+        glow: 'shadow-[0_0_40px_rgba(74,222,128,0.15)]',
+        button: 'bg-green-500 hover:bg-green-400 text-black font-bold shadow-lg shadow-green-500/25 transition-all',
+        lightBg: 'bg-green-500/10',
+    }
 
     return (
         <section id="pricing" className="py-24">
@@ -635,102 +608,131 @@ function PricingSection() {
                     viewport={{ once: true }}
                     className="text-center mb-12"
                 >
+                    {/* Promo badge */}
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/30 mb-6">
+                        <Sparkles className="w-4 h-4 text-amber-400" />
+                        <span className="text-sm font-semibold text-amber-400">🎉 Prix lancement · -50% les 6 premiers mois</span>
+                    </div>
+
                     <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
                         Des tarifs <span className="gradient-text">simples et transparents</span>
                     </h2>
                     <p className="text-gray-400 max-w-2xl mx-auto mb-8">
-                        Commencez gratuitement, upgradez quand vous êtes prêt. Pas de frais cachés.
+                        Commencez dès maintenant. Upgradez quand votre activité grandit. Sans engagement.
                     </p>
 
-                    {/* Billing Toggle commenté */}
-                    {/* <div className="flex items-center justify-center gap-4">
-                        <span className={`text-sm ${!isYearly ? 'text-white' : 'text-gray-400'}`}>Mensuel</span>
+                    {/* Billing Toggle */}
+                    <div className="flex items-center justify-center gap-4">
+                        <span className={`text-sm font-medium transition-colors ${!isYearly ? 'text-white' : 'text-gray-400'}`}>Mensuel</span>
                         <button
                             onClick={() => setIsYearly(!isYearly)}
-                            className={`relative w-14 h-7 rounded-full transition-colors ${isYearly ? 'bg-green-500' : 'bg-gray-700'
-                                }`}
+                            aria-label="Basculer facturation mensuelle/annuelle"
+                            className={`relative w-16 h-8 rounded-full transition-colors duration-300 ${isYearly ? 'bg-green-500' : 'bg-gray-700'}`}
                         >
-                            <span
-                                className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-transform ${isYearly ? 'translate-x-8' : 'translate-x-1'
-                                    }`}
-                            />
+                            <span className={`absolute top-1 w-6 h-6 rounded-full bg-white transition-transform duration-300 shadow-md ${isYearly ? 'translate-x-9' : 'translate-x-1'}`} />
                         </button>
-                        <span className={`text-sm ${isYearly ? 'text-white' : 'text-gray-400'}`}>
+                        <span className={`text-sm font-medium transition-colors ${isYearly ? 'text-white' : 'text-gray-400'}`}>
                             Annuel
-                            <span className="ml-2 px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded-full">-17%</span>
+                            <span className="ml-2 px-2.5 py-0.5 bg-green-500/20 text-green-400 text-xs font-semibold rounded-full">-17%</span>
                         </span>
-                    </div> */}
+                    </div>
                 </motion.div>
 
-                <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
-                    {plans.map((plan, index) => {
-                        const colors = getColorClasses(plan.color);
-                        return (
-                            <motion.div
-                                key={plan.name}
-                                initial={{ opacity: 0, y: 30 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ delay: index * 0.1 }}
-                                className={`relative rounded-2xl p-8 ${plan.popular
-                                    ? `glass-strong ${colors.border} ${colors.glow}`
+                <div className="grid md:grid-cols-3 gap-6 items-stretch">
+                    {plans.map((plan, index) => (
+                        <motion.div
+                            key={plan.id}
+                            initial={{ opacity: 0, y: 30 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: index * 0.1 }}
+                            className={`relative flex flex-col rounded-2xl p-8 ${
+                                plan.popular
+                                    ? `glass-strong ${colors.border} ${colors.glow} md:scale-[1.03] z-10`
                                     : 'glass border-white/5'
-                                    }`}
+                            }`}
+                        >
+                            {plan.popular && (
+                                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                                    <span className={`${colors.bg} text-white text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1 whitespace-nowrap`}>
+                                        <Star className="w-3 h-3 fill-white" />
+                                        Le plus populaire
+                                    </span>
+                                </div>
+                            )}
+
+                            {/* Plan name */}
+                            <div className="mb-4">
+                                <h3 className="text-xl font-bold text-white mb-1">{plan.name}</h3>
+                                <p className="text-sm text-green-400 font-medium">{plan.tagline}</p>
+                            </div>
+
+                            {/* Price block */}
+                            <div className="mb-6">
+                                {!isYearly && (
+                                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 mb-3">
+                                        <Sparkles className="w-3 h-3 text-amber-400" />
+                                        <span className="text-xs font-semibold text-amber-400">Prix lancement · 6 premiers mois</span>
+                                    </div>
+                                )}
+                                <div className="flex items-baseline gap-1 mb-1">
+                                    <span className="text-5xl font-bold text-white">
+                                        {isYearly
+                                            ? plan.yearly.toLocaleString('fr-FR')
+                                            : plan.promoMonthly.toLocaleString('fr-FR')
+                                        } F
+                                    </span>
+                                    <span className="text-gray-400">{isYearly ? '/an' : '/mois'}</span>
+                                </div>
+                                {!isYearly && (
+                                    <p className="text-sm text-gray-500">
+                                        <span className="line-through">{plan.monthly.toLocaleString('fr-FR')} F/mois</span>
+                                        <span className="ml-2 text-green-400 font-semibold text-xs">
+                                            puis {plan.monthly.toLocaleString('fr-FR')} F/mois
+                                        </span>
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* CTA */}
+                            <a
+                                href={`${ADMIN_URL}/auth/register?plan=${plan.id}${plan.id !== 'starter' ? '&checkout=true' : ''}`}
+                                onClick={() => localStorage.setItem('selectedPlan', plan.id)}
+                                className={`block w-full text-center py-3 rounded-lg font-semibold transition-all ${colors.button} mb-6`}
                             >
-                                {plan.popular && (
-                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                                        <span className={`${colors.bg} text-white text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1`}>
-                                            <Star className="w-3 h-3 fill-white" />
-                                            MEILLEURE VALEUR
-                                        </span>
-                                    </div>
-                                )}
-                                {(plan as any).badge && (
-                                    <div className="absolute top-4 right-4">
-                                        <span className="bg-green-500/20 text-green-400 text-xs font-semibold px-2 py-1 rounded-full">
-                                            {(plan as any).badge}
-                                        </span>
-                                    </div>
-                                )}
+                                {plan.cta}
+                            </a>
 
-                                <div className="mb-6">
-                                    <h3 className="text-xl font-bold text-white mb-1">{plan.name}</h3>
-                                    <p className="text-sm text-gray-400">{plan.description}</p>
-                                </div>
-
-                                <div className="mb-8">
-                                    <div className="flex items-baseline gap-1">
-                                        <span className="text-5xl font-bold text-white">
-                                            {plan.price.toLocaleString()} F
-                                        </span>
-                                        <span className="text-gray-400">{plan.period}</span>
-                                    </div>
-                                </div>
-
-                                <ul className="space-y-3 mb-8">
-                                    {plan.features.map((feature, i) => (
-                                        <li key={i} className="flex items-start gap-3">
-                                            <Check className={`w-5 h-5 ${colors.text} flex-shrink-0 mt-0.5`} />
-                                            <span className="text-sm text-gray-300">{feature}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-
-                                <a
-                                    href={`${ADMIN_URL}/auth/register`}
-                                    onClick={() => localStorage.setItem('selectedPlan', plan.id)}
-                                    className={`block w-full text-center py-3 rounded-lg font-semibold transition-colors ${colors.button}`}
-                                >
-                                    {plan.cta}
-                                </a>
-                            </motion.div>
-                        );
-                    })}
+                            {/* Features */}
+                            <ul className="space-y-2.5 flex-grow">
+                                {plan.features.map((feature, i) => (
+                                    <li key={i} className="flex items-start gap-2.5">
+                                        <Check className={`w-4 h-4 ${colors.text} flex-shrink-0 mt-0.5`} />
+                                        <span className="text-sm text-gray-300">{feature}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </motion.div>
+                    ))}
                 </div>
+
+                {/* Link to full pricing */}
+                <motion.p
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }}
+                    className="text-center text-gray-500 mt-8 text-sm"
+                >
+                    Comparer tous les détails →{' '}
+                    <a href="/pricing" className="text-green-400 hover:text-green-300 underline underline-offset-2 transition-colors">
+                        Voir le comparatif complet
+                    </a>
+                </motion.p>
             </div>
         </section>
     )
 }
+
 
 // Testimonials Section
 function TestimonialsSection() {
@@ -819,17 +821,17 @@ function CTASection() {
                             Prêt à transformer <span className="gradient-text">votre activité ?</span>
                         </h2>
                         <p className="text-gray-400 mb-8 max-w-xl mx-auto">
-                            Rejoignez 500+ photographes qui ont déjà fait le pas. Essai gratuit de 30 jours,
+                            Rejoignez les créatifs qui ont déjà fait le pas. Essai gratuit de 30 jours,
                             sans engagement.
                         </p>
 
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
                             <a
                                 href={`${ADMIN_URL}/auth/register`}
-                                className="bg-green-500 hover:bg-green-600 text-black font-semibold px-8 py-3 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                                className="bg-green-500 hover:bg-green-400 text-black font-bold px-8 py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-xl shadow-green-500/25"
                             >
                                 <Camera className="w-5 h-5" />
-                                Créer mon site maintenant
+                                Commencer maintenant
                             </a>
                             {/*<a
                                 href="/contact"
@@ -861,116 +863,17 @@ function CTASection() {
 }
 
 // Footer
-function Footer() {
-    const links = {
-        Product: [
-            { label: 'Fonctionnalités', href: '#features' },
-            { label: 'Tarifs', href: '#pricing' },
-            { label: 'Démo', href: '#' },
-            { label: 'Changelog', href: '#' },
-        ],
-        Resources: [
-            { label: 'Centre d\'aide', href: '#' },
-            { label: 'Documentation', href: '#' },
-            { label: 'Blog', href: '#' },
-            { label: 'Roadmap', href: '#' },
-        ],
-        Company: [
-            { label: 'À propos', href: '#' },
-            { label: 'Carrières', href: '#' },
-            { label: 'Contact', href: '#' },
-            { label: 'Presse', href: '#' },
-        ],
-        Legal: [
-            { label: 'Confidentialité', href: '#' },
-            { label: 'Conditions', href: '#' },
-            { label: 'CGV', href: '#' },
-            { label: 'Mentions légales', href: '#' },
-        ],
-    }
-
-    return (
-        <footer className="py-16 border-t border-white/5">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-12">
-                    {/* Logo & Description */}
-                    <div className="col-span-2">
-                        <a href="/" className="flex items-center gap-2 mb-4">
-                            <img
-                                src={vandaLogo}
-                                alt="Vanda Studio Logo"
-                                style={{ height: '40px', objectFit: 'contain' }}
-                            />
-                            <span style={{
-                                fontSize: '1rem',
-                                fontWeight: 800,
-                                background: 'linear-gradient(135deg, #4caf50 0%, #81c784 100%)',
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent',
-                                letterSpacing: '-0.3px'
-                            }}>
-                                VANDA STUDIO
-                            </span>
-                        </a>
-                        <p className="text-gray-400 text-sm mb-4 max-w-xs">
-                            La plateforme tout-en-un pour créer votre site de photographe professionnel
-                            et livrer vos galeries clients.
-                        </p>
-                        <div className="flex gap-4">
-                            {['twitter', 'instagram', 'linkedin', 'youtube'].map((social) => (
-                                <a
-                                    key={social}
-                                    href="#"
-                                    className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors"
-                                >
-                                    <Globe className="w-4 h-4 text-gray-400" />
-                                </a>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Links */}
-                    {Object.entries(links).map(([category, items]) => (
-                        <div key={category}>
-                            <h4 className="text-white font-medium mb-4">{category}</h4>
-                            <ul className="space-y-2">
-                                {items.map((item) => (
-                                    <li key={item.label}>
-                                        <a
-                                            href={item.href}
-                                            className="text-sm text-gray-400 hover:text-white transition-colors"
-                                        >
-                                            {item.label}
-                                        </a>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    ))}
-                </div>
-
-                <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
-                    <p className="text-sm text-gray-500">
-                        © 2026 VANDA STUDIO. Tous droits réservés.
-                    </p>
-                    <p className="text-sm text-gray-500">
-                        Fait avec ❤️ pour les photographes
-                    </p>
-                </div>
-            </div>
-        </footer>
-    )
-}
 
 // Main Landing Page Component
 export default function LandingPage() {
     return (
         <div className="min-h-screen bg-background text-foreground linear-theme font-sans">
-            <Navigation />
+            <SeoNavbar />
 
-            <main>
+            <main className="pt-20">
                 <HeroSection />
                 <SocialProofSection />
+                <TargetProfessionsStrip />
                 <FeaturesSection />
                 <HowItWorksSection />
                 <PricingSection />
@@ -978,7 +881,7 @@ export default function LandingPage() {
                 <CTASection />
             </main>
 
-            <Footer />
+            <SeoFooter />
         </div>
     )
 }
