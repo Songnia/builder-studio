@@ -1,0 +1,263 @@
+{
+  "schema_version": "1.0.0",
+  "personas": [
+    {
+      "id": "persona-photographer-new",
+      "name": "Photographe — Nouveau",
+      "primary_job": "Créer un site vitrine professionnel et le publier pour trouver des clients",
+      "first_value": "Site vitrine publié et visible publiquement",
+      "wow_moment_event_id": "site_published",
+      "required_setup": ["SiteConfig via builder"],
+      "irrelevant_features": ["Super-admin", "Gestion plans"],
+      "onboarding_intensity_default": "guided",
+      "first_run_objective": "Publier son site vitrine (ou à défaut créer sa première galerie) dans la première session",
+      "activation_criteria": "site_published",
+      "success_signal": "site_published + site_viewed_publicly"
+    },
+    {
+      "id": "persona-photographer-active",
+      "name": "Photographe — Actif",
+      "primary_job": "Livrer ses photos à ses clients et facturer ses prestations",
+      "first_value": "Première galerie livrée à un client",
+      "wow_moment_event_id": "first_gallery_viewed_by_client",
+      "required_setup": [],
+      "irrelevant_features": ["Builder", "Super-admin"],
+      "onboarding_intensity_default": "assisted",
+      "first_run_objective": "Créer et partager sa première galerie",
+      "activation_criteria": "first_gallery_viewed_by_client",
+      "success_signal": "retour du client dans la galerie (views + likes)"
+    },
+    {
+      "id": "persona-photographer-pro",
+      "name": "Photographe — Pro / Studio",
+      "primary_job": "Monétiser son studio : facturation, paiements, volume de livraisons",
+      "first_value": "Premier paiement de facture encaissé",
+      "wow_moment_event_id": "first_invoice_paid",
+      "required_setup": ["Subscription active"],
+      "irrelevant_features": ["Super-admin"],
+      "onboarding_intensity_default": "expert",
+      "first_run_objective": "Créer sa première facture et l'envoyer",
+      "activation_criteria": "first_invoice_created",
+      "success_signal": "first_invoice_paid"
+    },
+    {
+      "id": "persona-client",
+      "name": "Client final",
+      "primary_job": "Consulter et télécharger les photos de sa séance",
+      "first_value": "Galerie déverrouillée et photos visibles",
+      "wow_moment_event_id": "gallery_pin_unlocked",
+      "required_setup": [],
+      "irrelevant_features": ["Builder", "Facturation", "Abonnement", "Super-admin"],
+      "onboarding_intensity_default": "assisted",
+      "first_run_objective": "Déverrouiller la galerie (PIN si présent) et voir ses photos",
+      "activation_criteria": "gallery_pin_unlocked",
+      "success_signal": "gallery_photo_downloaded"
+    },
+    {
+      "id": "persona-superadmin",
+      "name": "Super-admin",
+      "primary_job": "Opérer la plateforme : activer les photographes, gérer les plans",
+      "first_value": "Tableau de bord opérationnel",
+      "wow_moment_event_id": null,
+      "required_setup": ["role=superadmin"],
+      "irrelevant_features": ["Builder", "Galeries", "Facturation"],
+      "onboarding_intensity_default": "expert",
+      "first_run_objective": "Consulter les stats plateforme",
+      "activation_criteria": null,
+      "success_signal": null
+    }
+  ],
+  "journeys": [
+    {
+      "id": "journey-new-photographer-first-run",
+      "persona_id": "persona-photographer-new",
+      "name": "Premier run : créer et publier son site",
+      "entry_condition": "account_created",
+      "goal_event": "site_published",
+      "exit_conditions": ["site_published"],
+      "channels": ["in_app"],
+      "intensity": "guided",
+      "steps": [
+        {
+          "id": "step-welcome-goal",
+          "goal": "Choisir son objectif",
+          "trigger": "account_created",
+          "mechanism": "welcome_modal",
+          "target": "/admin/dashboard (overlay)",
+          "completion_event": "goal_selected",
+          "skip_allowed": true,
+          "resume_allowed": false,
+          "options": ["creer_mon_site", "livrer_mes_photos", "facturer", "explorer"]
+        },
+        {
+          "id": "step-start-builder",
+          "goal": "Démarrer le builder de site",
+          "trigger": "goal_selected == creer_mon_site",
+          "mechanism": "redirect",
+          "target": "/admin/site-builder",
+          "completion_event": "site_builder_started",
+          "skip_allowed": true,
+          "resume_allowed": true
+        },
+        {
+          "id": "step-build-site",
+          "goal": "Remplir les étapes du builder (contenu réel)",
+          "trigger": "site_builder_started",
+          "mechanism": "guided_steps",
+          "target": "builder steps 1..N",
+          "completion_event": "site_config_saved",
+          "skip_allowed": true,
+          "resume_allowed": true
+        },
+        {
+          "id": "step-publish-site",
+          "goal": "Publier le site et le voir en ligne",
+          "trigger": "site_config_saved",
+          "mechanism": "inline + contextual_rescue",
+          "target": "/admin/site-builder (PreviewStep)",
+          "completion_event": "site_published",
+          "skip_allowed": true,
+          "resume_allowed": true
+        }
+      ]
+    },
+    {
+      "id": "journey-photographer-first-delivery",
+      "persona_id": "persona-photographer-active",
+      "name": "Première livraison à un client",
+      "entry_condition": "login_return AND galleries.count == 0 OR site_published",
+      "goal_event": "first_gallery_viewed_by_client",
+      "exit_conditions": ["first_gallery_viewed_by_client"],
+      "channels": ["in_app", "email"],
+      "intensity": "assisted",
+      "steps": [
+        {
+          "id": "step-create-gallery",
+          "goal": "Créer sa première galerie",
+          "trigger": "entry",
+          "mechanism": "checklist + empty_state",
+          "target": "/admin/new-delivery",
+          "completion_event": "first_gallery_created",
+          "skip_allowed": true,
+          "resume_allowed": true
+        },
+        {
+          "id": "step-upload-photos",
+          "goal": "Uploader les photos de la séance",
+          "trigger": "first_gallery_created",
+          "mechanism": "inline",
+          "target": "/admin/gallery/:uuid",
+          "completion_event": "first_photo_uploaded",
+          "skip_allowed": true,
+          "resume_allowed": true
+        },
+        {
+          "id": "step-share-gallery",
+          "goal": "Partager le lien au client",
+          "trigger": "first_photo_uploaded",
+          "mechanism": "inline",
+          "target": "ShareDialog",
+          "completion_event": "first_gallery_shared",
+          "skip_allowed": true,
+          "resume_allowed": true
+        },
+        {
+          "id": "step-client-visits",
+          "goal": "Le client consulte la galerie",
+          "trigger": "first_gallery_shared",
+          "mechanism": "email_validation",
+          "target": null,
+          "completion_event": "first_gallery_viewed_by_client",
+          "skip_allowed": true,
+          "resume_allowed": false
+        }
+      ]
+    },
+    {
+      "id": "journey-photographer-first-invoice",
+      "persona_id": "persona-photographer-pro",
+      "name": "Première facture",
+      "entry_condition": "first_gallery_created OR accès manuel /admin/invoices",
+      "goal_event": "first_invoice_created",
+      "exit_conditions": ["first_invoice_created"],
+      "channels": ["in_app"],
+      "intensity": "assisted",
+      "steps": [
+        {
+          "id": "step-create-invoice",
+          "goal": "Créer sa première facture",
+          "trigger": "entry",
+          "mechanism": "checklist + empty_state",
+          "target": "/admin/invoices/new",
+          "completion_event": "first_invoice_created",
+          "skip_allowed": true,
+          "resume_allowed": true
+        }
+      ]
+    },
+    {
+      "id": "journey-photographer-subscription",
+      "persona_id": "persona-photographer-new",
+      "name": "Abonnement / paiement",
+      "entry_condition": "publish_attempt OR upgrade_dialog OR selectedPlan_present",
+      "goal_event": "subscription_payment_completed",
+      "exit_conditions": ["subscription_payment_completed"],
+      "channels": ["in_app", "email"],
+      "intensity": "assisted",
+      "steps": [
+        {
+          "id": "step-choose-plan",
+          "goal": "Choisir un plan",
+          "trigger": "entry",
+          "mechanism": "inline",
+          "target": "/admin/subscription",
+          "completion_event": "plan_selected",
+          "skip_allowed": true,
+          "resume_allowed": true
+        },
+        {
+          "id": "step-checkout",
+          "goal": "Payer via Maketou",
+          "trigger": "plan_selected",
+          "mechanism": "inline",
+          "target": "redirect Maketou",
+          "completion_event": "subscription_payment_completed",
+          "skip_allowed": false,
+          "resume_allowed": true
+        }
+      ]
+    },
+    {
+      "id": "journey-client-gallery",
+      "persona_id": "persona-client",
+      "name": "Consultation de galerie client",
+      "entry_condition": "gallery_link_opened",
+      "goal_event": "gallery_pin_unlocked",
+      "exit_conditions": ["gallery_pin_unlocked"],
+      "channels": ["in_app"],
+      "intensity": "assisted",
+      "steps": [
+        {
+          "id": "step-unlock",
+          "goal": "Déverrouiller la galerie (PIN éventuel)",
+          "trigger": "gallery_link_opened",
+          "mechanism": "inline",
+          "target": "/g/:uuid",
+          "completion_event": "gallery_pin_unlocked",
+          "skip_allowed": false,
+          "resume_allowed": false
+        },
+        {
+          "id": "step-browse",
+          "goal": "Consulter / télécharger / liker les photos",
+          "trigger": "gallery_pin_unlocked",
+          "mechanism": "inline",
+          "target": "galerie",
+          "completion_event": "gallery_photo_downloaded",
+          "skip_allowed": true,
+          "resume_allowed": false
+        }
+      ]
+    }
+  ]
+}

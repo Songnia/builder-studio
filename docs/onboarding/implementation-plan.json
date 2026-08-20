@@ -1,0 +1,186 @@
+{
+  "schema_version": "1.0.0",
+  "objective": "Implémenter un système d'activation comportemental pour VANDA STUDIO : guider le photographe de l'inscription à la publication de son site puis à la première livraison, sans refaire la stratégie définie dans onboarding-architecture.json.",
+  "strategic_assumptions": [
+    "L'activation principale = site_published (promesse marketing 'votre site en 10 minutes').",
+    "La première valeur alternative = first_gallery_viewed_by_client.",
+    "La politique de publication doit être clarifiée : soit le site est publiable gratuitement (trial 30 jours), soit le publish est payant — mais pas les deux en contradiction (friction-publish-gating).",
+    "selectedPlan (localStorage) doit être conservé après inscription et transformé en intention d'abonnement."
+  ],
+  "files_to_inspect": [
+    "frontend/src/AppAdmin.tsx",
+    "frontend/src/App.tsx",
+    "frontend/src/pages/SignUp.tsx",
+    "frontend/src/pages/Login.tsx",
+    "frontend/src/pages/admin/AdminDashboard.tsx",
+    "frontend/src/pages/admin/InvoiceBuilder.tsx",
+    "frontend/src/pages/admin/Subscription.tsx",
+    "frontend/src/pages/admin/ProfilePage.tsx",
+    "frontend/src/builder/steps/PreviewStep.tsx",
+    "frontend/src/hooks/useBuilder.ts",
+    "frontend/src/hooks/usePlanLimits.ts",
+    "frontend/src/components/common/UpgradeDialog.tsx",
+    "frontend/src/components/Layout/AdminLayout.tsx",
+    "frontend/src/components/Layout/AdminNavbar.tsx",
+    "frontend/src/components/Layout/Sidebar.tsx",
+    "frontend/src/components/ui/empty.tsx",
+    "frontend/src/services/api.ts",
+    "frontend/src/services/authService.ts",
+    "backend/routes/api.php",
+    "backend/app/Http/Controllers/Api/AuthController.php",
+    "backend/app/Models/User.php",
+    "backend/app/Models/Gallery.php",
+    "backend/app/Models/SiteConfig.php",
+    "backend/app/Models/UserSubscription.php",
+    "backend/app/Http/Controllers/Api/SiteConfigController.php",
+    "backend/app/Http/Controllers/Api/PaymentController.php",
+    "backend/database/migrations"
+  ],
+  "state_model": {
+    "type": "hybrid",
+    "backend": {
+      "endpoint": "GET /api/onboarding/state",
+      "response": {
+        "has_site": "boolean (siteConfigs count > 0)",
+        "has_published": "boolean (any site is_published)",
+        "gallery_count": "number",
+        "invoice_count": "number",
+        "subscription_active": "boolean (any sub status active)",
+        "has_seen_welcome": "boolean (colonne users.onboarding_welcome_seen ou table onboarding_states)",
+        "goal": "string|null"
+      },
+      "persistence": "Option A (recommandée, sans migration lourde) : colonnes `onboarding_welcome_seen` + `onboarding_goal` sur users (migration). Option B : table onboarding_states(user_id, key, value). Dériver le reste depuis les compteurs existants (site_configs, galleries, invoices, subscriptions)."
+    },
+    "frontend": {
+      "localStorage": ["selectedPlan (conservé)", "vanda_current_step", "vanda_has_built_site", "vanda_draft_invoice", "vanda_onboarding_seen"]
+    }
+  },
+  "event_instrumentation": {
+    "approach": "Option A : SDK PostHog (JS) sur dist-public et dist-admin. Option B (sans dépendance externe) : endpoint POST /api/events stocké en table events + export/dashboard simple.",
+    "events_minimum_phase1": ["account_created", "site_builder_started", "site_builder_step_viewed", "site_config_saved", "site_published", "login_return"],
+    "mapping": "voir onboarding-events.json / onboarding-analytics.json"
+  },
+  "components_to_build": [
+    {
+      "id": "WelcomeModal",
+      "description": "Modal post-inscription : orientation + choix d'objectif (creer_mon_site / livrer_mes_photos / facturer / explorer). Dismissible, une seule fois, déclenché si has_seen_welcome=false.",
+      "state": "backend (onboarding_welcome_seen) + localStorage (vanda_onboarding_seen)",
+      "completion_event": "onboarding_goal_selected",
+      "skip_allowed": true
+    },
+    {
+      "id": "OnboardingChecklist",
+      "description": "Checklist de capacités affichée sur le dashboard vide (et en panneau rétractable pour les actifs) : 'Créer mon site', 'Livrer ma première galerie', 'Créer ma première facture'. Chaque item = CTA vers la route correspondante, coché via compteurs backend.",
+      "state": "dérivé de GET /api/onboarding/state",
+      "completion_event": "site_published / first_gallery_created / first_invoice_created",
+      "skip_allowed": true
+    },
+    {
+      "id": "DashboardEmptyState",
+      "description": "Remplacer 'Aucune livraison trouvée.' par un état vide (composant ui/empty.tsx) avec CTA primaire 'Créer ma première galerie' + lien builder + lien facturation.",
+      "state": "gallery_count == 0",
+      "completion_event": "first_gallery_created"
+    },
+    {
+      "id": "PublishSuccessView",
+      "description": "Écran de succès après publication : URL publique du site, bouton 'Voir mon site', prochaine étape suggérée (livrer une galerie).",
+      "state": "site_published",
+      "completion_event": "site_viewed_publicly"
+    }
+  ],
+  "backend_endpoints_needed": [
+    { "method": "GET", "path": "/api/onboarding/state", "purpose": "Fournir l'état d'onboarding dérivé au frontend", "phase": 1 },
+    { "method": "POST", "path": "/api/onboarding/goal", "purpose": "Persister le choix d'objectif du welcome modal", "phase": 2 },
+    { "method": "POST", "path": "/api/onboarding/welcome-seen", "purpose": "Marquer le welcome modal comme vu", "phase": 2 },
+    { "method": "POST", "path": "/api/events", "purpose": "Instrumentation analytics (option B)", "phase": 1 }
+  ],
+  "email_implementation": {
+    "backend": [
+      "App\\Mail\\WelcomeMail",
+      "App\\Mail\\BuilderRescueMail",
+      "App\\Mail\\BuilderRescue72hMail",
+      "App\\Mail\\PublishConfirmationMail",
+      "App\\Mail\\FirstDeliveryNudgeMail",
+      "App\\Mail\\CheckoutRescueMail",
+      "App\\Mail\\InactivityRecoveryMail"
+    ],
+    "jobs": ["SendOnboardingEmails (commandes artisan planifiées, scheduler : hourly)"],
+    "conditions": "importer email-lifecycle-map.json : chaque envoi vérifie send_if / suppress_if via compteurs",
+    "phase": 3
+  },
+  "analytics_changes": {
+    "phase_1": ["SDK analytics dans main-public.tsx et main-admin.tsx", "événements minimum définis", "identité user_id après auth"],
+    "phase_2": ["événements welcome modal et checklist", "funnel builder"],
+    "phase_3": ["email events (sent, clicked, goal_achieved)"]
+  },
+  "migration_needs": [
+    { "migration": "add_onboarding_columns_to_users_table", "columns": ["onboarding_welcome_seen boolean default false", "onboarding_goal string nullable"], "phase": 1 },
+    { "migration": "create_onboarding_events_table", "columns": ["id, user_id nullable, event_name, properties json, occurred_at"], "phase": 1 },
+    { "migration": "add_fields_to_users_table", "columns": ["phone, bio, avatar (nullable)"], "phase": 4, "optional": true }
+  ],
+  "tests": [
+    { "feature": "Redirect post-signup", "type": "frontend", "scope": "SignUp → builder ou dashboard+welcome" },
+    { "feature": "Routes subscription/profile", "type": "frontend", "scope": "AppAdmin inclut /admin/subscription et /admin/profile" },
+    { "feature": "GET /api/onboarding/state", "type": "backend", "scope": "has_site/has_published/counts corrects selon seed" },
+    { "feature": "Suppression email", "type": "backend", "scope": "pas d'envoi si suppress_if true (ex. site_configs.count>0)" },
+    { "feature": "Welcome modal", "type": "frontend", "scope": "visible une fois, dismissible, goal persisté" },
+    { "feature": "Checklist", "type": "frontend", "scope": "items cochés selon compteurs, CTA fonctionnels" }
+  ],
+  "rollout_phases": [
+    {
+      "phase": 1,
+      "label": "Fixes bloquants + activation",
+      "items": [
+        "fix redirect post-signup (friction-signup-redirect)",
+        "ajouter routes /admin/subscription + /admin/profile dans AppAdmin.tsx (friction-missing-routes)",
+        "fix TOTAL_STEPS dans useBuilder.ts (friction-builder-step-count)",
+        "état vide dashboard + CTA (friction-empty-dashboard)",
+        "GET /api/onboarding/state + migration colonnes users",
+        "instrumentation analytics minimale (account_created, site_builder_started, site_published)"
+      ],
+      "exit_criteria": "Activation Rate mesurable ; plus de 404 sur subscription ; dashboard guide l'utilisateur"
+    },
+    {
+      "phase": 2,
+      "label": "Journey premier site",
+      "items": [
+        "WelcomeModal + persistance goal",
+        "clarifier la politique de publication (publish gratuit trial OU payant — décision produit, à trancher) et mettre à jour UpgradeDialog/usePlanLimits en cohérence",
+        "conserver selectedPlan après inscription et proposer le checkout dans le parcours (friction-selected-plan-lost)",
+        "PublishSuccessView + 'voir mon site'",
+        "fix lien AdminNavbar 'Mon abonnement' → /admin/subscription"
+      ],
+      "exit_criteria": "Journey Completion du premier site mesuré ; drop-off par étape connu"
+    },
+    {
+      "phase": 3,
+      "label": "Emails de cycle de vie",
+      "items": [
+        "Mailables + jobs + scheduler",
+        "welcome email immédiat",
+        "builder rescue 24h/72h",
+        "publish confirmation",
+        "first delivery nudge (3 jours)",
+        "checkout rescue (24h)",
+        "inactivity recovery (14 jours)"
+      ],
+      "exit_criteria": "Emails envoyés avec suppression correcte ; Rescue Success mesurable"
+    },
+    {
+      "phase": 4,
+      "label": "Adoption avancée",
+      "items": [
+        "tour contextual facturation (journey first invoice)",
+        "profile enrichi (phone/bio/avatar) + migration",
+        "fix share-stub galerie client (WhatsApp/email) et panier shop",
+        "transitions status gallery (livrée) via API"
+      ],
+      "exit_criteria": "First Delivery Rate et First Invoice Rate mesurés et croissants"
+    }
+  ],
+  "decisions_produit_requises": [
+    "Politique de publication : le publish est-il gratuit pendant le trial 30 jours, ou payant ? (affecte UpgradeDialog, auto-publish backend, friction-publish-gating)",
+    "selectedPlan : garder l'intention d'abonnement après inscription et l'utiliser comme pré-sélection du checkout ?",
+    "Limites de plans : appliquer réellement les limites (20 photos / 4 galeries Starter) ou les afficher comme Infinity ?"
+  ]
+}

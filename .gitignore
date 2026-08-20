@@ -2,6 +2,13 @@
 # VANDA STUDIO — .gitignore
 # =====================================================
 
+# Local agent tooling & internal reports (never public)
+.agents/
+.audit/
+.onboarding/
+.codex/
+backup/
+
 # Environment files (never commit real secrets)
 .env
 .env.*
@@ -80,6 +87,11 @@ id_rsa.pub
 /frontProduction2026/
 /startjobs-main/
 /frontend/new vertion of landing page/
+/screenshortApplicationvanda/
+/backend/public/assets/
+
+# Superseded documentation
+/docs/old/
 
 # IDE & OS
 .idea/
@@ -102,6 +114,8 @@ lerna-debug.log*
 coverage/
 *.lcov
 .nyc_output/
+# Local MySQL test runner (CI uses sqlite :memory: via phpunit.xml)
+/backend/phpunit.mysql.xml
 
 # Temporary files
 *.tmp

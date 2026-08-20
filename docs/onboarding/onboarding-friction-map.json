@@ -1,0 +1,155 @@
+{
+  "schema_version": "1.0.0",
+  "frictions": [
+    {
+      "id": "friction-signup-redirect",
+      "type": "dead_end",
+      "severity": "high",
+      "route": "/auth/register",
+      "persona_ids": ["persona-photographer-new"],
+      "problem": "SignUp navigue vers /admin/dashboard (vide) alors que Login envoie les nouveaux utilisateurs (has_site=false) vers /admin/site-builder. L'inscrit atterrit sur un dashboard vide sans CTA.",
+      "recommended_mechanism": "redirect_to_builder",
+      "priority_tier": 1,
+      "evidence": ["frontend/src/pages/SignUp.tsx: navigate('/admin/dashboard')", "frontend/src/pages/Login.tsx: has_site ? dashboard : site-builder"]
+    },
+    {
+      "id": "friction-empty-dashboard",
+      "type": "empty_state",
+      "severity": "high",
+      "route": "/admin/dashboard",
+      "persona_ids": ["persona-photographer-new", "persona-photographer-active"],
+      "problem": "Dashboard vide ('Aucune livraison trouvée.') sans explication, sans CTA primaire, sans chemin vers le builder, la facturation ou l'abonnement.",
+      "recommended_mechanism": "onboarding_checklist + empty-state-upgrade",
+      "priority_tier": 1,
+      "evidence": ["frontend/src/pages/admin/AdminDashboard.tsx: table + 'Aucune livraison trouvée.'", "frontend/src/components/ui/empty.tsx: existant mais non importé"]
+    },
+    {
+      "id": "friction-missing-routes",
+      "type": "dead_end",
+      "severity": "high",
+      "route": "/admin/subscription, /admin/profile",
+      "persona_ids": ["persona-photographer-new", "persona-photographer-pro"],
+      "problem": "Les routes /admin/subscription et /admin/profile sont déclarées dans App.tsx mais ABSENTES de AppAdmin.tsx (build admin). UpgradeDialog navigue vers /admin/subscription → 404. Liens Sidebar désactivés ('Bientôt disponible').",
+      "recommended_mechanism": "fix_routes",
+      "priority_tier": 1,
+      "evidence": ["frontend/src/AppAdmin.tsx: pas de route subscription/profile", "frontend/src/components/common/UpgradeDialog.tsx: navigate('/admin/subscription')", "frontend/src/components/Layout/Sidebar.tsx: disabled"]
+    },
+    {
+      "id": "friction-no-onboarding",
+      "type": "no_contextual_guidance",
+      "severity": "high",
+      "route": "toutes (admin)",
+      "persona_ids": ["persona-photographer-new"],
+      "problem": "Aucun mécanisme d'onboarding : pas de welcome modal, checklist, tour, tooltips, ni analytics. La seule brique est le WelcomeStep du builder.",
+      "recommended_mechanism": "welcome_modal + onboarding_checklist",
+      "priority_tier": 1,
+      "evidence": ["aucun SDK analytics dans package.json", "grep tooltip/tour/checklist: aucun"]
+    },
+    {
+      "id": "friction-publish-gating",
+      "type": "premature_upsell",
+      "severity": "medium",
+      "route": "/admin/site-builder",
+      "persona_ids": ["persona-photographer-new"],
+      "problem": "La publication est gated par UpgradeDialog (feature=publish) alors que le backend accepte is_published=true au store ; les limites de plan sont cosmétiques (Infinity dans usePlanLimits). Le copy d'UpgradeDialog annonce des limites (20 photos, 4 galeries) non appliquées. Message contradictoire.",
+      "recommended_mechanism": "clarify_publish_policy",
+      "priority_tier": 1,
+      "evidence": ["frontend/src/builder/steps/PreviewStep.tsx: UpgradeDialog feature=publish", "frontend/src/hooks/usePlanLimits.ts: Infinity", "backend SiteConfigController store: is_published default true"]
+    },
+    {
+      "id": "friction-selected-plan-lost",
+      "type": "long_setup",
+      "severity": "medium",
+      "route": "/auth/register",
+      "persona_ids": ["persona-photographer-new"],
+      "problem": "Le plan choisi sur Landing/Pricing (localStorage.selectedPlan) est supprimé à l'inscription : l'intention d'achat est perdue et l'abonnement ne démarre pas.",
+      "recommended_mechanism": "preserve_plan_intent",
+      "priority_tier": 1,
+      "evidence": ["frontend/src/pages/SignUp.tsx: localStorage.removeItem('selectedPlan')"]
+    },
+    {
+      "id": "friction-navbar-subscription",
+      "type": "dead_end",
+      "severity": "medium",
+      "route": "AdminNavbar dropdown",
+      "persona_ids": ["persona-photographer-active"],
+      "problem": "Le menu 'Mon abonnement' du dropdown profile pointe vers /pricing (page marketing publique) au lieu de /admin/subscription.",
+      "recommended_mechanism": "fix_link",
+      "priority_tier": 2,
+      "evidence": ["frontend/src/components/Layout/AdminNavbar.tsx"]
+    },
+    {
+      "id": "friction-no-email-verification",
+      "type": "unnecessary_permission",
+      "severity": "medium",
+      "route": "auth",
+      "persona_ids": ["persona-photographer-new"],
+      "problem": "Le réglage require_email_verification existe côté superadmin mais aucune vérification n'est implémentée côté frontend (pas d'écran verify, pas de resend). Si activé, blocage silencieux.",
+      "recommended_mechanism": "defer_or_implement",
+      "priority_tier": 2,
+      "evidence": ["backend routes: aucun /email/verify", "frontend Login/SignUp: aucun handling"]
+    },
+    {
+      "id": "friction-client-share-stub",
+      "type": "dead_end",
+      "severity": "low",
+      "route": "/g/:uuid",
+      "persona_ids": ["persona-client"],
+      "problem": "Le bouton 'Envoyer' la sélection de la galerie client est un stub (simple snackbar), aucune action réelle (pas de WhatsApp/email).",
+      "recommended_mechanism": "whatsapp_or_email",
+      "priority_tier": 4,
+      "evidence": ["frontend/src/pages/client/ClientGalleryView.tsx: handleSendSelection → snackbar"]
+    },
+    {
+      "id": "friction-cart-unmounted",
+      "type": "dead_end",
+      "severity": "low",
+      "route": "template shop",
+      "persona_ids": ["persona-client"],
+      "problem": "Le CartDrawer n'est monté nulle part : le panier 'Commander' du shop du site généré est non fonctionnel.",
+      "recommended_mechanism": "fix_cart",
+      "priority_tier": 4,
+      "evidence": ["frontend/src/template/components/Shop/CartDrawer.tsx: non importé"]
+    },
+    {
+      "id": "friction-gallery-status",
+      "type": "feature_with_no_context",
+      "severity": "low",
+      "route": "api/admin/galleries",
+      "persona_ids": ["persona-photographer-active"],
+      "problem": "Le statut gallery (draft/published/archived) n'est jamais transitionné par l'API : 'draft' permanent, aucune notion de 'livrée'.",
+      "recommended_mechanism": "add_status_transitions",
+      "priority_tier": 4,
+      "evidence": ["backend GalleryController: status toujours 'draft'"]
+    },
+    {
+      "id": "friction-builder-step-count",
+      "type": "duplicate_setup_step",
+      "severity": "low",
+      "route": "/admin/site-builder",
+      "persona_ids": ["persona-photographer-new"],
+      "problem": "TOTAL_STEPS=9 dans useBuilder alors que 10 composants d'étapes existent : la progression affichée est fausse.",
+      "recommended_mechanism": "fix_step_count",
+      "priority_tier": 1,
+      "evidence": ["frontend/src/hooks/useBuilder.ts: TOTAL_STEPS=9", "frontend/src/builder/steps: 10 fichiers"]
+    },
+    {
+      "id": "friction-profile-schema",
+      "type": "feature_with_no_context",
+      "severity": "low",
+      "route": "/admin/profile",
+      "persona_ids": ["persona-photographer-active"],
+      "problem": "phone/bio/avatar référencés dans le code mais absents du schéma users et du fillable : profil incomplet.",
+      "recommended_mechanism": "extend_schema",
+      "priority_tier": 4,
+      "evidence": ["backend/app/Models/User.php: fillable sans phone/bio/avatar", "PaymentController/PhotographerController/SiteConfigController: user->phone"]
+    }
+  ],
+  "empty_states_inventaire": [
+    { "route": "/admin/dashboard", "texte_actuel": "Aucune livraison trouvée.", "statut": "SANS CTA", "recommendation": "état vide onboarding avec CTA 'Créer ma première galerie' + accès builder" },
+    { "route": "/admin/invoices", "texte_actuel": "Aucune facture trouvée.", "statut": "SANS CTA", "recommendation": "état vide avec CTA 'Créer ma première facture'" },
+    { "route": "builder à propos", "texte_actuel": "Les informations du promoteur seront affichées ici une fois configurées dans le builder.", "statut": "OK", "recommendation": "garder" },
+    { "route": "/g/:uuid", "texte_actuel": "Galerie introuvable / Vérifiez le lien.", "statut": "OK", "recommendation": "garder + lien contact" },
+    { "route": "template portfolio", "texte_actuel": "Aucune photo disponible pour le moment.", "statut": "OK", "recommendation": "garder" }
+  ]
+}

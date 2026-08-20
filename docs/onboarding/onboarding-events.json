@@ -1,0 +1,194 @@
+{
+  "schema_version": "1.0.0",
+  "events": [
+    {
+      "id": "account_created",
+      "event_name": "account_created",
+      "type": "entry",
+      "source": "product",
+      "persona_ids": ["persona-photographer-new"],
+      "properties": ["user_id", "selected_plan_present", "referrer", "utm_campaign"],
+      "evidence": ["POST /api/register → 201"]
+    },
+    {
+      "id": "goal_selected",
+      "event_name": "onboarding_goal_selected",
+      "type": "setup",
+      "source": "in_app",
+      "persona_ids": ["persona-photographer-new"],
+      "properties": ["user_id", "goal"],
+      "evidence": ["welcome modal → choix site|livraison|facturation|skip"]
+    },
+    {
+      "id": "site_builder_started",
+      "event_name": "site_builder_started",
+      "type": "setup",
+      "source": "product",
+      "persona_ids": ["persona-photographer-new"],
+      "properties": ["user_id", "step_start"],
+      "evidence": ["visite /admin/site-builder"]
+    },
+    {
+      "id": "site_builder_step_viewed",
+      "event_name": "site_builder_step_viewed",
+      "type": "setup",
+      "source": "product",
+      "persona_ids": ["persona-photographer-new"],
+      "properties": ["user_id", "step_number", "step_name"],
+      "evidence": ["navigation d'étape du builder"]
+    },
+    {
+      "id": "site_config_saved",
+      "event_name": "site_config_saved",
+      "type": "setup",
+      "source": "product",
+      "persona_ids": ["persona-photographer-new"],
+      "properties": ["user_id", "site_config_id", "steps_completed"],
+      "evidence": ["POST /api/site-configs"]
+    },
+    {
+      "id": "site_published",
+      "event_name": "site_published",
+      "type": "activation",
+      "source": "product",
+      "persona_ids": ["persona-photographer-new"],
+      "properties": ["user_id", "site_config_id", "slug"],
+      "evidence": ["is_published=true (publish, create ou auto-post-paiement)"]
+    },
+    {
+      "id": "site_viewed_publicly",
+      "event_name": "site_viewed_publicly",
+      "type": "value",
+      "source": "product",
+      "persona_ids": ["persona-photographer-new"],
+      "properties": ["slug"],
+      "evidence": ["GET /api/sites/{slug}/config 200"]
+    },
+    {
+      "id": "first_gallery_created",
+      "event_name": "first_gallery_created",
+      "type": "value",
+      "source": "product",
+      "persona_ids": ["persona-photographer-active"],
+      "properties": ["user_id", "gallery_uuid", "has_pin", "has_zip"],
+      "evidence": ["POST /api/admin/galleries, gallery_count == 1"]
+    },
+    {
+      "id": "first_photo_uploaded",
+      "event_name": "first_photo_uploaded",
+      "type": "value",
+      "source": "product",
+      "persona_ids": ["persona-photographer-active"],
+      "properties": ["user_id", "gallery_uuid"],
+      "evidence": ["POST /api/admin/galleries/{id}/photos"]
+    },
+    {
+      "id": "first_gallery_shared",
+      "event_name": "first_gallery_shared",
+      "type": "value",
+      "source": "product",
+      "persona_ids": ["persona-photographer-active"],
+      "properties": ["user_id", "gallery_uuid", "channel"],
+      "evidence": ["ShareDialog → copier | WhatsApp"]
+    },
+    {
+      "id": "first_gallery_viewed_by_client",
+      "event_name": "first_gallery_viewed_by_client",
+      "type": "value",
+      "source": "product",
+      "persona_ids": ["persona-photographer-active"],
+      "properties": ["gallery_uuid", "photographer_user_id"],
+      "evidence": ["GET /api/client/gallery/{uuid} 200 (client count >= 1)"]
+    },
+    {
+      "id": "gallery_pin_unlocked",
+      "event_name": "gallery_pin_unlocked",
+      "type": "value",
+      "source": "product",
+      "persona_ids": ["persona-client"],
+      "properties": ["gallery_uuid"],
+      "evidence": ["PIN correct envoyé → 200"]
+    },
+    {
+      "id": "gallery_photo_downloaded",
+      "event_name": "gallery_photo_downloaded",
+      "type": "value",
+      "source": "product",
+      "persona_ids": ["persona-client"],
+      "properties": ["gallery_uuid", "photo_id"],
+      "evidence": ["clic téléchargement photo"]
+    },
+    {
+      "id": "first_invoice_created",
+      "event_name": "first_invoice_created",
+      "type": "value",
+      "source": "product",
+      "persona_ids": ["persona-photographer-pro"],
+      "properties": ["user_id", "invoice_number"],
+      "evidence": ["POST /api/admin/invoices, invoice_count == 1"]
+    },
+    {
+      "id": "first_invoice_paid",
+      "event_name": "first_invoice_paid",
+      "type": "value",
+      "source": "product",
+      "persona_ids": ["persona-photographer-pro"],
+      "properties": ["user_id", "invoice_number", "amount"],
+      "evidence": ["POST /api/admin/invoices/{id}/payment → status paid"]
+    },
+    {
+      "id": "subscription_checkout_started",
+      "event_name": "subscription_checkout_started",
+      "type": "conversion",
+      "source": "product",
+      "persona_ids": ["persona-photographer-new", "persona-photographer-pro"],
+      "properties": ["user_id", "plan_id", "cart_id"],
+      "evidence": ["POST /api/payment/checkout → 200"]
+    },
+    {
+      "id": "subscription_payment_completed",
+      "event_name": "subscription_payment_completed",
+      "type": "conversion",
+      "source": "product",
+      "persona_ids": ["persona-photographer-new", "persona-photographer-pro"],
+      "properties": ["user_id", "plan_id", "cart_id"],
+      "evidence": ["webhook / verify Maketou → status completed"]
+    },
+    {
+      "id": "subscription_payment_abandoned",
+      "event_name": "subscription_payment_abandoned",
+      "type": "conversion",
+      "source": "product",
+      "persona_ids": ["persona-photographer-new", "persona-photographer-pro"],
+      "properties": ["user_id", "plan_id", "cart_id"],
+      "evidence": ["webhook / verify → payment_status abandoned|payment_failed"]
+    },
+    {
+      "id": "login_return",
+      "event_name": "login_return",
+      "type": "retention",
+      "source": "product",
+      "persona_ids": ["persona-photographer-active"],
+      "properties": ["user_id", "has_site"],
+      "evidence": ["POST /api/login → 200"]
+    },
+    {
+      "id": "rescue_triggered",
+      "event_name": "onboarding_rescue_triggered",
+      "type": "lifecycle",
+      "source": "email",
+      "persona_ids": ["persona-photographer-new"],
+      "properties": ["user_id", "rescue_type"],
+      "evidence": ["envoi email relance (backend)"]
+    },
+    {
+      "id": "email_goal_achieved",
+      "event_name": "onboarding_email_goal_achieved",
+      "type": "lifecycle",
+      "source": "email",
+      "persona_ids": ["persona-photographer-new"],
+      "properties": ["user_id", "email_id", "goal_event"],
+      "evidence": ["suppression email suite à objectif atteint"]
+    }
+  ]
+}

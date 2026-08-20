@@ -1,0 +1,396 @@
+{
+  "schema_version": "1.0.0",
+  "project": {
+    "name": "VANDA STUDIO",
+    "description": "Plateforme SaaS permettant à chaque photographe de créer, gérer et monétiser son propre studio en ligne : builder de site vitrine, galeries client (livraison photos), facturation, abonnement (paiement Maketou).",
+    "primary_customer": "Photographes professionnels",
+    "secondary_users": ["Clients finaux des photographes", "Super-admin plateforme"],
+    "languages": ["fr"],
+    "currency": "FCFA",
+    "free_trial": "30 jours sans carte bancaire (promesse marketing)",
+    "domain_structure": {
+      "main": "vanda-studio.org (marketing)",
+      "admin": "app.vanda-studio.org (application photographe)",
+      "api": "api.vanda-studio.org (API REST)",
+      "photographer_subdomain": "{slug}.vanda-studio.org (site vitrine généré)"
+    }
+  },
+  "codebase": {
+    "backend": {
+      "framework": "Laravel 11/12 (PHP 8.3)",
+      "auth": "Sanctum tokens",
+      "models": ["User", "Gallery", "Photo", "Like", "Invoice", "InvoiceItem", "SiteConfig", "SubscriptionPlan", "UserSubscription"],
+      "middleware": ["EnsureUserIsActive (alias active)", "SuperAdminMiddleware (alias superadmin)"],
+      "payment": "MaketouService (cart checkout + webhook)",
+      "onboarding_state_backend": "Aucun état d'onboarding côté backend. Seul signal : has_site (siteConfigs()->exists()) renvoyé au login."
+    },
+    "frontend": {
+      "framework": "React 18/19 + TypeScript + Vite",
+      "ui": "MUI + shadcn/ui (Radix) + sonner + framer-motion",
+      "builds": ["dist-public (site public)", "dist-admin (application admin)"],
+      "routing_admin": ["/auth/login", "/auth/register", "/admin/dashboard", "/admin/new-delivery", "/admin/gallery/:uuid", "/admin/invoices", "/admin/invoices/new", "/admin/site-builder", "/superadmin/*"],
+      "routing_public": ["/", "/pricing", "/g/:uuid", "/:slug"],
+      "state": "localStorage (auth_token, user, selectedPlan, vanda_current_step, vanda_has_built_site, vanda_draft_invoice)",
+      "analytics": "Aucun SDK analytics présent",
+      "email": "Aucune infrastructure email frontend ; backend Laravel MAIL configuré mais aucun Mailable/queued job",
+      "onboarding_ui_existant": "Builder 10 étapes avec WelcomeStep ; composant ui/empty.tsx inutilisé"
+    }
+  },
+  "personas": [
+    {
+      "id": "persona-photographer-new",
+      "name": "Photographe — Nouveau",
+      "primary_job": "Créer un site vitrine professionnel et le publier pour trouver des clients",
+      "first_value": "Site vitrine publié et visible publiquement sur son sous-domaine",
+      "wow_moment_event_id": "site_published",
+      "required_setup": ["SiteConfig (builder 10 étapes)"],
+      "irrelevant_features": ["Super-admin", "Gestion des plans"],
+      "onboarding_intensity_default": "guided",
+      "characteristics": "Vient de s'inscrire sur vanda-studio.org (ou via pricing avec selectedPlan). Ne connaît pas le produit. Redirection post-register incohérente."
+    },
+    {
+      "id": "persona-photographer-active",
+      "name": "Photographe — Actif",
+      "primary_job": "Livrer ses photos à ses clients et facturer ses prestations",
+      "first_value": "Première galerie livrée à un client (lien consulté)",
+      "wow_moment_event_id": "first_gallery_viewed_by_client",
+      "required_setup": [],
+      "irrelevant_features": ["Builder (déjà fait)", "Super-admin"],
+      "onboarding_intensity_default": "assisted",
+      "characteristics": "A déjà un site configuré (has_site=true). Retourne dans l'app pour créer des livraisons et factures. A parfois un abonnement payé."
+    },
+    {
+      "id": "persona-photographer-pro",
+      "name": "Photographe — Pro / Studio",
+      "primary_job": "Monétiser son studio : facturation, paiements, volume de livraisons",
+      "first_value": "Premier paiement de facture encaissé / abonnement Studio actif",
+      "wow_moment_event_id": "first_invoice_paid",
+      "required_setup": ["Subscription active"],
+      "irrelevant_features": ["Super-admin"],
+      "onboarding_intensity_default": "expert",
+      "characteristics": "Utilisateur régulier, veut du volume et de la vitesse. Ne doit pas être interrompu par de l'éducation basique."
+    },
+    {
+      "id": "persona-client",
+      "name": "Client final",
+      "primary_job": "Consulter et télécharger les photos de sa séance",
+      "first_value": "Galerie déverrouillée et photos visibles",
+      "wow_moment_event_id": "gallery_pin_unlocked",
+      "required_setup": [],
+      "irrelevant_features": ["Builder", "Facturation", "Abonnement", "Super-admin"],
+      "onboarding_intensity_default": "assisted",
+      "characteristics": "Accède via un lien partagé par le photographe. Pas de compte. Éventuel PIN. Veut voir/télécharger ses photos sans friction."
+    },
+    {
+      "id": "persona-superadmin",
+      "name": "Super-admin",
+      "primary_job": "Opérer la plateforme : activer les photographes, gérer les plans",
+      "first_value": "Tableau de bord opérationnel",
+      "wow_moment_event_id": null,
+      "required_setup": ["Compte role=superadmin"],
+      "irrelevant_features": ["Builder", "Galeries", "Facturation"],
+      "onboarding_intensity_default": "expert",
+      "characteristics": "Compte interne créé via seeder. Onboarding non requis."
+    }
+  ],
+  "capabilities": [
+    {
+      "feature": "Builder de site (10 étapes)",
+      "classification": "CORE",
+      "user": "persona-photographer-new",
+      "problem_solved": "Créer un site vitrine professionnel sans compétence technique",
+      "input": "identité, couleurs, hero, portfolio, services, tarifs, témoignages, contact",
+      "action": "remplir les étapes + sauvegarder (save config)",
+      "output": "SiteConfig (config_data JSON) avec slug",
+      "outcome": "Site visible publiquement une fois is_published=true",
+      "prerequisites": "Compte",
+      "dependencies": "media upload, siteConfigService",
+      "frequency": "one-time (création) puis maintenance",
+      "complexity": "moyenne",
+      "business_value": "high",
+      "activation_relevance": "high",
+      "publish_gate": "is_published ; UI gated par UpgradeDialog (feature=publish) ; auto-publié après 1er paiement"
+    },
+    {
+      "feature": "Galeries / Livraison",
+      "classification": "CORE",
+      "user": "persona-photographer-active",
+      "problem_solved": "Livrer les photos de séance à un client via un lien protégé",
+      "input": "titre, description, client_phone, pin_code, photos, zip",
+      "action": "créer la galerie + uploader photos + partager le lien (WhatsApp)",
+      "output": "Galerie (uuid) avec photos ; URL publique /g/{uuid} ou {slug}.vanda-studio.org/g/{uuid}",
+      "outcome": "Le client consulte / télécharge / like les photos",
+      "prerequisites": "Compte (site facultatif)",
+      "dependencies": "media upload, ShareDialog",
+      "frequency": "récurrente (chaque séance)",
+      "complexity": "faible",
+      "business_value": "high",
+      "activation_relevance": "high",
+      "note": "status gallery reste toujours 'draft' — aucune transition published côté API"
+    },
+    {
+      "feature": "Facturation",
+      "classification": "CORE",
+      "user": "persona-photographer-pro",
+      "problem_solved": "Devis et factures pour prestations",
+      "input": "client, items, taxes, dates",
+      "action": "créer/enregistrer une facture, enregistrer un paiement",
+      "output": "Facture (numero unique) + PDF partageable",
+      "outcome": "Facture payée (status dérivé amount_paid vs total)",
+      "prerequisites": "Compte",
+      "dependencies": "invoice state (autosave localStorage), @react-pdf/renderer",
+      "frequency": "récurrente",
+      "complexity": "moyenne",
+      "business_value": "high",
+      "activation_relevance": "medium",
+      "note": "MOCK_CLIENTS / MOCK_STUDIO_DATA comme exemples pré-remplis"
+    },
+    {
+      "feature": "Abonnement / Paiement Maketou",
+      "classification": "CORE (monétisation)",
+      "user": "persona-photographer-new/pro",
+      "problem_solved": "Activer les capacités du studio (publish, limites)",
+      "input": "plan_id + redirect_url",
+      "action": "choisir un plan + checkout Maketou + payer",
+      "output": "UserSubscription active + site auto-publié",
+      "outcome": "Abonnement actif ; AHA moment (auto-publish) codé côté backend",
+      "prerequisites": "Plan actif avec maketou_product_id",
+      "dependencies": "MaketouService, webhook",
+      "frequency": "one-time puis renouvellement",
+      "complexity": "haute",
+      "business_value": "high",
+      "activation_relevance": "high (gating publish)",
+      "note": "Pas de trial seeding, pas d'enforcement ends_at, duréee 1 mois hardcodée"
+    },
+    {
+      "feature": "Profil photographe",
+      "classification": "SECONDARY",
+      "user": "persona-photographer-active",
+      "problem_solved": "Mettre à jour nom/email/mot de passe",
+      "input": "name, email, password",
+      "action": "PATCH /user/profile",
+      "output": "User mis à jour",
+      "outcome": "Compte à jour",
+      "prerequisites": "Compte",
+      "dependencies": "ProfileController",
+      "frequency": "rare",
+      "complexity": "faible",
+      "business_value": "low",
+      "activation_relevance": "low",
+      "note": "phone/bio/avatar référencés mais absents du schéma et du fillable"
+    },
+    {
+      "feature": "Admin plateforme (superadmin)",
+      "classification": "ADMIN",
+      "user": "persona-superadmin",
+      "problem_solved": "Activer/désactiver photographes, gérer plans, stats",
+      "input": "—",
+      "action": "CRUD users/plans, toggles, dashboard stats",
+      "output": "Plateforme opérée",
+      "outcome": "Pilotage de la plateforme",
+      "prerequisites": "role=superadmin",
+      "dependencies": "—",
+      "frequency": "quotidienne (interne)",
+      "complexity": "moyenne",
+      "business_value": "medium",
+      "activation_relevance": "none"
+    }
+  ],
+  "activation_model": {
+    "definition": "Un photographe est ACTIVÉ quand il a créé et publié son site vitrine OU livré sa première galerie à un client. La première valeur mesurable la plus précoce est la publication du site (promesse marketing : 'votre site en 10 minutes').",
+    "activation_event_id": "site_published",
+    "alternative_activation_event_id": "first_gallery_shared",
+    "entry_events": ["account_created"],
+    "setup_events": ["site_builder_started", "site_config_saved"],
+    "activation_events": ["site_published"],
+    "value_events": ["first_gallery_created", "first_photo_uploaded", "first_gallery_shared", "first_gallery_viewed_by_client", "first_invoice_created", "first_invoice_paid"],
+    "wow_moments": [
+      {
+        "persona_id": "persona-photographer-new",
+        "wow_moment": "Voir son site vitrine en ligne sur son propre sous-domaine après publication",
+        "preconditions": ["SiteConfig complété", "is_published=true"],
+        "steps_to_wow": ["s'inscrire", "remplir le builder (10 étapes)", "sauvegarder la config", "publier (payé ou auto-publié post-paiement)", "ouvrir {slug}.vanda-studio.org"],
+        "estimated_friction": "moyenne (10 étapes + éventuel paiement)",
+        "account_requirement": true,
+        "team_requirement": false,
+        "data_requirement": "contenu du site (nom, photo, services, tarifs)",
+        "payment_requirement": "UI gated ; backend auto-publish après paiement"
+      },
+      {
+        "persona_id": "persona-photographer-active",
+        "wow_moment": "Voir un client consulter/télécharger les photos de sa galerie livrée",
+        "preconditions": ["Galerie créée avec photos", "lien partagé", "client ouvre le lien"],
+        "steps_to_wow": ["créer une galerie", "uploader les photos", "partager le lien (WhatsApp/copie)", "client ouvre la galerie"],
+        "estimated_friction": "faible",
+        "account_requirement": true,
+        "team_requirement": false,
+        "data_requirement": "photos",
+        "payment_requirement": false
+      }
+    ],
+    "time_to_value": {
+      "time_to_first_action": "signup → première sauvegarde du builder (5-15 min)",
+      "time_to_first_value": "signup → site publié (15-30 min si paiement ok, sinon retardé par le gating)",
+      "time_to_wow": "signup → site visible publiquement (15-30 min)",
+      "bottleneck_identifie": "Gating de la publication derrière UpgradeDialog alors que le backend permet is_published=true au store ; incohérence SignUp→dashboard vs Login→builder"
+    }
+  },
+  "events": [
+    { "id": "account_created", "event_name": "account_created", "type": "entry", "source": "product", "persona_ids": ["persona-photographer-new"], "evidence": ["register 201"] },
+    { "id": "site_builder_started", "event_name": "site_builder_started", "type": "setup", "source": "product", "persona_ids": ["persona-photographer-new"], "evidence": ["route /admin/site-builder visitée"] },
+    { "id": "site_config_saved", "event_name": "site_config_saved", "type": "setup", "source": "product", "persona_ids": ["persona-photographer-new"], "evidence": ["POST /site-configs"] },
+    { "id": "site_published", "event_name": "site_published", "type": "activation", "source": "product", "persona_ids": ["persona-photographer-new"], "evidence": ["is_published=true (POST publish / create / auto après paiement)"] },
+    { "id": "first_gallery_created", "event_name": "first_gallery_created", "type": "value", "source": "product", "persona_ids": ["persona-photographer-active"], "evidence": ["POST /admin/galleries (count==1)"] },
+    { "id": "first_photo_uploaded", "event_name": "first_photo_uploaded", "type": "value", "source": "product", "persona_ids": ["persona-photographer-active"], "evidence": ["POST /admin/galleries/{id}/photos"] },
+    { "id": "first_gallery_shared", "event_name": "first_gallery_shared", "type": "value", "source": "product", "persona_ids": ["persona-photographer-active"], "evidence": ["ShareDialog ouvert + copie/WhatsApp"] },
+    { "id": "first_gallery_viewed_by_client", "event_name": "first_gallery_viewed_by_client", "type": "value", "source": "product", "persona_ids": ["persona-photographer-active"], "evidence": ["GET /client/gallery/{uuid} 200"] },
+    { "id": "gallery_pin_unlocked", "event_name": "gallery_pin_unlocked", "type": "value", "source": "product", "persona_ids": ["persona-client"], "evidence": ["PIN valide envoyé"] },
+    { "id": "first_invoice_created", "event_name": "first_invoice_created", "type": "value", "source": "product", "persona_ids": ["persona-photographer-pro"], "evidence": ["POST /admin/invoices (count==1)"] },
+    { "id": "first_invoice_paid", "event_name": "first_invoice_paid", "type": "value", "source": "product", "persona_ids": ["persona-photographer-pro"], "evidence": ["POST /admin/invoices/{id}/payment → status paid"] },
+    { "id": "subscription_payment_completed", "event_name": "subscription_payment_completed", "type": "conversion", "source": "product", "persona_ids": ["persona-photographer-new", "persona-photographer-pro"], "evidence": ["webhook/verify Maketou status completed"] },
+    { "id": "login_return", "event_name": "login_return", "type": "retention", "source": "product", "persona_ids": ["persona-photographer-active"], "evidence": ["POST /login 200"] }
+  ],
+  "frictions": [
+    { "id": "friction-signup-redirect", "type": "dead_end", "severity": "high", "route": "/auth/register", "persona_ids": ["persona-photographer-new"], "problem": "SignUp navigue vers /admin/dashboard (vide) alors que Login envoie les nouveaux utilisateurs (has_site=false) vers /admin/site-builder. Incohérence : l'inscrit voit un dashboard vide sans CTA.", "recommended_mechanism": "redirect_to_builder", "evidence": ["SignUp.tsx navigate('/admin/dashboard')", "Login.tsx navigate('/admin/site-builder')"] },
+    { "id": "friction-empty-dashboard", "type": "empty_state", "severity": "high", "route": "/admin/dashboard", "persona_ids": ["persona-photographer-new"], "problem": "Dashboard vide ('Aucune livraison trouvée.') sans CTA ni orientation vers le builder, la facturation ou l'abonnement.", "recommended_mechanism": "onboarding_checklist", "evidence": ["AdminDashboard.tsx table vide", "Empty non branché"] },
+    { "id": "friction-missing-routes", "type": "dead_end", "severity": "high", "route": "/admin/subscription, /admin/profile", "persona_ids": ["persona-photographer-new", "persona-photographer-pro"], "problem": "Les routes /admin/subscription et /admin/profile sont déclarées dans App.tsx mais ABSENTES de AppAdmin.tsx : UpgradeDialog navigue vers /admin/subscription → 404. Les liens Sidebar sont désactivés ('Bientôt disponible').", "recommended_mechanism": "fix_routes", "evidence": ["AppAdmin.tsx", "UpgradeDialog navigate('/admin/subscription')"] },
+    { "id": "friction-publish-gating", "type": "premature_upsell", "severity": "medium", "route": "/admin/site-builder", "persona_ids": ["persona-photographer-new"], "problem": "La publication est gated par UpgradeDialog (feature=publish) alors que le backend accepte is_published=true au store ; les limites de plan sont cosmétiques (Infinity dans usePlanLimits). Message contradictoire pour l'utilisateur.", "recommended_mechanism": "clarify_publish_policy", "evidence": ["PreviewStep.tsx UpgradeDialog publish", "usePlanLimits.ts Infinity", "SiteConfigController store default true"] },
+    { "id": "friction-no-onboarding", "type": "no_contextual_guidance", "severity": "high", "route": "toutes (admin)", "persona_ids": ["persona-photographer-new"], "problem": "Aucun mécanisme d'onboarding : pas de welcome modal, checklist, tour, tooltips, ni analytics. La seule brique est WelcomeStep du builder.", "recommended_mechanism": "welcome_modal + checklist", "evidence": ["aucun SDK", "aucun composant onboarding"] },
+    { "id": "friction-selected-plan-lost", "type": "long_setup", "severity": "medium", "route": "/auth/register", "persona_ids": ["persona-photographer-new"], "problem": "Le plan choisi sur Landing/Pricing (localStorage.selectedPlan) est supprimé à l'inscription : l'intention d'achat est perdue et l'abonnement ne démarre pas.", "recommended_mechanism": "preserve_plan_intent", "evidence": ["SignUp.tsx removeItem('selectedPlan')"] },
+    { "id": "friction-navbar-subscription", "type": "dead_end", "severity": "medium", "route": "AdminNavbar dropdown", "persona_ids": ["persona-photographer-active"], "problem": "Le menu 'Mon abonnement' du dropdown profile pointe vers /pricing (page publique marketing) au lieu de /admin/subscription.", "recommended_mechanism": "fix_link", "evidence": ["AdminNavbar.tsx"] },
+    { "id": "friction-client-share-stub", "type": "dead_end", "severity": "low", "route": "/g/:uuid", "persona_ids": ["persona-client"], "problem": "Le bouton 'Envoyer' la sélection de la galerie client est un stub (simple snackbar), aucune action réelle.", "recommended_mechanism": "whatsapp_or_email", "evidence": ["ClientGalleryView handleSendSelection"] },
+    { "id": "friction-cart-unmounted", "type": "dead_end", "severity": "low", "route": "template shop", "persona_ids": ["persona-client"], "problem": "Le CartDrawer n'est monté nulle part : le panier 'Commander' du shop est non fonctionnel.", "recommended_mechanism": "fix_cart", "evidence": ["CartDrawer.tsx non importé"] },
+    { "id": "friction-gallery-status", "type": "feature_with_no_context", "severity": "low", "route": "/api/admin/galleries", "persona_ids": ["persona-photographer-active"], "problem": "Le statut gallery (draft/published/archived) n'est jamais transitionné par l'API : 'draft' permanent, aucune notion de 'livrée'.", "recommended_mechanism": "add_status_transitions", "evidence": ["GalleryController"] },
+    { "id": "friction-builder-step-count", "type": "duplicate_setup_step", "severity": "low", "route": "/admin/site-builder", "persona_ids": ["persona-photographer-new"], "problem": "TOTAL_STEPS=9 dans useBuilder vs 10 composants d'étapes : la progression affichée est fausse.", "recommended_mechanism": "fix_step_count", "evidence": ["useBuilder.ts TOTAL_STEPS=9"] },
+    { "id": "friction-no-email-verification", "type": "unnecessary_permission", "severity": "medium", "route": "auth", "persona_ids": ["persona-photographer-new"], "problem": "Le réglage require_email_verification existe côté superadmin mais aucune vérification n'est implémentée côté frontend (pas d'écran verify, pas de resend).", "recommended_mechanism": "defer_or_implement", "evidence": ["SuperAdminSettings", "Login/SignUp sans verify"] },
+    { "id": "friction-profile-schema", "type": "feature_with_no_context", "severity": "low", "route": "/admin/profile", "persona_ids": ["persona-photographer-active"], "problem": "phone/bio/avatar référencés dans le code mais absents du schéma users et du fillable : profil incomplet.", "recommended_mechanism": "extend_schema", "evidence": ["User.php fillable", "migrations"] }
+  ],
+  "journeys": [
+    {
+      "id": "journey-new-photographer-first-run",
+      "persona_id": "persona-photographer-new",
+      "entry_condition": "account_created",
+      "goal_event": "site_published",
+      "exit_conditions": ["site_published"],
+      "channels": ["in_app"],
+      "intensity": "guided",
+      "steps": [
+        { "id": "step-welcome-goal", "goal": "Choisir son objectif (créer mon site / livrer mes photos / facturer)", "trigger": "account_created", "mechanism": "welcome_modal", "target": "/admin/dashboard (overlay)", "completion_event": "goal_selected", "skip_allowed": true, "resume_allowed": false },
+        { "id": "step-start-builder", "goal": "Démarrer le builder de site", "trigger": "goal_selected=site", "mechanism": "redirect", "target": "/admin/site-builder", "completion_event": "site_builder_started", "skip_allowed": true, "resume_allowed": true },
+        { "id": "step-build-site", "goal": "Remplir les étapes du builder (contenu réel)", "trigger": "site_builder_started", "mechanism": "guided_steps", "target": "builder steps", "completion_event": "site_config_saved", "skip_allowed": true, "resume_allowed": true },
+        { "id": "step-publish-site", "goal": "Publier le site et le voir en ligne", "trigger": "site_config_saved", "mechanism": "inline + contextual_rescue", "target": "/admin/site-builder (PreviewStep)", "completion_event": "site_published", "skip_allowed": true, "resume_allowed": true }
+      ]
+    },
+    {
+      "id": "journey-photographer-first-delivery",
+      "persona_id": "persona-photographer-active",
+      "entry_condition": "login_return OR site_published",
+      "goal_event": "first_gallery_viewed_by_client",
+      "exit_conditions": ["first_gallery_viewed_by_client"],
+      "channels": ["in_app", "email"],
+      "intensity": "assisted",
+      "steps": [
+        { "id": "step-create-gallery", "goal": "Créer sa première galerie", "trigger": "login_return sans gallery", "mechanism": "checklist + empty_state", "target": "/admin/new-delivery", "completion_event": "first_gallery_created", "skip_allowed": true, "resume_allowed": true },
+        { "id": "step-upload-photos", "goal": "Uploader les photos de la séance", "trigger": "first_gallery_created", "mechanism": "inline", "target": "/admin/gallery/:uuid", "completion_event": "first_photo_uploaded", "skip_allowed": true, "resume_allowed": true },
+        { "id": "step-share-gallery", "goal": "Partager le lien au client", "trigger": "first_photo_uploaded", "mechanism": "inline", "target": "ShareDialog", "completion_event": "first_gallery_shared", "skip_allowed": true, "resume_allowed": true },
+        { "id": "step-client-visits", "goal": "Le client consulte la galerie", "trigger": "first_gallery_shared", "mechanism": "email_validation", "target": null, "completion_event": "first_gallery_viewed_by_client", "skip_allowed": true, "resume_allowed": false }
+      ]
+    },
+    {
+      "id": "journey-photographer-first-invoice",
+      "persona_id": "persona-photographer-pro",
+      "entry_condition": "first_gallery_created OR manual_activation",
+      "goal_event": "first_invoice_created",
+      "exit_conditions": ["first_invoice_created"],
+      "channels": ["in_app"],
+      "intensity": "assisted",
+      "steps": [
+        { "id": "step-create-invoice", "goal": "Créer sa première facture", "trigger": "entry", "mechanism": "checklist + empty_state", "target": "/admin/invoices/new", "completion_event": "first_invoice_created", "skip_allowed": true, "resume_allowed": true }
+      ]
+    },
+    {
+      "id": "journey-photographer-subscription",
+      "persona_id": "persona-photographer-new",
+      "entry_condition": "publish_attempt OR upgrade_dialog OR selectedPlan_present",
+      "goal_event": "subscription_payment_completed",
+      "exit_conditions": ["subscription_payment_completed"],
+      "channels": ["in_app", "email"],
+      "intensity": "assisted",
+      "steps": [
+        { "id": "step-choose-plan", "goal": "Choisir un plan", "trigger": "entry", "mechanism": "inline", "target": "/admin/subscription", "completion_event": "plan_selected", "skip_allowed": true, "resume_allowed": true },
+        { "id": "step-checkout", "goal": "Payer via Maketou", "trigger": "plan_selected", "mechanism": "inline", "target": "redirect Maketou", "completion_event": "subscription_payment_completed", "skip_allowed": false, "resume_allowed": true }
+      ]
+    },
+    {
+      "id": "journey-client-gallery",
+      "persona_id": "persona-client",
+      "entry_condition": "gallery_link_opened",
+      "goal_event": "gallery_pin_unlocked",
+      "exit_conditions": ["gallery_pin_unlocked"],
+      "channels": ["in_app"],
+      "intensity": "assisted",
+      "steps": [
+        { "id": "step-unlock", "goal": "Déverrouiller la galerie (PIN éventuel)", "trigger": "gallery_link_opened", "mechanism": "inline", "target": "/g/:uuid", "completion_event": "gallery_pin_unlocked", "skip_allowed": false, "resume_allowed": false },
+        { "id": "step-browse", "goal": "Consulter / télécharger / liker les photos", "trigger": "gallery_pin_unlocked", "mechanism": "inline", "target": "galerie", "completion_event": "gallery_photo_downloaded", "skip_allowed": true, "resume_allowed": false }
+      ]
+    }
+  ],
+  "mechanisms": [
+    { "id": "welcome-modal", "use": "Orientation + sélection d'objectif après inscription", "rule": "une seule fois, dismissible, non bloquante pour les actionneurs avancés", "persona_ids": ["persona-photographer-new"] },
+    { "id": "onboarding-checklist", "use": "Lister les tâches d'activation sur le dashboard vide", "rule": "tâches = capacités (Créer mon site / Livrer ma première galerie / Créer ma première facture), jamais du sightseeing", "persona_ids": ["persona-photographer-new", "persona-photographer-active"] },
+    { "id": "empty-state-upgrade", "use": "Remplacer 'Aucune livraison trouvée.' par un état vide avec CTA primaire", "rule": "explication + CTA + lien aide, avec composant ui/empty.tsx", "persona_ids": ["persona-photographer-new"] },
+    { "id": "builder-guided-steps", "use": "Guide pas-à-pas existant du builder", "rule": "conserver WelcomeStep comme première étape d'objectif, corriger TOTAL_STEPS", "persona_ids": ["persona-photographer-new"] },
+    { "id": "contextual-rescue", "use": "Secourir un utilisateur bloqué (site non publié, paiement abandonné)", "rule": "afficher un CTA contextuel avec prochaine action", "persona_ids": ["persona-photographer-new"] },
+    { "id": "email-lifecycle", "use": "Relancer les utilisateurs absents (welcome, builder rescue, nudge livraison, recovery)", "rule": "comportement-driven, avec suppression si objectif atteint", "persona_ids": ["persona-photographer-new", "persona-photographer-active"] },
+    { "id": "sample-data", "use": "Fournir des exemples dans le builder (defaultSiteConfig déjà présent) et l'état vide factures (MOCK_CLIENTS)", "rule": "clairement distinguable des données réelles", "persona_ids": ["persona-photographer-new"] }
+  ],
+  "lifecycle": {
+    "orchestration": "Behavior-driven (EVENT → CONDITION → MESSAGE). Chronologie utilisée seulement en relance.",
+    "rescue_flows": [
+      { "trigger": "account_created + 24h sans site_config", "action": "email welcome + nudge builder", "suppress_if": "site_configs.count > 0" },
+      { "trigger": "account_created + 72h sans site_config", "action": "email builder rescue (étapes + valeur)", "suppress_if": "site_configs.count > 0" },
+      { "trigger": "site_published + 3 jours sans gallery", "action": "email nudge première livraison", "suppress_if": "galleries.count > 0" },
+      { "trigger": "site_published + site non payé (pas de sub active)", "action": "bannière in-app upgrade contextuel", "suppress_if": "subscription active" },
+      { "trigger": "checkout initié mais payment_status=waiting_payment pendant 24h", "action": "email relance paiement", "suppress_if": "payment_status != waiting_payment" },
+      { "trigger": "14 jours sans login après activation", "action": "email inactivity recovery", "suppress_if": "login dans les 7 jours" }
+    ],
+    "exit_and_suppression": "Chaque email a un goal_event et un suppress_if basé sur les compteurs backend (site_configs, galleries, invoices, subscriptions)."
+  },
+  "analytics": {
+    "status": "absent — à créer",
+    "recommendation": "SDK analytics léger (ex. PostHog) branché sur les deux builds, ou events POST /api/events custom. Événements définis dans onboarding-events.json.",
+    "metrics": [
+      { "metric": "Activation Rate", "definition": "% de comptes ayant site_published dans les 7 jours", "tier": 1 },
+      { "metric": "Time to First Meaningful Action", "definition": "signup → site_builder_started", "tier": 1 },
+      { "metric": "Time to First Value", "definition": "signup → site_published", "tier": 1 },
+      { "metric": "Journey Completion", "definition": "% du journey-new-photographer-first-run complété", "tier": 1 },
+      { "metric": "Step Drop-off", "definition": "abandon par étape du builder", "tier": 1 },
+      { "metric": "First Delivery Rate", "definition": "% d'utilisateurs activés ayant first_gallery_created sous 14 jours", "tier": 2 },
+      { "metric": "Checkout Completion", "definition": "% de subscription_payment_completed après début de checkout", "tier": 2 },
+      { "metric": "Rescue Success", "definition": "réactivation après email de relance", "tier": 3 }
+    ]
+  },
+  "implementation": {
+    "rollout": [
+      { "phase": 1, "label": "Fixes bloquants + activation", "items": ["redirect post-signup vers builder", "routes /admin/subscription et /admin/profile dans AppAdmin", "état vide dashboard + checklist", "correction TOTAL_STEPS", "events analytics signup/builder/publish"] },
+      { "phase": 2, "label": "Journey premier site", "items": ["welcome modal objectif", "politique de publication clarifiée", "résumé post-publication (voir le site)"] },
+      { "phase": 3, "label": "Emails de cycle de vie", "items": ["infra email backend (Mailable + jobs)", "welcome/rescue/nudge/recovery avec suppression"] },
+      { "phase": 4, "label": "Adoption avancée", "items": ["tour contextual facturation", "réactivation profils", "fix share-stub et panier", "status gallery transitions"] }
+    ]
+  },
+  "validation": {
+    "rules": [
+      "persona-photographer-new a une première valeur : site_published",
+      "persona-photographer-active a une première valeur : first_gallery_viewed_by_client",
+      "persona-photographer-pro a une première valeur : first_invoice_paid",
+      "persona-client a une première valeur : gallery_pin_unlocked",
+      "journey-new-photographer-first-run a goal_event site_published",
+      "journey-photographer-first-delivery a goal_event first_gallery_viewed_by_client",
+      "chaque step a un completion_event",
+      "chaque email a un suppress_if",
+      "chaque friction majeure a une résolution (mechanism ou fix)",
+      "aucun mécanisme sans objectif utilisateur",
+      "les analytics peuvent mesurer l'activation (events signup/builder/publish) après instrumentation"
+    ]
+  }
+}

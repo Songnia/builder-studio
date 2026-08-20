@@ -1,0 +1,43 @@
+{
+  "schema_version": "1.0.0",
+  "status": "absent_à_implémenter",
+  "recommendation": {
+    "sdk": "PostHog (option : events API custom si pas de compte externe souhaité)",
+    "integrations": ["dist-public", "dist-admin"],
+    "identité_utilisateur": "user_id (backend) — à associer après login/register"
+  },
+  "events_tracked": [
+    { "event_name": "account_created", "source": "backend", "properties": ["user_id", "selected_plan_present"] },
+    { "event_name": "login_return", "source": "backend", "properties": ["user_id", "has_site"] },
+    { "event_name": "onboarding_goal_selected", "source": "frontend", "properties": ["user_id", "goal"] },
+    { "event_name": "site_builder_started", "source": "frontend", "properties": ["user_id", "step_start"] },
+    { "event_name": "site_builder_step_viewed", "source": "frontend", "properties": ["user_id", "step_number", "step_name"] },
+    { "event_name": "site_config_saved", "source": "backend", "properties": ["user_id", "site_config_id", "steps_completed"] },
+    { "event_name": "site_published", "source": "backend", "properties": ["user_id", "site_config_id", "slug"] },
+    { "event_name": "site_viewed_publicly", "source": "backend", "properties": ["slug"] },
+    { "event_name": "first_gallery_created", "source": "backend", "properties": ["user_id", "gallery_uuid", "has_pin"] },
+    { "event_name": "first_photo_uploaded", "source": "backend", "properties": ["user_id", "gallery_uuid"] },
+    { "event_name": "first_gallery_shared", "source": "frontend", "properties": ["user_id", "gallery_uuid", "channel"] },
+    { "event_name": "first_gallery_viewed_by_client", "source": "backend", "properties": ["gallery_uuid", "photographer_user_id"] },
+    { "event_name": "gallery_pin_unlocked", "source": "backend", "properties": ["gallery_uuid"] },
+    { "event_name": "gallery_photo_downloaded", "source": "frontend", "properties": ["gallery_uuid", "photo_id"] },
+    { "event_name": "first_invoice_created", "source": "backend", "properties": ["user_id", "invoice_number"] },
+    { "event_name": "first_invoice_paid", "source": "backend", "properties": ["user_id", "invoice_number", "amount"] },
+    { "event_name": "subscription_checkout_started", "source": "backend", "properties": ["user_id", "plan_id", "cart_id"] },
+    { "event_name": "subscription_payment_completed", "source": "backend", "properties": ["user_id", "plan_id", "cart_id"] },
+    { "event_name": "subscription_payment_abandoned", "source": "backend", "properties": ["user_id", "plan_id", "cart_id"] },
+    { "event_name": "onboarding_rescue_triggered", "source": "backend", "properties": ["user_id", "rescue_type"] },
+    { "event_name": "onboarding_email_goal_achieved", "source": "backend", "properties": ["user_id", "email_id", "goal_event"] }
+  ],
+  "metrics": [
+    { "metric": "Activation Rate", "definition": "% de comptes ayant site_published dans les 7 jours", "query": "account_created → site_published <= 7d", "tier": 1 },
+    { "metric": "Time to First Meaningful Action", "definition": "signup → site_builder_started", "query": "median(delta account_created → site_builder_started)", "tier": 1 },
+    { "metric": "Time to First Value", "definition": "signup → site_published", "query": "median(delta account_created → site_published)", "tier": 1 },
+    { "metric": "Journey Completion", "definition": "% du journey-new-photographer-first-run complété", "query": "steps complétées / steps totales", "tier": 1 },
+    { "metric": "Step Drop-off", "definition": "abandon par étape du builder", "query": "site_builder_step_viewed par étape (funnel)", "tier": 1 },
+    { "metric": "First Delivery Rate", "definition": "% d'utilisateurs activés ayant first_gallery_created sous 14 jours", "query": "site_published → first_gallery_created <= 14d", "tier": 2 },
+    { "metric": "Checkout Completion", "definition": "% de subscription_payment_completed après subscription_checkout_started", "query": "checkout → completed", "tier": 2 },
+    { "metric": "Rescue Success", "definition": "réactivation (login ou action) après email de relance", "query": "email_sent → login_return <= 3d", "tier": 3 }
+  ],
+  "identifiants": "Pas de userId anonyme unique avant auth : utiliser le user_id renvoyé par l'API. Pour le parcours client (persona-client), tracker sans userId (gallery_uuid uniquement)."
+}

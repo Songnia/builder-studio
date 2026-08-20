@@ -1,0 +1,93 @@
+{
+  "schema_version": "1.0.0",
+  "infrastructure": {
+    "status": "à_creer",
+    "backend": "Laravel MAIL configuré (.env) mais aucun Mailable ni queued job existant. Nécessite création de Mailables + jobs + scheduler.",
+    "frontend": "Aucun provider email. Les emails sont purement backend (queued jobs).",
+    "fournisseur_recommande": "Configurer MAIL_MAILER (ex. SMTP/Mailgun/Resend) + QUEUE_CONNECTION=database (déjà en place)."
+  },
+  "principe": "Behavior-driven : un email n'est envoyé que si son objectif n'est pas déjà atteint (suppress_if basé sur les compteurs backend). Chronologie utilisée seulement comme relance.",
+  "emails": [
+    {
+      "id": "email-welcome",
+      "type": "WELCOME",
+      "entry_condition": "account_created",
+      "delay": "immédiat (après inscription)",
+      "send_if": "site_configs.count == 0",
+      "suppress_if": "site_configs.count > 0",
+      "goal_event": "site_builder_started",
+      "persona_ids": ["persona-photographer-new"],
+      "content_goal": "Bienvenue + prochaine action : créer son site (lien direct /admin/site-builder)"
+    },
+    {
+      "id": "email-builder-rescue",
+      "type": "SETUP_NUDGE",
+      "entry_condition": "account_created",
+      "delay": "24h après inscription",
+      "send_if": "site_configs.count == 0",
+      "suppress_if": "site_configs.count > 0",
+      "goal_event": "site_builder_started",
+      "persona_ids": ["persona-photographer-new"],
+      "content_goal": "Rappeler la promesse (site en 10 minutes), montrer les 3 étapes, CTA reprendre le builder"
+    },
+    {
+      "id": "email-builder-rescue-72h",
+      "type": "BLOCKER_RESCUE",
+      "entry_condition": "account_created",
+      "delay": "72h après inscription",
+      "send_if": "site_configs.count == 0",
+      "suppress_if": "site_configs.count > 0",
+      "goal_event": "site_builder_started",
+      "persona_ids": ["persona-photographer-new"],
+      "content_goal": "Rescue : proposer l'aide humaine (support), montrer un exemple de site, relancer le lien builder"
+    },
+    {
+      "id": "email-publish-confirmation",
+      "type": "VALUE_CONFIRMATION",
+      "entry_condition": "site_published",
+      "delay": "immédiat (événementiel)",
+      "send_if": "site_published == true",
+      "suppress_if": "email déjà envoyé pour ce site",
+      "goal_event": "site_viewed_publicly",
+      "persona_ids": ["persona-photographer-new"],
+      "content_goal": "Féliciter + lien public de son site + prochaine étape (livrer sa première galerie)"
+    },
+    {
+      "id": "email-first-delivery-nudge",
+      "type": "FEATURE_DISCOVERY",
+      "entry_condition": "site_published",
+      "delay": "3 jours après publication",
+      "send_if": "galleries.count == 0",
+      "suppress_if": "galleries.count > 0",
+      "goal_event": "first_gallery_created",
+      "persona_ids": ["persona-photographer-new"],
+      "content_goal": "Montrer la valeur 'livrer mes photos' : exemple de galerie, CTA créer sa première livraison"
+    },
+    {
+      "id": "email-checkout-rescue",
+      "type": "BLOCKER_RESCUE",
+      "entry_condition": "subscription_checkout_started",
+      "delay": "24h après checkout initié",
+      "send_if": "payment_status == waiting_payment",
+      "suppress_if": "payment_status != waiting_payment",
+      "goal_event": "subscription_payment_completed",
+      "persona_ids": ["persona-photographer-new", "persona-photographer-pro"],
+      "content_goal": "Relancer le paiement Maketou abandonné, rappeler la valeur de l'abonnement, lien direct checkout"
+    },
+    {
+      "id": "email-inactivity-recovery",
+      "type": "INACTIVITY_RECOVERY",
+      "entry_condition": "site_published",
+      "delay": "14 jours sans login après activation",
+      "send_if": "dernier_login > 7 jours",
+      "suppress_if": "login dans les 7 jours",
+      "goal_event": "login_return",
+      "persona_ids": ["persona-photographer-active"],
+      "content_goal": "Relance : rappeler le studio, montrer une astuce produit (ex. PIN de galerie, facturation)"
+    }
+  ],
+  "non_prevus": [
+    "Aucun email 'PREMATURE UPSELL' : l'abonnement n'est poussé qu'au moment du publish attempt / limites.",
+    "Aucun email 'TEAM_ADOPTION' : produit mono-utilisateur, sans équipe."
+  ]
+}
