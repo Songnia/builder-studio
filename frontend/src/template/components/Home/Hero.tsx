@@ -15,29 +15,31 @@ const Hero: React.FC = () => {
     const { t } = useTranslation();
     const { config } = useSiteConfig();
     const { getPath } = useSitePath();
-
-    if (!config) return null;
     const [currentSlide, setCurrentSlide] = useState(0);
 
     // Use config.heroImages if available, otherwise fallback to default images
     const defaultImages = [hero1, hero2, hero3];
-    const heroImages = config.heroImages.length > 0 ? config.heroImages : defaultImages;
+    const heroImages = config?.heroImages?.length ? config.heroImages : defaultImages;
 
-    const slides = heroImages.map((image, index) => ({
+    const slides = config ? heroImages.map((image, index) => ({
         id: index + 1,
         image,
         title: config.siteName,
         highlight: config.tagline,
         description: config.description,
         miniDesc: config.description
-    }));
+    })) : [];
 
     useEffect(() => {
+        if (slides.length === 0) return;
+
         const timer = setInterval(() => {
             setCurrentSlide((prev) => (prev + 1) % slides.length);
         }, 6000);
         return () => clearInterval(timer);
     }, [slides.length]);
+
+    if (!config || slides.length === 0) return null;
 
     const handlePrev = () => {
         setCurrentSlide((prev) => (prev === 0 ? slides.length - 1 : prev - 1));

@@ -30,14 +30,7 @@ class Photo extends Model
 
     public function getUrlAttribute()
     {
-        $path = $this->file_path;
-
-        // Si c'est déjà une URL absolue (http/https), la retourner directement
-        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://') || str_starts_with($path, '/')) {
-            return PublicMedia::normalizeUrlIfPublicMedia($path) ?? $path;
-        }
-
-        return PublicMedia::url($path);
+        return $this->mediaUrl($this->file_path);
     }
 
     public function getIsLikedAttribute()
@@ -47,6 +40,27 @@ class Photo extends Model
 
     public function getThumbnailUrlAttribute()
     {
-        return $this->thumbnail_path;
+        return $this->mediaUrl($this->thumbnail_path);
+    }
+
+    private function mediaUrl(?string $path): ?string
+    {
+        if (! $path) {
+            return null;
+        }
+
+        $relativePath = PublicMedia::extractRelativePath($path);
+        if (! $relativePath && (str_starts_with($path, 'http://') || str_starts_with($path, 'https://'))) {
+            return $path;
+        }
+
+        $relativePath ??= ltrim($path, '/');
+        $gallery = $this->relationLoaded('gallery')
+            ? $this->getRelation('gallery')
+            : $this->gallery()->first(['id', 'pin_code']);
+
+        return $gallery?->pin_code
+            ? PublicMedia::temporaryUrl($relativePath)
+            : PublicMedia::url($relativePath);
     }
 }

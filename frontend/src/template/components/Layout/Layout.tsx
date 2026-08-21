@@ -19,6 +19,27 @@ interface LayoutProps {
 const LayoutContent: React.FC = () => {
     const { config, loading, error } = useSiteConfig();
 
+    // Hooks must run in the same order on loading, error and loaded renders.
+    React.useEffect(() => {
+        if (!config) return;
+
+        const loadFont = (font: string) => {
+            if (!font) return;
+            const fontUrlName = font.trim().replace(/"/g, '').replace(/'/g, '').replace(/ /g, '+');
+            const linkId = `gfont-site-${fontUrlName.toLowerCase()}`;
+            if (document.getElementById(linkId)) return;
+
+            const link = document.createElement('link');
+            link.id = linkId;
+            link.rel = 'stylesheet';
+            link.href = `https://fonts.googleapis.com/css2?family=${fontUrlName}:wght@300;400;500;600;700;800;900&display=swap`;
+            document.head.appendChild(link);
+        };
+
+        if (config.primaryFont) loadFont(config.primaryFont);
+        if (config.secondaryFont) loadFont(config.secondaryFont);
+    }, [config]);
+
     // État de chargement
     if (loading) {
         return (
@@ -60,27 +81,6 @@ const LayoutContent: React.FC = () => {
 
     // Création du thème dynamique
     const dynamicTheme = createThemeFromConfig(config);
-
-    // Chargement dynamique des Google Fonts configurées
-    React.useEffect(() => {
-        if (!config) return;
-        
-        const loadFont = (font: string) => {
-            if (!font) return;
-            const fontUrlName = font.trim().replace(/"/g, '').replace(/'/g, '').replace(/ /g, '+');
-            const linkId = `gfont-site-${fontUrlName.toLowerCase()}`;
-            if (document.getElementById(linkId)) return;
-            
-            const link = document.createElement('link');
-            link.id = linkId;
-            link.rel = 'stylesheet';
-            link.href = `https://fonts.googleapis.com/css2?family=${fontUrlName}:wght@300;400;500;600;700;800;900&display=swap`;
-            document.head.appendChild(link);
-        };
-
-        if (config.primaryFont) loadFont(config.primaryFont);
-        if (config.secondaryFont) loadFont(config.secondaryFont);
-    }, [config?.primaryFont, config?.secondaryFont]);
 
     const isSecondaryDark = (color: string) => {
         if (!color) return false;

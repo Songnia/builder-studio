@@ -21,8 +21,17 @@ export const authService = {
     },
 
     logout() {
+        const token = localStorage.getItem('auth_token');
         localStorage.removeItem('auth_token');
         localStorage.removeItem('user');
+
+        if (token) {
+            void api.post('/logout', {}, {
+                headers: { Authorization: `Bearer ${token}` },
+            }).catch(() => {
+                // The local session is already cleared; server expiry remains a fallback.
+            });
+        }
     },
 
     getCurrentUser() {

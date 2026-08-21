@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
     Box,
     Typography,
@@ -28,7 +28,11 @@ import { SiteConfigProvider, useSiteConfig } from '@/context/SiteConfigContext';
 import { createTheme, ThemeProvider, alpha } from '@mui/material/styles';
 import type { Gallery } from '../../types/gallery';
 
-const GalleryContent: React.FC<{ gallery: Gallery; onUpdateGallery: (g: Gallery) => void }> = ({ gallery, onUpdateGallery }) => {
+const GalleryContent: React.FC<{
+    gallery: Gallery;
+    pin?: string;
+    onUpdateGallery: (g: Gallery) => void;
+}> = ({ gallery, pin, onUpdateGallery }) => {
     const { uuid } = useParams<{ uuid: string }>();
     const { config } = useSiteConfig();
     const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -36,9 +40,9 @@ const GalleryContent: React.FC<{ gallery: Gallery; onUpdateGallery: (g: Gallery)
 
     const handleToggleLike = async (imageId: string) => {
         if (uuid) {
-            galleryService.toggleImageLike(uuid, imageId);
+            await galleryService.toggleImageLike(uuid, imageId, pin);
             // Refresh gallery
-            const result = await galleryService.getGalleryByUUID(uuid);
+            const result = await galleryService.getGalleryByUUID(uuid, pin);
             if (result.gallery) {
                 onUpdateGallery(result.gallery);
             }
@@ -359,7 +363,7 @@ const ClientGalleryView: React.FC = () => {
     const [pinError, setPinError] = useState('');
     const [activePin, setActivePin] = useState<string | undefined>();
 
-    const fetchGallery = async (pinToTry?: string) => {
+    const fetchGallery = useCallback(async (pinToTry?: string) => {
         if (!uuid) return;
         setLoading(true);
         setPinError('');
@@ -382,11 +386,11 @@ const ClientGalleryView: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [uuid]);
 
     useEffect(() => {
-        fetchGallery();
-    }, [uuid]);
+        void fetchGallery();
+    }, [fetchGallery]);
 
     const handlePinSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -521,6 +525,7 @@ const ClientGalleryView: React.FC = () => {
         <SiteConfigProvider slug={gallery.photographerSlug}>
             <GalleryContent 
                 gallery={gallery} 
+                pin={activePin}
                 onUpdateGallery={async () => {
                     const { gallery: updated } = await galleryService.getGalleryByUUID(uuid!, activePin);
                     if (updated) setGallery(updated);

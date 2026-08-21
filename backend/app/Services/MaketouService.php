@@ -30,6 +30,8 @@ class MaketouService
 
         $response = Http::withToken($this->apiKey)
             ->acceptJson()
+            ->connectTimeout(5)
+            ->timeout(15)
             ->post("{$this->baseUrl}/api/v1/stores/cart/checkout", $data);
 
         if ($response->failed()) {
@@ -53,6 +55,8 @@ class MaketouService
 
         $response = Http::withToken($this->apiKey)
             ->acceptJson()
+            ->connectTimeout(5)
+            ->timeout(15)
             ->get("{$this->baseUrl}/api/v1/stores/cart/{$cartId}");
 
         if ($response->failed()) {

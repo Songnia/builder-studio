@@ -4,8 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\SiteConfig;
+use App\Services\SubscriptionEntitlementService;
 use App\Support\PublicMedia;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -30,14 +33,20 @@ class SiteConfigController extends Controller
     /**
      * Store a newly created site config.
      */
-    public function store(Request $request)
+    public function store(Request $request, SubscriptionEntitlementService $subscriptions)
     {
         $validated = $request->validate([
-            'site_name'    => 'required|string|max:255',
-            'slug'         => 'nullable|string|unique:site_configs,slug|regex:/^[a-z0-9-]+$/',
-            'config_data'  => 'required|array',
+            'site_name' => 'required|string|max:255',
+            'slug' => 'nullable|string|unique:site_configs,slug|regex:/^[a-z0-9-]+$/',
+            'config_data' => 'required|array',
             'is_published' => 'boolean',
         ]);
+
+        if ($request->boolean('is_published')) {
+            if ($denied = $subscriptions->authorize($request->user(), 'publish_site')) {
+                return $denied;
+            }
+        }
 
         // Auto-migrate any Base64 images to physical files
         $validated['config_data'] = $this->migrateBase64Images(
@@ -45,14 +54,30 @@ class SiteConfigController extends Controller
             $request->user()->id
         );
 
-        $validated['user_id']      = $request->user()->id;
-        $validated['is_published'] = $request->input('is_published', true);
+        $validated['user_id'] = $request->user()->id;
+        $validated['is_published'] = $request->boolean('is_published', false);
 
-        $siteConfig = SiteConfig::create($validated);
+        $siteConfig = DB::transaction(function () use ($request, $subscriptions, $validated) {
+            // Serialize all writes that consume the account-wide portfolio quota.
+            $request->user()->newQuery()->whereKey($request->user()->id)->lockForUpdate()->firstOrFail();
+
+            $currentUsage = $subscriptions->portfolioPhotoUsage($request->user());
+            $proposedUsage = $currentUsage + $subscriptions->portfolioPhotoCount($validated['config_data']);
+            $photoLimit = $subscriptions->limit($request->user(), 'portfolio_photos_limit');
+            if ($photoLimit !== null && $proposedUsage > $photoLimit) {
+                return $subscriptions->quotaExceeded('portfolio_photos_limit', $photoLimit, $proposedUsage);
+            }
+
+            return SiteConfig::create($validated);
+        });
+
+        if ($siteConfig instanceof JsonResponse) {
+            return $siteConfig;
+        }
 
         return response()->json([
             'message' => 'Site configuration created successfully',
-            'data'    => $this->serializeSiteConfig($siteConfig),
+            'data' => $this->serializeSiteConfig($siteConfig),
         ], 201);
     }
 
@@ -71,21 +96,27 @@ class SiteConfigController extends Controller
     /**
      * Update the specified site config.
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, $id, SubscriptionEntitlementService $subscriptions)
     {
         $siteConfig = SiteConfig::ownedByCurrentUser()
             ->where('id', $id)
             ->firstOrFail();
 
         $validator = Validator::make($request->all(), [
-            'site_name'    => 'sometimes|string|max:255',
-            'config_data'  => 'sometimes|array',
-            'slug'         => 'nullable|string|unique:site_configs,slug,' . $id . '|regex:/^[a-z0-9-]+$/',
+            'site_name' => 'sometimes|string|max:255',
+            'config_data' => 'sometimes|array',
+            'slug' => 'nullable|string|unique:site_configs,slug,'.$id.'|regex:/^[a-z0-9-]+$/',
             'is_published' => 'boolean',
         ]);
 
         if ($validator->fails()) {
             throw new ValidationException($validator);
+        }
+
+        if ($request->boolean('is_published')) {
+            if ($denied = $subscriptions->authorize($request->user(), 'publish_site')) {
+                return $denied;
+            }
         }
 
         $data = $request->only(['site_name', 'config_data', 'slug', 'is_published']);
@@ -98,11 +129,34 @@ class SiteConfigController extends Controller
             );
         }
 
-        $siteConfig->update($data);
+        $result = DB::transaction(function () use ($request, $subscriptions, $siteConfig, $data) {
+            $request->user()->newQuery()->whereKey($request->user()->id)->lockForUpdate()->firstOrFail();
+
+            if (isset($data['config_data'])) {
+                $currentUsage = $subscriptions->portfolioPhotoUsage($request->user());
+                $proposedUsage = $subscriptions->portfolioPhotoUsage($request->user(), $siteConfig)
+                    + $subscriptions->portfolioPhotoCount($data['config_data']);
+                $photoLimit = $subscriptions->limit($request->user(), 'portfolio_photos_limit');
+
+                // Existing over-limit portfolios remain editable when the photo count
+                // does not increase, matching the frontend's data-retention promise.
+                if ($photoLimit !== null && $proposedUsage > $photoLimit && $proposedUsage > $currentUsage) {
+                    return $subscriptions->quotaExceeded('portfolio_photos_limit', $photoLimit, $proposedUsage);
+                }
+            }
+
+            $siteConfig->update($data);
+
+            return $siteConfig;
+        });
+
+        if ($result instanceof JsonResponse) {
+            return $result;
+        }
 
         return response()->json([
             'message' => 'Site configuration updated successfully',
-            'data'    => $this->serializeSiteConfig($siteConfig),
+            'data' => $this->serializeSiteConfig($result),
         ]);
     }
 
@@ -123,7 +177,7 @@ class SiteConfigController extends Controller
     /**
      * Publish or unpublish a site config.
      */
-    public function publish(Request $request, $id)
+    public function publish(Request $request, $id, SubscriptionEntitlementService $subscriptions)
     {
         $siteConfig = SiteConfig::ownedByCurrentUser()
             ->where('id', $id)
@@ -131,18 +185,24 @@ class SiteConfigController extends Controller
 
         $request->validate(['is_published' => 'required|boolean']);
 
+        if ($request->boolean('is_published')) {
+            if ($denied = $subscriptions->authorize($request->user(), 'publish_site')) {
+                return $denied;
+            }
+        }
+
         $siteConfig->update(['is_published' => $request->is_published]);
 
         return response()->json([
             'message' => 'Site status updated',
-            'data'    => $this->serializeSiteConfig($siteConfig),
+            'data' => $this->serializeSiteConfig($siteConfig),
         ]);
     }
 
     /**
      * Récupérer la configuration publique d'un site par slug.
      */
-    public function getPublicConfig($slug)
+    public function getPublicConfig($slug, SubscriptionEntitlementService $subscriptions)
     {
         $siteConfig = SiteConfig::where('slug', $slug)
             ->where('is_published', true)
@@ -153,13 +213,17 @@ class SiteConfigController extends Controller
             return response()->json(['message' => 'Site non trouvé ou non publié'], 404);
         }
 
+        if (! $subscriptions->forUser($siteConfig->user)['active']) {
+            return response()->json(['message' => 'Site non trouvé ou non publié'], 404);
+        }
+
         return response()->json([
-            'site_name'   => $siteConfig->site_name,
-            'slug'        => $siteConfig->slug,
+            'site_name' => $siteConfig->site_name,
+            'slug' => $siteConfig->slug,
             'config_data' => $this->normalizeConfigMediaUrls($siteConfig->config_data),
             'photographer' => [
-                'name'   => $siteConfig->user->name   ?? 'Photographe',
-                'bio'    => $siteConfig->user->bio    ?? '',
+                'name' => $siteConfig->user->name ?? 'Photographe',
+                'bio' => $siteConfig->user->bio ?? '',
                 'avatar' => $siteConfig->user->avatar ?? '',
             ],
             'created_at' => $siteConfig->created_at,
@@ -178,9 +242,9 @@ class SiteConfigController extends Controller
      * Base64 strings embedded directly in the JSON config.
      * It also acts as a transparent migration for old data.
      *
-     * @param  array $configData  The raw config_data array from the request.
-     * @param  int   $userId      Owner's user ID (used for storage path).
-     * @return array              Config data with Base64 replaced by URLs.
+     * @param  array  $configData  The raw config_data array from the request.
+     * @param  int  $userId  Owner's user ID (used for storage path).
+     * @return array Config data with Base64 replaced by URLs.
      */
     private function migrateBase64Images(array $configData, int $userId): array
     {
@@ -194,17 +258,17 @@ class SiteConfigController extends Controller
                 return;
             }
 
-            $mimeType  = $matches[1]; // e.g. "image/jpeg"
+            $mimeType = $matches[1]; // e.g. "image/jpeg"
             $base64Raw = $matches[2];
 
             // Map MIME type to file extension
             $extension = match (true) {
                 str_contains($mimeType, 'jpeg'),
-                str_contains($mimeType, 'jpg')  => 'jpg',
-                str_contains($mimeType, 'png')  => 'png',
+                str_contains($mimeType, 'jpg') => 'jpg',
+                str_contains($mimeType, 'png') => 'png',
                 str_contains($mimeType, 'webp') => 'webp',
-                str_contains($mimeType, 'gif')  => 'gif',
-                default                         => 'jpg',
+                str_contains($mimeType, 'gif') => 'gif',
+                default => 'jpg',
             };
 
             $decoded = base64_decode($base64Raw, strict: true);
@@ -212,18 +276,19 @@ class SiteConfigController extends Controller
             if ($decoded === false) {
                 // Corrupt Base64 — clear to avoid storing garbage
                 $value = '';
+
                 return;
             }
 
             // Path: builder-media/{userId}/migrated/{uuid}.{ext}
-            $path = "builder-media/{$userId}/migrated/" . Str::uuid() . ".{$extension}";
+            $path = "builder-media/{$userId}/migrated/".Str::uuid().".{$extension}";
 
             try {
                 Storage::disk('public')->put($path, $decoded);
                 $value = PublicMedia::url($path);
             } catch (\Throwable $e) {
                 // If storage fails, clear the field rather than keep a multi-MB Base64 string
-                Log::warning("Base64 migration failed for user {$userId}: " . $e->getMessage());
+                Log::warning("Base64 migration failed for user {$userId}: ".$e->getMessage());
                 $value = '';
             }
         });

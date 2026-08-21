@@ -1,14 +1,38 @@
+import axios from 'axios';
 import { api } from './api';
 import type { Gallery, GalleryImage, CreateGalleryData } from '../types/gallery';
 
+interface ApiPhoto {
+    id: number;
+    file_path: string;
+    url: string;
+    is_liked: boolean;
+}
+
+interface ApiGallery {
+    uuid: string;
+    title: string;
+    description: string;
+    created_at: string;
+    photos: ApiPhoto[];
+    zip_url?: string | null;
+    pin_code?: string | null;
+    photographer_slug?: string | null;
+    client_phone?: string | null;
+}
+
+interface GalleryAccessError {
+    requires_pin?: boolean;
+}
+
 // Helper to map backend response to frontend type
-const mapGalleryFromApi = (data: any): Gallery => {
+const mapGalleryFromApi = (data: ApiGallery): Gallery => {
     return {
         uuid: data.uuid,
         title: data.title,
         description: data.description,
         createdAt: data.created_at,
-        images: data.photos.map((photo: any) => ({
+        images: data.photos.map((photo) => ({
             id: photo.id.toString(),
             filename: photo.file_path.split('/').pop() || `image-${photo.id}.jpg`,
             url: photo.url,
@@ -16,8 +40,8 @@ const mapGalleryFromApi = (data: any): Gallery => {
         })),
         zipFileUrl: data.zip_url || '#',
         zipFileSize: 'Unknown',
-        pin: data.pin_code,
-        photographerSlug: data.photographer_slug,
+        pin: data.pin_code ?? undefined,
+        photographerSlug: data.photographer_slug ?? undefined,
         clientPhone: data.client_phone || undefined,
     };
 };
@@ -29,14 +53,22 @@ export const galleryService = {
         return response.data.data.map(mapGalleryFromApi);
     },
 
+    // Get gallery by UUID for Admin (Admin only - bypasses PIN, requires auth)
+    getAdminGalleryByUUID: async (uuid: string): Promise<Gallery> => {
+        const response = await api.get(`/admin/galleries/${uuid}`);
+        return mapGalleryFromApi(response.data);
+    },
+
     // Get gallery by UUID (Public, supports PIN)
     getGalleryByUUID: async (uuid: string, pin?: string): Promise<{ gallery: Gallery | null; requiresPin?: boolean; errorMsg?: string }> => {
         try {
             const headers = pin ? { 'X-Gallery-PIN': pin } : {};
             const response = await api.get(`/client/gallery/${uuid}`, { headers });
             return { gallery: mapGalleryFromApi(response.data) };
-        } catch (error: any) {
-            if (error?.response?.status === 403 && error?.response?.data?.requires_pin) {
+        } catch (error: unknown) {
+            if (axios.isAxiosError<GalleryAccessError>(error)
+                && error.response?.status === 403
+                && error.response.data?.requires_pin) {
                 return { gallery: null, requiresPin: true, errorMsg: pin ? 'Code PIN incorrect' : undefined };
             }
             console.error('Failed to fetch gallery', error);
@@ -97,8 +129,9 @@ export const galleryService = {
     },
 
     // Toggle image like (Public)
-    toggleImageLike: async (uuid: string, imageId: string): Promise<void> => {
-        await api.post(`/client/gallery/${uuid}/like`, { photo_id: imageId });
+    toggleImageLike: async (uuid: string, imageId: string, pin?: string): Promise<void> => {
+        const headers = pin ? { 'X-Gallery-PIN': pin } : {};
+        await api.post(`/client/gallery/${uuid}/like`, { photo_id: imageId }, { headers });
     },
 
     // Get selected (liked) images

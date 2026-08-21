@@ -8,9 +8,11 @@ interface Plan {
     id: number;
     name: string;
     price: string;
+    yearly_price: string | null;
     features: string[];
     is_active: boolean;
     maketou_product_id: string | null;
+    maketou_yearly_product_id: string | null;
 }
 
 const SubscriptionPlans: React.FC = () => {
@@ -22,8 +24,10 @@ const SubscriptionPlans: React.FC = () => {
     const [formData, setFormData] = useState({
         name: '',
         price: '',
+        yearly_price: '',
         features: '',
         maketou_product_id: '',
+        maketou_yearly_product_id: '',
         is_active: true
     });
 
@@ -31,7 +35,7 @@ const SubscriptionPlans: React.FC = () => {
         try {
             const response = await api.get('/superadmin/plans');
             setPlans(response.data);
-        } catch (error) {
+        } catch {
             toast.error("Erreur lors de la récupération des forfaits");
         } finally {
             setLoading(false);
@@ -44,8 +48,10 @@ const SubscriptionPlans: React.FC = () => {
             setFormData({
                 name: plan.name,
                 price: plan.price,
+                yearly_price: plan.yearly_price || '',
                 features: Array.isArray(plan.features) ? plan.features.join('\n') : '',
                 maketou_product_id: plan.maketou_product_id || '',
+                maketou_yearly_product_id: plan.maketou_yearly_product_id || '',
                 is_active: plan.is_active
             });
         } else {
@@ -53,8 +59,10 @@ const SubscriptionPlans: React.FC = () => {
             setFormData({
                 name: '',
                 price: '',
+                yearly_price: '',
                 features: '',
                 maketou_product_id: '',
+                maketou_yearly_product_id: '',
                 is_active: true
             });
         }
@@ -78,7 +86,7 @@ const SubscriptionPlans: React.FC = () => {
             }
             setIsModalOpen(false);
             fetchPlans();
-        } catch (error) {
+        } catch {
             toast.error("Erreur lors de la sauvegarde");
         }
     };
@@ -93,7 +101,7 @@ const SubscriptionPlans: React.FC = () => {
             await api.delete(`/superadmin/plans/${id}`);
             setPlans(prev => prev.filter(p => p.id !== id));
             toast.success("Forfait supprimé");
-        } catch (error) {
+        } catch {
             toast.error("Erreur lors de la suppression");
         }
     };
@@ -136,7 +144,7 @@ const SubscriptionPlans: React.FC = () => {
                         <div className="absolute -inset-0.5 bg-gradient-to-br from-green-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-[24px]" />
                         
                         <div className="absolute top-4 right-4 flex gap-2 z-10 flex-col items-end">
-                            {plan.maketou_product_id ? (
+                            {plan.maketou_product_id && plan.maketou_yearly_product_id ? (
                                 <div className="bg-green-100 text-green-700 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full shadow-sm">
                                     ✓ Maketou OK
                                 </div>
@@ -155,9 +163,12 @@ const SubscriptionPlans: React.FC = () => {
                         <div className="relative z-10">
                             <h3 className="text-xl font-extrabold text-slate-800 tracking-tight">{plan.name}</h3>
                             <div className="mt-4 flex items-baseline text-slate-900 mb-2">
-                                <span className="text-5xl font-black tracking-tighter">{plan.price}€</span>
+                                <span className="text-5xl font-black tracking-tighter">{plan.price} F</span>
                                 <span className="ml-1.5 text-lg font-bold text-slate-400">/mois</span>
                             </div>
+                            <p className="text-sm font-semibold text-slate-500">
+                                {plan.yearly_price ?? '—'} F / an
+                            </p>
                             <div className="h-px w-full bg-gradient-to-r from-slate-200 to-transparent my-6" />
                             
                             <ul className="space-y-4 flex-1 mb-8">
@@ -238,7 +249,7 @@ const SubscriptionPlans: React.FC = () => {
                             </div>
                             
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-1">Prix mensuel (€)</label>
+                                <label className="block text-sm font-bold text-slate-700 mb-1">Prix mensuel (F CFA)</label>
                                 <input 
                                     type="number" 
                                     step="0.01"
@@ -250,8 +261,20 @@ const SubscriptionPlans: React.FC = () => {
                             </div>
 
                             <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-1">Prix annuel (F CFA)</label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    value={formData.yearly_price}
+                                    onChange={(e) => setFormData({...formData, yearly_price: e.target.value})}
+                                    required
+                                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+                                />
+                            </div>
+
+                            <div>
                                 <label className="block text-sm font-bold text-slate-700 mb-1">
-                                    Identifiant produit Maketou <span className="text-red-500">*</span>
+                                    Identifiant produit Maketou mensuel <span className="text-red-500">*</span>
                                 </label>
                                 <p className="text-xs text-slate-500 mb-2">
                                     L'identifiant public Maketou (UUID). <br/>
@@ -262,6 +285,20 @@ const SubscriptionPlans: React.FC = () => {
                                     value={formData.maketou_product_id}
                                     onChange={(e) => setFormData({...formData, maketou_product_id: e.target.value})}
                                     placeholder="UUID public Maketou..."
+                                    required
+                                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-1">
+                                    Identifiant produit Maketou annuel <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    value={formData.maketou_yearly_product_id}
+                                    onChange={(e) => setFormData({...formData, maketou_yearly_product_id: e.target.value})}
+                                    placeholder="UUID public Maketou annuel..."
                                     required
                                     className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
                                 />

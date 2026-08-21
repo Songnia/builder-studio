@@ -2,6 +2,8 @@
 
 namespace App\Support;
 
+use Illuminate\Support\Facades\URL;
+
 class PublicMedia
 {
     public static function url(string $path): string
@@ -10,6 +12,17 @@ class PublicMedia
         $encodedPath = implode('/', array_map('rawurlencode', explode('/', $normalizedPath)));
 
         return url('/media/' . $encodedPath);
+    }
+
+    public static function temporaryUrl(string $path, int $minutes = 30): string
+    {
+        $normalizedPath = ltrim(self::extractRelativePath($path) ?? $path, '/');
+
+        return URL::temporarySignedRoute(
+            'media.show',
+            now()->addMinutes($minutes),
+            ['path' => $normalizedPath]
+        );
     }
 
     public static function normalizeUrlIfPublicMedia(?string $value): ?string

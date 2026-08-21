@@ -9,6 +9,7 @@ interface Transaction {
     id: number;
     user_id: number;
     subscription_plan_id: number;
+    billing_cycle: 'monthly' | 'yearly';
     status: string;
     payment_status: string;
     maketou_cart_id: string;
@@ -22,7 +23,7 @@ interface Transaction {
     plan?: {
         name: string;
         price: number;
-        billing_cycle: string;
+        yearly_price: number | null;
     };
 }
 
@@ -121,7 +122,11 @@ export default function TransactionsList() {
                                     </td>
                                     <td className="p-4">
                                         <div className="font-medium text-gray-900">{tx.plan?.name || 'Inconnu'}</div>
-                                        <div className="text-sm text-gray-500">{tx.plan ? `${tx.plan.price} F / ${tx.plan.billing_cycle}` : ''}</div>
+                                        <div className="text-sm text-gray-500">
+                                            {tx.plan
+                                                ? `${tx.billing_cycle === 'yearly' ? tx.plan.yearly_price : tx.plan.price} F / ${tx.billing_cycle === 'yearly' ? 'an' : 'mois'}`
+                                                : ''}
+                                        </div>
                                     </td>
                                     <td className="p-4">
                                         <div className="flex flex-col gap-1 items-start">

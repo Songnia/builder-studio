@@ -9,9 +9,9 @@ import { useSiteConfig } from '@/context/SiteConfigContext';
 const FlashInfo: React.FC = () => {
     // const { t } = useTranslation();
     const { config } = useSiteConfig();
+    const [open, setOpen] = useState(false);
 
     if (!config) return null;
-    const [open, setOpen] = useState(false);
 
     if (!config.flashInfo.enabled) {
         return null;

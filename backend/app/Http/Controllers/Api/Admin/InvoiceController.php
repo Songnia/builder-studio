@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
+use App\Services\SubscriptionEntitlementService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class InvoiceController extends Controller
 {
@@ -16,26 +18,30 @@ class InvoiceController extends Controller
             ->get();
     }
 
-    public function store(Request $request)
+    public function store(Request $request, SubscriptionEntitlementService $subscriptions)
     {
+        if ($denied = $subscriptions->authorize($request->user(), 'invoicing')) {
+            return $denied;
+        }
+
         $validated = $request->validate([
             'invoice_number' => 'required|string|unique:invoices,invoice_number',
             'issue_date' => 'required|date',
-            'due_date' => 'required|date',
+            'due_date' => 'required|date|after_or_equal:issue_date',
             'client_name' => 'required|string',
             'client_email' => 'required|email',
             'client_phone' => 'nullable|string',
             'client_address' => 'nullable|string',
-            'tax_rate' => 'required|numeric',
+            'tax_rate' => 'required|numeric|min:0|max:100',
             'include_tax' => 'nullable|boolean',
-            'total_amount' => 'required|numeric',
-            'amount_paid' => 'nullable|numeric|min:0',
+            'total_amount' => 'required|numeric|min:0.01',
+            'amount_paid' => 'nullable|numeric|min:0|lte:total_amount',
             'studio_info' => 'nullable|json',
             'items' => 'required|array|min:1',
             'items.*.description' => 'required|string',
-            'items.*.quantity' => 'required|integer',
-            'items.*.unit_price' => 'required|numeric',
-            'items.*.total' => 'required|numeric',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.unit_price' => 'required|numeric|min:0',
+            'items.*.total' => 'required|numeric|min:0',
         ]);
 
         return DB::transaction(function () use ($validated, $request) {
@@ -62,7 +68,7 @@ class InvoiceController extends Controller
                 'amount_paid' => $amount_paid,
                 'studio_info' => isset($validated['studio_info']) ? json_decode($validated['studio_info'], true) : null,
                 'status' => $status,
-                'currency' => 'FCFA'
+                'currency' => 'FCFA',
             ]);
 
             foreach ($validated['items'] as $item) {
@@ -85,23 +91,23 @@ class InvoiceController extends Controller
         $invoice = Invoice::where('user_id', $request->user()->id)->findOrFail($id);
 
         $validated = $request->validate([
-            'invoice_number' => 'required|string|unique:invoices,invoice_number,' . $id,
+            'invoice_number' => 'required|string|unique:invoices,invoice_number,'.$id,
             'issue_date' => 'required|date',
-            'due_date' => 'required|date',
+            'due_date' => 'required|date|after_or_equal:issue_date',
             'client_name' => 'required|string',
             'client_email' => 'required|email',
             'client_phone' => 'nullable|string',
             'client_address' => 'nullable|string',
-            'tax_rate' => 'required|numeric',
+            'tax_rate' => 'required|numeric|min:0|max:100',
             'include_tax' => 'nullable|boolean',
-            'total_amount' => 'required|numeric',
-            'amount_paid' => 'nullable|numeric|min:0',
+            'total_amount' => 'required|numeric|min:0.01',
+            'amount_paid' => 'nullable|numeric|min:0|lte:total_amount',
             'studio_info' => 'nullable|json',
             'items' => 'required|array|min:1',
             'items.*.description' => 'required|string',
-            'items.*.quantity' => 'required|integer',
-            'items.*.unit_price' => 'required|numeric',
-            'items.*.total' => 'required|numeric',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.unit_price' => 'required|numeric|min:0',
+            'items.*.total' => 'required|numeric|min:0',
         ]);
 
         return DB::transaction(function () use ($validated, $invoice) {
@@ -141,32 +147,42 @@ class InvoiceController extends Controller
 
     public function recordPayment(Request $request, $id)
     {
-        $invoice = Invoice::where('user_id', $request->user()->id)->findOrFail($id);
-
         $validated = $request->validate([
-            'amount' => 'required|numeric|min:0.01'
+            'amount' => 'required|numeric|min:0.01',
         ]);
 
-        $newAmountPaid = ($invoice->amount_paid ?? 0) + $validated['amount'];
-        $status = 'pending';
-        if ($newAmountPaid > 0 && $newAmountPaid < $invoice->total_amount) {
-            $status = 'partially_paid';
-        } elseif ($newAmountPaid >= $invoice->total_amount) {
-            $status = 'paid';
-        }
+        return DB::transaction(function () use ($request, $id, $validated) {
+            $invoice = Invoice::where('user_id', $request->user()->id)
+                ->lockForUpdate()
+                ->findOrFail($id);
 
-        $invoice->update([
-            'amount_paid' => $newAmountPaid,
-            'status' => $status
-        ]);
+            $currentAmount = (float) ($invoice->amount_paid ?? 0);
+            $totalAmount = (float) $invoice->total_amount;
+            $remainingAmount = max(0, $totalAmount - $currentAmount);
 
-        return response()->json($invoice->load('items'));
+            if ((float) $validated['amount'] > $remainingAmount) {
+                throw ValidationException::withMessages([
+                    'amount' => ['Le montant dépasse le solde restant de la facture.'],
+                ]);
+            }
+
+            $newAmountPaid = $currentAmount + (float) $validated['amount'];
+            $status = $newAmountPaid >= $totalAmount ? 'paid' : 'partially_paid';
+
+            $invoice->update([
+                'amount_paid' => $newAmountPaid,
+                'status' => $status,
+            ]);
+
+            return response()->json($invoice->load('items'));
+        });
     }
 
     public function destroy($id, Request $request)
     {
         $invoice = Invoice::where('user_id', $request->user()->id)->findOrFail($id);
         $invoice->delete();
+
         return response()->json(null, 204);
     }
 }

@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,6 +23,22 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        RateLimiter::for('login', function (Request $request) {
+            $email = Str::lower((string) $request->input('email'));
+
+            return Limit::perMinute(5)->by($email.'|'.$request->ip());
+        });
+
+        RateLimiter::for('register', fn (Request $request) =>
+            Limit::perHour(10)->by($request->ip())
+        );
+
+        RateLimiter::for('gallery-public', fn (Request $request) =>
+            Limit::perMinute(30)->by((string) $request->route('uuid').'|'.$request->ip())
+        );
+
+        RateLimiter::for('maketou-webhook', fn (Request $request) =>
+            Limit::perMinute(60)->by($request->ip())
+        );
     }
 }

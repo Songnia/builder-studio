@@ -28,11 +28,13 @@ Route::get('/guides/{slug}', [MarketingPageController::class, 'show']);
 Route::get('/alternatives', [MarketingPageController::class, 'show']);
 Route::get('/alternatives/{slug}', [MarketingPageController::class, 'show']);
 
-// 1. API Domain
-Route::domain('api.vanda-studio.org')->group(function () {
-    Route::get('/media/{path}', [PublicMediaController::class, 'show'])
-        ->where('path', '.*');
+// 1. Media Route (accessible globally for local dev & production)
+Route::get('/media/{path}', [PublicMediaController::class, 'show'])
+    ->where('path', '.*')
+    ->name('media.show');
 
+// 2. API Domain Fallback
+Route::domain('api.vanda-studio.org')->group(function () {
     Route::any('{any?}', function() {
         return response()->json(['message' => 'Vanda API is running'], 200);
     })->where('any', '.*');

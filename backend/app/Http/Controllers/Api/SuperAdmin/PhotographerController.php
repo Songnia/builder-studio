@@ -11,13 +11,14 @@ class PhotographerController extends Controller
     public function index()
     {
         $photographers = User::whereIn('role', ['user', 'admin', 'superadmin'])
-            ->with(['subscriptions' => function($query) {
-                $query->where('status', 'active')->with('plan');
+            ->with(['subscriptions' => function ($query) {
+                $query->currentlyActive()->with('plan');
             }, 'siteConfigs'])
             ->get()
-            ->map(function($user) {
+            ->map(function ($user) {
                 $activeSub = $user->subscriptions->first();
                 $firstSite = $user->siteConfigs->first();
+
                 return [
                     'id' => $user->id,
                     'name' => $user->name,
@@ -76,7 +77,7 @@ class PhotographerController extends Controller
             'phone' => array_key_exists('phone', $validated) ? $validated['phone'] : $user->phone,
         ];
 
-        if (!empty($validated['password'])) {
+        if (! empty($validated['password'])) {
             $dataToUpdate['password'] = bcrypt($validated['password']);
         }
 
@@ -101,17 +102,17 @@ class PhotographerController extends Controller
     public function toggleActive($id)
     {
         $user = User::findOrFail($id);
-        
+
         if ($user->role === 'superadmin') {
             return response()->json(['message' => 'Cannot toggle superadmin status'], 403);
         }
 
-        $user->is_active = !$user->is_active;
+        $user->is_active = ! $user->is_active;
         $user->save();
 
         return response()->json([
             'message' => 'User status updated',
-            'is_active' => $user->is_active
+            'is_active' => $user->is_active,
         ]);
     }
 
@@ -120,7 +121,7 @@ class PhotographerController extends Controller
         $user = User::findOrFail($id);
         $site = $user->siteConfigs()->first();
 
-        if (!$site) {
+        if (! $site) {
             return response()->json(['message' => 'Cet utilisateur n\'a pas de site configuré'], 404);
         }
 
@@ -129,7 +130,7 @@ class PhotographerController extends Controller
 
         return response()->json([
             'message' => 'Site publish status updated',
-            'is_published' => $newValue
+            'is_published' => $newValue,
         ]);
     }
 }

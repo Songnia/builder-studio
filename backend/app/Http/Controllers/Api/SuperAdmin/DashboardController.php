@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api\SuperAdmin;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use App\Models\Gallery;
+use App\Models\User;
 use App\Models\UserSubscription;
 use Illuminate\Http\Request;
 
@@ -14,11 +14,17 @@ class DashboardController extends Controller
     {
         $totalPhotographers = User::where('role', 'user')->count();
         $totalGalleries = Gallery::count();
-        
-        $activeSubscriptions = UserSubscription::where('status', 'active')->with('plan')->get();
+
+        $activeSubscriptions = UserSubscription::currentlyActive()->with('plan')->get();
         $totalActiveSubscriptions = $activeSubscriptions->count();
-        $monthlyRevenue = $activeSubscriptions->sum(function($sub) {
-            return $sub->plan ? $sub->plan->price : 0;
+        $monthlyRevenue = $activeSubscriptions->sum(function ($sub) {
+            if (! $sub->plan) {
+                return 0;
+            }
+
+            return $sub->billing_cycle === 'yearly'
+                ? ((float) $sub->plan->yearly_price / 12)
+                : (float) $sub->plan->price;
         });
 
         // Mock data for the chart, representing growth over the last 7 days
@@ -39,7 +45,7 @@ class DashboardController extends Controller
                 'active_subscriptions' => $totalActiveSubscriptions,
                 'monthly_revenue' => $monthlyRevenue,
             ],
-            'growth_data' => $growthData
+            'growth_data' => $growthData,
         ]);
     }
 

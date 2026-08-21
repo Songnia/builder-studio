@@ -27,6 +27,12 @@ export const galleryService = {
         return response.data.data.map(mapGalleryFromApi);
     },
 
+    // Get gallery by UUID for Admin (Admin only - bypasses PIN, requires auth)
+    getAdminGalleryByUUID: async (uuid: string): Promise<Gallery> => {
+        const response = await api.get(`/admin/galleries/${uuid}`);
+        return mapGalleryFromApi(response.data);
+    },
+
     // Get gallery by UUID (Public)
     getGalleryByUUID: async (uuid: string): Promise<Gallery | null> => {
         try {

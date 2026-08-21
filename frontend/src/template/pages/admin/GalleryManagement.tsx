@@ -17,7 +17,7 @@ const GalleryManagement: React.FC = () => {
     const fetchGallery = async () => {
         if (uuid) {
             try {
-                const g = await galleryService.getGalleryByUUID(uuid);
+                const g = await galleryService.getAdminGalleryByUUID(uuid);
                 setGallery(g);
             } catch (error) {
                 console.error("Failed to fetch gallery", error);

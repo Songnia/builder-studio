@@ -22,7 +22,7 @@ class Gallery extends Model implements HasMedia
 
     public function photos()
     {
-        return $this->hasMany(Photo::class);
+        return $this->hasMany(Photo::class)->chaperone();
     }
 
     public function likes()
@@ -48,7 +48,13 @@ class Gallery extends Model implements HasMedia
 
     public function getZipUrlAttribute()
     {
-        return $this->zip_path ? PublicMedia::url($this->zip_path) : null;
+        if (! $this->zip_path) {
+            return null;
+        }
+
+        return $this->pin_code
+            ? PublicMedia::temporaryUrl($this->zip_path)
+            : PublicMedia::url($this->zip_path);
     }
 
     public function registerMediaConversions(?\Spatie\MediaLibrary\MediaCollections\Models\Media $media = null): void

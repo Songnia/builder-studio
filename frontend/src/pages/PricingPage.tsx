@@ -290,8 +290,11 @@ function PricingCards() {
                                 </div>
 
                                 <a
-                                    href={`${ADMIN_URL}/auth/register?plan=${plan.id}${plan.id !== 'starter' ? '&checkout=true' : ''}`}
-                                    onClick={() => localStorage.setItem('selectedPlan', plan.id)}
+                                    href={`${ADMIN_URL}/auth/register?plan=${plan.id}&billing_cycle=${cycle}${plan.id !== 'starter' ? '&checkout=true' : ''}`}
+                                    onClick={() => {
+                                        localStorage.setItem('selectedPlan', plan.id)
+                                        localStorage.setItem('selectedBillingCycle', cycle)
+                                    }}
                                     className={`block w-full text-center py-3 rounded-lg font-semibold transition-all ${colors.button} mb-6`}
                                 >
                                     {plan.cta}

@@ -12,10 +12,12 @@ use App\Http\Controllers\Api\Client\GalleryController as ClientGalleryController
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
+Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:register');
 
 Route::middleware(['auth:sanctum', 'active'])->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
+
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
@@ -24,6 +26,7 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
 
     // Payment & Subscription endpoints
     Route::get('/plans', [SubscriptionController::class, 'getActivePlans']);
+    Route::get('/subscription/entitlements', [SubscriptionController::class, 'current']);
     Route::post('/payment/checkout', [PaymentController::class, 'checkout']);
     Route::post('/payment/verify', [PaymentController::class, 'verifyPayment']);
 
@@ -65,7 +68,7 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
 
 
 
-Route::prefix('client')->group(function () {
+Route::middleware('throttle:gallery-public')->prefix('client')->group(function () {
     Route::get('/gallery/{uuid}', [ClientGalleryController::class, 'show']);
     Route::post('/gallery/{uuid}/like', [ClientGalleryController::class, 'toggleLike']);
 });
@@ -77,4 +80,5 @@ Route::prefix('client')->group(function () {
 Route::get('/sites/{slug}/config', [SiteConfigController::class, 'getPublicConfig']);
 
 // Maketou Webhook Route
-Route::post('/payment/maketou/webhook', [PaymentController::class, 'webhook']);
+Route::post('/payment/maketou/webhook', [PaymentController::class, 'webhook'])
+    ->middleware('throttle:maketou-webhook');
