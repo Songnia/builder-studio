@@ -5,9 +5,9 @@ import LandscapeIcon from '@mui/icons-material/Landscape';
 import BusinessIcon from '@mui/icons-material/Business';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import { useTranslation } from 'react-i18next';
-import studioImage from '/skillset_studio_setup_1768795996549.png';
-import urbanImage from '/skillset_urban_photographer_1768796012189.png';
-import cameraImage from '/postproduction_service_composition_1768795547698.png';
+import studioImage from '../../assets/hero/hero-1.jpg';
+import urbanImage from '../../assets/hero/hero-2.jpg';
+import cameraImage from '../../assets/hero/hero-3.jpg';
 
 const SkillsetSection: React.FC = () => {
     const { t } = useTranslation();

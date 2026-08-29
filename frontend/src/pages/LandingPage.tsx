@@ -410,9 +410,9 @@ function FeaturesSection() {
                                         </div>
                                         <img
                                             src={[
-                                                '/assets/screenshots/monsite/star creation site.png',
-                                                '/assets/screenshots/galerie/Partager la galerie.png',
-                                                '/assets/screenshots/facturation/create facture.png'
+                                                '/assets/screenshots/monsite/start-creation-site.png',
+                                                '/assets/screenshots/galerie/partager-galerie.png',
+                                                '/assets/screenshots/facturation/create-facture.png'
                                             ][index]}
                                             alt={feature.title}
                                             className="w-full rounded-lg"

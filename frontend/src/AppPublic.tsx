@@ -7,6 +7,7 @@ import { getSubdomainInfo } from '@/utils/subdomain';
 import LandingPage from '@/pages/LandingPage';
 import PricingPage from '@/pages/PricingPage';
 import SeoPageView from '@/pages/seo/SeoPageView';
+import ClientGalleryView from '@/pages/client/ClientGalleryView';
 
 // Template Pages
 import TemplateLayout from '@/template/components/Layout/Layout';
@@ -27,6 +28,9 @@ function AppPublic() {
                     {/* Pages Publiques Générales */}
                     <Route path="/" element={<LandingPage />} />
                     <Route path="/pricing" element={<PricingPage />} />
+
+                    {/* Galerie client partagée sur un sous-domaine créateur. */}
+                    <Route path="/g/:uuid" element={<ClientGalleryView />} />
 
                     {/* Programmatic SEO Marketing Routes */}
                     <Route path="/tools/:slug" element={<SeoPageView />} />

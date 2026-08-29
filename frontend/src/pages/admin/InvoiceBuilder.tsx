@@ -14,7 +14,7 @@ import { X, Eye, Loader2 } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 const MOCK_STUDIO_DATA = {
-    logoUrl: '/logo.png',
+    logoUrl: '/favicon.png',
     photographerName: 'Vanda Studio',
     email: 'contact@vanda-studio.org',
     address: 'Paris, France',
@@ -59,7 +59,7 @@ const InvoiceBuilder: React.FC = () => {
                 if (configs && configs.length > 0) {
                     const primaryConfig = configs[0].config_data;
                     updateMetadata('studio', {
-                        logoUrl: primaryConfig.logo || '/logo.png',
+                        logoUrl: primaryConfig.logo || '/favicon.png',
                         photographerName: primaryConfig.siteName || 'Vanda Studio',
                         email: primaryConfig.email || 'contact@vanda-studio.org',
                         address: `${primaryConfig.address || ''} ${primaryConfig.city || ''}, ${primaryConfig.country || ''}`.trim() || 'Paris, France',

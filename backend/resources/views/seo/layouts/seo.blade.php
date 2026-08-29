@@ -245,7 +245,7 @@
         <div class="container">
             <div class="nav-inner">
                 <a href="/" class="logo">
-                    <img src="/logo.png" alt="Vanda Studio" height="36" style="display: block;">
+                    <img src="/favicon.png" alt="Vanda Studio" width="36" height="36" style="display: block;">
                     <span class="logo-text gradient-text">VANDA STUDIO</span>
                 </a>
 

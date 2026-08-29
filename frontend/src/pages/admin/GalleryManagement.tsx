@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Box, Typography, Button, Chip } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowBack as BackIcon, Favorite as FavoriteIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
+import { ArrowBack as BackIcon, Favorite as FavoriteIcon, Delete as DeleteIcon, Add as AddIcon, Visibility, VisibilityOff, LockOutlined } from '@mui/icons-material';
 import { IconButton, CircularProgress } from '@mui/material';
 import { toast } from 'sonner';
 import Masonry, { ResponsiveMasonry } from 'react-responsive-masonry';
@@ -14,6 +14,7 @@ const GalleryManagement: React.FC = () => {
     const [gallery, setGallery] = useState<Gallery | null>(null);
     const [loading, setLoading] = useState(false);
     const [pageLoading, setPageLoading] = useState(true);
+    const [showPin, setShowPin] = useState(false);
 
     const fetchGallery = async () => {
         if (uuid) {
@@ -208,6 +209,21 @@ const GalleryManagement: React.FC = () => {
                             '& .MuiChip-icon': { color: 'white' }
                         }}
                     />
+                    {gallery.pin && (
+                        <Chip
+                            icon={<LockOutlined sx={{ fontSize: '16px !important' }} />}
+                            label={`Mot de passe : ${showPin ? gallery.pin : '••••'}`}
+                            onDelete={() => setShowPin((value) => !value)}
+                            deleteIcon={showPin ? <VisibilityOff /> : <Visibility />}
+                            sx={{
+                                borderRadius: '10px',
+                                fontWeight: 700,
+                                backgroundColor: '#eef2ff',
+                                color: '#3730a3',
+                                '& .MuiChip-deleteIcon': { color: '#4f46e5' },
+                            }}
+                        />
+                    )}
                 </Box>
             </Box>
 

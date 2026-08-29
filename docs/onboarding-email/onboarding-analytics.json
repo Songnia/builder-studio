@@ -1,0 +1,31 @@
+{
+  "schema_version": "1.0.0",
+  "primary_metric": {
+    "name": "activation_rate_within_7_days",
+    "definition": "new active users reaching site_published or first_gallery_shared within 7 days / eligible new active users"
+  },
+  "secondary_metrics": [
+    "median_time_to_first_action",
+    "median_time_to_first_value",
+    "gallery_first_client_open_rate",
+    "first_invoice_creation_rate_within_14_days",
+    "trial_to_paid_conversion_rate",
+    "rescue_email_goal_completion_rate"
+  ],
+  "email_metrics": ["queued", "sent", "delivered_if_provider_supports", "bounced", "clicked", "unsubscribed", "goal_achieved"],
+  "guardrails": [
+    {"name": "hard_bounce_rate", "direction": "minimize"},
+    {"name": "spam_complaint_rate", "direction": "minimize"},
+    {"name": "unsubscribe_rate", "direction": "minimize"},
+    {"name": "duplicate_send_count", "target": 0}
+  ],
+  "experiment": {
+    "hypothesis": "Behavior-triggered rescue emails increase 7-day activation without increasing unsubscribe rate",
+    "target_segment": "new creative-owner accounts",
+    "control": "existing in-app onboarding only",
+    "variant": "in-app onboarding plus email lifecycle",
+    "primary_metric": "activation_rate_within_7_days",
+    "guardrail_metric": "unsubscribe_rate",
+    "significance": "not predetermined; evaluate after sufficient eligible traffic"
+  }
+}

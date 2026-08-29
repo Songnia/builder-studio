@@ -10,24 +10,50 @@ type BillingCycle = 'monthly' | 'yearly';
 type PlanFeature = string | { name?: string };
 
 interface Plan {
-    id: string;
+    id: number;
     name: string;
+    policy_key: 'starter' | 'pro' | 'studio';
     description: string;
     price: number;
     yearly_price: number | null;
+    promo_monthly_price: number | null;
+    promo_months: number | null;
+    popular: boolean;
     features: PlanFeature[] | null;
     is_active: boolean;
 }
 
-const apiErrorMessage = (error: unknown, fallback: string) =>
-    axios.isAxiosError(error) && typeof error.response?.data?.message === 'string'
-        ? error.response.data.message
-        : fallback;
+const apiErrorMessage = (error: unknown, fallback: string) => {
+    if (!axios.isAxiosError(error)) {
+        return fallback;
+    }
+
+    const data = error.response?.data;
+    const message = typeof data?.message === 'string' ? data.message : '';
+    const providerError = typeof data?.error === 'string' ? data.error : '';
+    const code = typeof data?.code === 'string' ? data.code : '';
+    const diagnostic = `${code} ${providerError} ${message}`;
+
+    if (diagnostic.includes('INVALID_API_KEY') || code === 'payment_configuration_error') {
+        return 'Le service de paiement est mal configuré. Contactez l’administrateur avant de réessayer.';
+    }
+
+    if (diagnostic.includes('INVALID_PRODUCT') || code === 'plan_payment_unavailable') {
+        return 'Ce forfait n’est pas disponible au paiement. Contactez l’administrateur.';
+    }
+
+    if (diagnostic.includes('RATE_LIMITED') || code === 'payment_rate_limited') {
+        return 'Le service de paiement reçoit trop de demandes. Réessayez dans quelques instants.';
+    }
+
+    return message || fallback;
+};
 
 export default function Subscription() {
     const [plans, setPlans] = useState<Plan[]>([]);
     const [loading, setLoading] = useState(true);
     const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+    const [checkoutErrorKey, setCheckoutErrorKey] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [billingCycle, setBillingCycle] = useState<BillingCycle>(() =>
         localStorage.getItem('selectedBillingCycle') === 'yearly' ? 'yearly' : 'monthly'
@@ -61,10 +87,11 @@ export default function Subscription() {
         }
     };
 
-    const handleSubscribe = async (planId: string, cycle: BillingCycle = billingCycle) => {
+    const handleSubscribe = async (planId: number, cycle: BillingCycle = billingCycle) => {
         const checkoutKey = `${planId}:${cycle}`;
         setCheckoutLoading(checkoutKey);
         setError(null);
+        setCheckoutErrorKey(null);
         try {
             const response = await api.post('/payment/checkout', {
                 plan_id: planId,
@@ -78,7 +105,9 @@ export default function Subscription() {
                 throw new Error('URL de redirection manquante.');
             }
         } catch (err: unknown) {
-            setError(apiErrorMessage(err, 'Erreur lors de la préparation du paiement.'));
+            const message = apiErrorMessage(err, 'Erreur lors de la préparation du paiement.');
+            setError(message);
+            setCheckoutErrorKey(checkoutKey);
             setCheckoutLoading(null);
         }
     };
@@ -86,6 +115,8 @@ export default function Subscription() {
     const selectBillingCycle = (cycle: BillingCycle) => {
         setBillingCycle(cycle);
         localStorage.setItem('selectedBillingCycle', cycle);
+        setError(null);
+        setCheckoutErrorKey(null);
     };
 
     if (loading) {
@@ -107,7 +138,7 @@ export default function Subscription() {
                 </p>
             </div>
 
-            {error && (
+            {error && checkoutErrorKey === null && (
                 <Alert variant="destructive" className="mb-8 max-w-2xl mx-auto">
                     <AlertCircle className="h-4 w-4" />
                     <AlertDescription>{error}</AlertDescription>
@@ -141,9 +172,12 @@ export default function Subscription() {
                 {plans.map((plan, index) => {
                     const monthlyPrice = Number(plan.price);
                     const yearlyPrice = plan.yearly_price === null ? null : Number(plan.yearly_price);
-                    const displayedPrice = billingCycle === 'yearly' ? yearlyPrice : monthlyPrice;
+                    const promoMonthlyPrice = plan.promo_monthly_price === null ? null : Number(plan.promo_monthly_price);
+                    const displayedPrice = billingCycle === 'yearly'
+                        ? yearlyPrice
+                        : (promoMonthlyPrice ?? monthlyPrice);
                     const checkoutKey = `${plan.id}:${billingCycle}`;
-                    const isPopular = monthlyPrice > 10000; // heuristic for UI, or use a DB field if available
+                    const isPopular = plan.popular;
                     
                     return (
                         <motion.div
@@ -170,12 +204,23 @@ export default function Subscription() {
                             </div>
 
                             <div className="mb-6 flex-grow">
+                                {billingCycle === 'monthly' && promoMonthlyPrice !== null && plan.promo_months !== null && (
+                                    <div className="mb-3 inline-flex rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700">
+                                        Prix lancement · {plan.promo_months} premiers mois
+                                    </div>
+                                )}
                                 <div className="flex items-baseline gap-2 mb-6">
                                     <span className="text-4xl font-extrabold text-gray-900">
                                         {displayedPrice?.toLocaleString('fr-FR') ?? '—'} F
                                     </span>
                                     <span className="text-gray-500 font-medium">/{billingCycle === 'yearly' ? 'an' : 'mois'}</span>
                                 </div>
+                                {billingCycle === 'monthly' && promoMonthlyPrice !== null && (
+                                    <p className="-mt-4 mb-6 text-sm text-gray-500">
+                                        <span className="line-through">{monthlyPrice.toLocaleString('fr-FR')} F/mois</span>
+                                        <span className="ml-2 font-semibold text-green-700">puis {monthlyPrice.toLocaleString('fr-FR')} F/mois</span>
+                                    </p>
+                                )}
 
                                 <ul className="space-y-4">
                                     {plan.features && Array.isArray(plan.features) ? plan.features.map((feature, i: number) => (
@@ -206,9 +251,14 @@ export default function Subscription() {
                                 {checkoutLoading === checkoutKey ? (
                                     <Loader2 className="w-5 h-5 animate-spin" />
                                 ) : (
-                                    'S\'abonner'
+                                    checkoutErrorKey === checkoutKey ? 'Réessayer' : 'S\'abonner'
                                 )}
                             </button>
+                            {error && checkoutErrorKey === checkoutKey && (
+                                <p role="alert" aria-live="assertive" className="mt-3 text-sm font-medium text-red-600">
+                                    {error}
+                                </p>
+                            )}
                         </motion.div>
                     );
                 })}

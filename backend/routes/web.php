@@ -1,9 +1,11 @@
 <?php
 
 use App\Http\Controllers\PublicMediaController;
+use App\Http\Controllers\GalleryShareController;
 use App\Http\Controllers\SeoController;
 use App\Http\Controllers\Seo\MarketingPageController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\DB;
 
 /*
 |--------------------------------------------------------------------------
@@ -33,6 +35,24 @@ Route::get('/media/{path}', [PublicMediaController::class, 'show'])
     ->where('path', '.*')
     ->name('media.show');
 
+// Shared galleries: Laravel injects Open Graph metadata before React boots.
+Route::get('/g/{uuid}', [GalleryShareController::class, 'page'])
+    ->whereUuid('uuid')
+    ->name('gallery.share.page');
+Route::get('/gallery-share/{uuid}/cover', [GalleryShareController::class, 'cover'])
+    ->whereUuid('uuid')
+    ->name('gallery.share.cover');
+
+Route::get('/email/onboarding/unsubscribe/{user}', function (int $user) {
+    DB::table('onboarding_email_preferences')->updateOrInsert(
+        ['user_id' => $user],
+        ['unsubscribed_at' => now(), 'created_at' => now(), 'updated_at' => now()]
+    );
+
+    return response('Vous ne recevrez plus les conseils d’onboarding VANDA STUDIO.', 200)
+        ->header('Content-Type', 'text/plain; charset=UTF-8');
+})->middleware('signed')->name('onboarding.unsubscribe');
+
 // 2. API Domain Fallback
 Route::domain('api.vanda-studio.org')->group(function () {
     Route::any('{any?}', function() {
@@ -42,8 +62,26 @@ Route::domain('api.vanda-studio.org')->group(function () {
 
 // 2. Fallback
 Route::fallback(function () {
+    $isAdminRoute = request()->is(
+        'admin',
+        'admin/*',
+        'superadmin',
+        'superadmin/*',
+        'auth/*',
+        'login',
+        'signup',
+        'profile',
+        'builder',
+        'resources'
+    );
+
+    if ($isAdminRoute && file_exists(public_path('app/index.html'))) {
+        return response()->file(public_path('app/index.html'));
+    }
+
     if (file_exists(public_path('landing/index.html'))) {
         return response()->file(public_path('landing/index.html'));
     }
+
     return response()->json(['error' => 'Route not found'], 404);
 });

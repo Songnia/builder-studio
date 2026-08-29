@@ -59,6 +59,7 @@ const AdminDashboard: React.FC = () => {
     const [shareUuid, setShareUuid] = useState('');
     const [shareSlug, setShareSlug] = useState<string | undefined>(undefined);
     const [sharePhone, setSharePhone] = useState<string | undefined>(undefined);
+    const [sharePin, setSharePin] = useState<string | undefined>(undefined);
     const [user, setUser] = useState<any>(null);
 
     // Plan limits
@@ -150,6 +151,7 @@ const AdminDashboard: React.FC = () => {
         setShareUuid(uuid);
         setShareSlug(gallery?.photographerSlug);
         setSharePhone(gallery?.clientPhone);
+        setSharePin(gallery?.pin);
         setShareDialogOpen(true);
     };
 
@@ -647,6 +649,7 @@ const AdminDashboard: React.FC = () => {
                 uuid={shareUuid}
                 photographerSlug={shareSlug}
                 clientPhone={sharePhone}
+                pin={sharePin}
             />
 
             {/* Upgrade Dialog */}

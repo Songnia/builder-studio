@@ -1,0 +1,95 @@
+{
+  "schema_version": "1.0.0",
+  "project": {
+    "name": "VANDA STUDIO",
+    "scope": "email_onboarding",
+    "locale": "fr-CM",
+    "timezone": "Africa/Douala",
+    "sender": {
+      "address": "assistant@vanda-studio.org",
+      "name": "Assistant VANDA STUDIO"
+    }
+  },
+  "codebase": {
+    "backend": "Laravel",
+    "frontend": "React/Vite",
+    "mail_status": "Laravel mail configured but no onboarding mailables, jobs, delivery ledger or lifecycle events found",
+    "existing_onboarding": "Dashboard checklist and spotlight for site publication, first gallery and first invoice",
+    "queue_recommendation": "database",
+    "scheduler_recommendation": "hourly lifecycle evaluation plus Laravel scheduler every minute"
+  },
+  "personas": [
+    {
+      "id": "persona-creative-owner",
+      "name": "Créatif / photographe indépendant",
+      "primary_job": "Présenter son activité et livrer rapidement des photos à un client",
+      "first_value": "Un site publié ou une première galerie prête à partager",
+      "wow_moment_event_id": "gallery_first_client_opened",
+      "required_setup": ["account_created", "account_active"],
+      "irrelevant_features": ["superadmin_operations"],
+      "onboarding_intensity_default": "assisted"
+    }
+  ],
+  "capabilities": [
+    {"id": "publish_site", "class": "core", "outcome": "Présence publique disponible"},
+    {"id": "deliver_gallery", "class": "core", "outcome": "Photos livrées par lien protégé"},
+    {"id": "create_invoice", "class": "secondary", "outcome": "Prestation facturée professionnellement"},
+    {"id": "activate_subscription", "class": "conversion", "outcome": "Accès public maintenu après l'essai"}
+  ],
+  "activation_model": {
+    "entry_event": "account_created",
+    "first_meaningful_action_events": ["site_builder_started", "first_gallery_created"],
+    "activation_events": ["site_published", "first_gallery_shared"],
+    "first_value_events": ["site_first_public_visit", "gallery_first_client_opened"],
+    "wow_moment": "gallery_first_client_opened",
+    "retention_events": ["second_gallery_created", "first_invoice_created"],
+    "conversion_event": "subscription_activated",
+    "time_metrics": ["time_to_first_action", "time_to_first_value", "time_to_wow"]
+  },
+  "journeys": [
+    {
+      "id": "journey-creative-first-value",
+      "persona_id": "persona-creative-owner",
+      "entry_condition": "account_created",
+      "goal_event": "first_gallery_shared OR site_published",
+      "exit_conditions": ["first_gallery_shared", "site_published"],
+      "channels": ["in_app", "email"],
+      "intensity": "assisted"
+    },
+    {
+      "id": "journey-trial-conversion",
+      "persona_id": "persona-creative-owner",
+      "entry_condition": "trial_active AND no_paid_subscription",
+      "goal_event": "subscription_activated",
+      "exit_conditions": ["subscription_activated", "account_deactivated"],
+      "channels": ["email", "in_app"],
+      "intensity": "assisted"
+    }
+  ],
+  "lifecycle": {
+    "strategy": "behavior_first",
+    "email_map": "email-lifecycle-map.json",
+    "global_suppression": [
+      "user.is_active == false",
+      "email is empty or invalid",
+      "same lifecycle message already sent for current version",
+      "goal event already achieved"
+    ],
+    "frequency_cap": "maximum 1 onboarding email per user per 24 hours except immediate confirmations"
+  },
+  "implementation": {
+    "plan": "implementation-plan.json",
+    "state_location": "backend",
+    "rollout": ["internal_accounts", "10_percent_new_signups", "50_percent_new_signups", "all_new_signups"]
+  },
+  "validation": {
+    "primary_metric": "activation_rate_within_7_days",
+    "guardrails": ["unsubscribe_rate", "bounce_rate", "spam_complaint_rate", "support_requests_caused_by_email"],
+    "done_when": [
+      "every email has entry, exit and suppression rules",
+      "duplicate sends are prevented",
+      "goals suppress obsolete reminders",
+      "delivery and activation events are measurable"
+    ]
+  }
+}

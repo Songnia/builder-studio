@@ -23,12 +23,12 @@ export interface SeoPageData {
 
 const S = {
     dashboard: '/assets/screenshots/dashboard.png',
-    createSite: '/assets/screenshots/monsite/star creation site.png',
-    previewSite: '/assets/screenshots/monsite/step10-preview site.png',
-    createGallery: '/assets/screenshots/galerie/cree galerie.png',
-    shareGallery: '/assets/screenshots/galerie/Partager la galerie.png',
-    createInvoice: '/assets/screenshots/facturation/create facture.png',
-    invoiceList: '/assets/screenshots/facturation/facturation list.png',
+    createSite: '/assets/screenshots/monsite/start-creation-site.png',
+    previewSite: '/assets/screenshots/monsite/step10-preview-site.png',
+    createGallery: '/assets/screenshots/galerie/cree-galerie.png',
+    shareGallery: '/assets/screenshots/galerie/partager-galerie.png',
+    createInvoice: '/assets/screenshots/facturation/create-facture.png',
+    invoiceList: '/assets/screenshots/facturation/facturation-list.png',
 }
 
 export const SEO_PAGES: SeoPageData[] = [

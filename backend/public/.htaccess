@@ -34,7 +34,7 @@
     RewriteRule ^(.*)$ app/$1 [L]
 
     # 2b. Programmatic SEO Routes & Infrastructure -> Laravel index.php
-    RewriteCond %{REQUEST_URI} ^/(sitemap.*\.xml|robots\.txt|pricing|for|for/.*|tools/.*|features/.*|solutions/.*|templates/.*|guides/.*|alternatives|alternatives/.*)$ [NC]
+    RewriteCond %{REQUEST_URI} ^/(sitemap.*\.xml|robots\.txt|pricing|for|for/.*|tools/.*|features/.*|solutions/.*|templates/.*|guides/.*|alternatives|alternatives/.*|g/[0-9a-f-]+|gallery-share/[0-9a-f-]+/cover|email/onboarding/unsubscribe/[0-9]+)$ [NC]
     RewriteRule ^ index.php [L]
 
     # 3. Main domain + photographer subdomains -> /landing

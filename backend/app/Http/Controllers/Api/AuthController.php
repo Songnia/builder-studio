@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
 use App\Models\User;
+use App\Models\SystemSetting;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use App\Services\OnboardingLifecycleService;
 
 class AuthController extends Controller
 {
@@ -39,8 +41,12 @@ class AuthController extends Controller
         return response()->json(['message' => 'Invalid credentials'], 401);
     }
 
-    public function register(Request $request)
+    public function register(Request $request, OnboardingLifecycleService $onboarding)
     {
+        if (! SystemSetting::valueFor('allow_registrations', true)) {
+            return response()->json(['message' => 'Les inscriptions sont temporairement fermées.'], 403);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
@@ -55,6 +61,7 @@ class AuthController extends Controller
         ]);
 
         $token = $user->createToken('auth-token')->plainTextToken;
+        $onboarding->recordAndTrigger($user, 'account_created');
 
         return response()->json([
             'token' => $token,
@@ -64,7 +71,19 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()?->delete();
+        $currentToken = $request->user()->currentAccessToken();
+
+        if ($currentToken && method_exists($currentToken, 'delete')) {
+            $currentToken->delete();
+        } else {
+            Auth::guard('web')->logout();
+            if ($request->hasSession()) {
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+            }
+        }
+
+        Auth::guard('sanctum')->forgetUser();
 
         return response()->noContent();
     }

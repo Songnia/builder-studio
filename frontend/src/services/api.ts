@@ -1,7 +1,9 @@
 import axios from 'axios';
 
-// Utiliser l'URL de base de l'API Laravel
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+// En développement, Vite relaie /api vers Laravel (voir vite.config.ts).
+// En production, VITE_API_URL est injectée explicitement pendant le build.
+// Un chemin relatif évite d'embarquer accidentellement localhost dans un bundle.
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 export const api = axios.create({
     baseURL: API_URL,

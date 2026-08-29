@@ -12,7 +12,8 @@ import {
     Snackbar,
     Alert,
 } from '@mui/material';
-import { ContentCopy as CopyIcon, WhatsApp as WhatsAppIcon, Close as CloseIcon } from '@mui/icons-material';
+import { ContentCopy as CopyIcon, WhatsApp as WhatsAppIcon, Close as CloseIcon, Visibility, VisibilityOff } from '@mui/icons-material';
+import { galleryService } from '@/services/galleryService';
 
 interface ShareDialogProps {
     open: boolean;
@@ -22,10 +23,13 @@ interface ShareDialogProps {
     photographerSlug?: string;
     /** Numéro WhatsApp du client (ex: +33612345678). Si fourni, ouvre un chat direct. */
     clientPhone?: string;
+    /** Code privé transmis au client depuis l'espace administrateur. */
+    pin?: string;
 }
 
-const ShareDialog: React.FC<ShareDialogProps> = ({ open, onClose, uuid, photographerSlug, clientPhone }) => {
+const ShareDialog: React.FC<ShareDialogProps> = ({ open, onClose, uuid, photographerSlug, clientPhone, pin }) => {
     const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [showPin, setShowPin] = useState(false);
 
     // Lien vers la galerie du client
     // - Local dev  : /{slug}/g/{uuid}
@@ -37,13 +41,17 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ open, onClose, uuid, photogra
             : `${window.location.origin}/${photographerSlug}/g/${uuid}`
         : `${window.location.origin}/g/${uuid}`; // fallback sans slug
 
+    const shareText = `Lien de la galerie : ${galleryUrl}${pin ? `\nMot de passe : ${pin}` : ''}`;
+
     const handleCopy = () => {
-        navigator.clipboard.writeText(galleryUrl);
+        navigator.clipboard.writeText(shareText);
+        void galleryService.recordGalleryShare(uuid, 'clipboard').catch(() => undefined);
         setSnackbarOpen(true);
     };
 
     const handleWhatsApp = () => {
-        const message = `Bonjour ! 📸 Votre galerie photo est prête :\n${galleryUrl}`;
+        const message = `Bonjour ! 📸 Votre galerie photo est prête.\n\n${shareText}`;
+        void galleryService.recordGalleryShare(uuid, 'whatsapp').catch(() => undefined);
 
         let whatsappUrl: string;
         if (clientPhone) {
@@ -87,6 +95,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ open, onClose, uuid, photogra
 
                     <TextField
                         fullWidth
+                        label="Lien de la galerie"
                         value={galleryUrl}
                         variant="outlined"
                         InputProps={{
@@ -99,6 +108,24 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ open, onClose, uuid, photogra
                         }}
                         sx={{ mb: 2 }}
                     />
+
+                    {pin && (
+                        <TextField
+                            fullWidth
+                            label="Mot de passe"
+                            value={pin}
+                            type={showPin ? 'text' : 'password'}
+                            InputProps={{
+                                readOnly: true,
+                                endAdornment: (
+                                    <IconButton onClick={() => setShowPin((value) => !value)} edge="end" aria-label={showPin ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}>
+                                        {showPin ? <VisibilityOff /> : <Visibility />}
+                                    </IconButton>
+                                ),
+                            }}
+                            sx={{ mb: 2 }}
+                        />
+                    )}
 
                     <Box sx={{ display: 'flex', gap: 2 }}>
                         <Button
@@ -131,7 +158,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({ open, onClose, uuid, photogra
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
             >
                 <Alert severity="success" variant="filled">
-                    Lien copié dans le presse-papier
+                    Lien{pin ? ' et mot de passe copiés' : ' copié'} dans le presse-papier
                 </Alert>
             </Snackbar>
         </>

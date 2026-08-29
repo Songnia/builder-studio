@@ -5,7 +5,7 @@ import { inspectAttr } from 'kimi-plugin-inspect-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
-export default defineConfig(({ mode }) => {
+export default defineConfig(() => {
   const appMode = process.env.VITE_APP_MODE || 'public';
 
   return {
@@ -21,6 +21,10 @@ export default defineConfig(({ mode }) => {
         workbox: {
           // The admin bundle is currently larger than Workbox's default 2 MiB limit.
           maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+          // Rollup emits the selected HTML input under its original name. Keep
+          // that file in the build so Workbox can precache and serve it for SPA
+          // navigations; index.html is a deployment-compatible copy.
+          navigateFallback: appMode === 'admin' ? 'index-admin.html' : 'index-public.html',
         },
         manifest: {
           name: 'VANDA STUDIO Admin',
@@ -48,6 +52,18 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),
+      },
+    },
+    server: {
+      proxy: {
+        '/api': {
+          target: process.env.VITE_DEV_API_TARGET || 'http://localhost:8000',
+          changeOrigin: true,
+        },
+        '/media': {
+          target: process.env.VITE_DEV_API_TARGET || 'http://localhost:8000',
+          changeOrigin: true,
+        },
       },
     },
     build: {

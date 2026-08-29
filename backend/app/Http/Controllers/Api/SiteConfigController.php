@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\SiteConfig;
 use App\Services\SubscriptionEntitlementService;
+use App\Services\OnboardingLifecycleService;
 use App\Support\PublicMedia;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -177,7 +178,7 @@ class SiteConfigController extends Controller
     /**
      * Publish or unpublish a site config.
      */
-    public function publish(Request $request, $id, SubscriptionEntitlementService $subscriptions)
+    public function publish(Request $request, $id, SubscriptionEntitlementService $subscriptions, OnboardingLifecycleService $onboarding)
     {
         $siteConfig = SiteConfig::ownedByCurrentUser()
             ->where('id', $id)
@@ -191,7 +192,12 @@ class SiteConfigController extends Controller
             }
         }
 
+        $wasPublished = (bool) $siteConfig->is_published;
         $siteConfig->update(['is_published' => $request->is_published]);
+
+        if (! $wasPublished && $request->boolean('is_published')) {
+            $onboarding->recordAndTrigger($request->user(), 'site_published', $siteConfig, ['slug' => $siteConfig->slug]);
+        }
 
         return response()->json([
             'message' => 'Site status updated',
@@ -202,7 +208,7 @@ class SiteConfigController extends Controller
     /**
      * Récupérer la configuration publique d'un site par slug.
      */
-    public function getPublicConfig($slug, SubscriptionEntitlementService $subscriptions)
+    public function getPublicConfig($slug, SubscriptionEntitlementService $subscriptions, OnboardingLifecycleService $onboarding)
     {
         $siteConfig = SiteConfig::where('slug', $slug)
             ->where('is_published', true)
@@ -216,6 +222,8 @@ class SiteConfigController extends Controller
         if (! $subscriptions->forUser($siteConfig->user)['active']) {
             return response()->json(['message' => 'Site non trouvé ou non publié'], 404);
         }
+
+        $onboarding->recordOnce($siteConfig->user, 'site_first_public_visit', $siteConfig, ['slug' => $siteConfig->slug]);
 
         return response()->json([
             'site_name' => $siteConfig->site_name,

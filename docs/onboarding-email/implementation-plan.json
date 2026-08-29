@@ -1,0 +1,86 @@
+{
+  "schema_version": "1.0.0",
+  "mode": "architecture_handoff",
+  "phases": [
+    {
+      "id": "phase-1-foundation",
+      "priority": "tier_1",
+      "tasks": [
+        "Configure verified SMTP sender assistant@vanda-studio.org",
+        "Publish SPF, DKIM and DMARC records for vanda-studio.org",
+        "Create onboarding_events and onboarding_email_deliveries tables",
+        "Create idempotent queued email job and delivery ledger",
+        "Add scheduler command to evaluate due lifecycle messages hourly",
+        "Implement welcome, site rescue and gallery rescue templates"
+      ]
+    },
+    {
+      "id": "phase-2-product-events",
+      "priority": "tier_1",
+      "tasks": [
+        "Emit account_created after committed registration",
+        "Emit site_published after committed publication",
+        "Emit first_gallery_created after committed gallery creation",
+        "Record authenticated first_gallery_shared from copy and WhatsApp actions",
+        "Record privacy-safe gallery_first_client_opened"
+      ]
+    },
+    {
+      "id": "phase-3-conversion",
+      "priority": "tier_2",
+      "tasks": [
+        "Implement trial seven-day and two-day reminders",
+        "Emit subscription_activated from verified Maketou completion",
+        "Implement subscription confirmation",
+        "Add unsubscribe preference for non-transactional messages"
+      ]
+    },
+    {
+      "id": "phase-4-measurement-rollout",
+      "priority": "tier_3",
+      "tasks": [
+        "Add signed click redirect tracking",
+        "Build activation and deliverability report",
+        "Release to internal accounts then staged percentages",
+        "Compare 7-day activation against holdout"
+      ]
+    }
+  ],
+  "backend_modules": [
+    "app/Events/OnboardingEventRecorded.php",
+    "app/Jobs/SendOnboardingEmail.php",
+    "app/Mail/OnboardingMail.php",
+    "app/Models/OnboardingEvent.php",
+    "app/Models/OnboardingEmailDelivery.php",
+    "app/Services/OnboardingLifecycleService.php",
+    "app/Console/Commands/EvaluateOnboardingLifecycle.php",
+    "resources/views/mail/onboarding"
+  ],
+  "configuration": {
+    "MAIL_FROM_ADDRESS": "assistant@vanda-studio.org",
+    "MAIL_FROM_NAME": "Assistant VANDA STUDIO",
+    "MAIL_MAILER": "smtp",
+    "MAIL_HOST": "mail.vanda-studio.org",
+    "MAIL_PORT": 465,
+    "MAIL_SCHEME": "smtps",
+    "MAIL_USERNAME": "assistant@vanda-studio.org",
+    "MAIL_EHLO_DOMAIN": "vanda-studio.org",
+    "QUEUE_CONNECTION": "database"
+  },
+  "database_constraints": [
+    "unique(user_id, template_key, lifecycle_version, subject_key)",
+    "index(user_id, event_name, occurred_at)",
+    "index(status, scheduled_for)"
+  ],
+  "tests": [
+    "welcome email queued once after registration",
+    "site rescue suppressed after site creation or publication",
+    "gallery rescue suppressed after gallery creation",
+    "paid subscription suppresses trial reminders",
+    "inactive user receives no onboarding email",
+    "frequency cap respected",
+    "failed job can retry without duplicate delivery",
+    "gallery PIN and private media never appear in onboarding email payloads",
+    "unsubscribe suppresses non-transactional lifecycle email"
+  ]
+}

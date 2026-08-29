@@ -28,6 +28,9 @@ import PhotographersList from '@/pages/superadmin/PhotographersList';
 import SubscriptionPlans from '@/pages/superadmin/SubscriptionPlans';
 import TransactionsList from '@/pages/superadmin/TransactionsList';
 import SuperAdminSettings from '@/pages/superadmin/SuperAdminSettings';
+import SuperAdminUserDetail from '@/pages/superadmin/SuperAdminUserDetail';
+import SuperAdminAuditLog from '@/pages/superadmin/SuperAdminAuditLog';
+import ResourceControlCenter from '@/pages/superadmin/ResourceControlCenter';
 
 // ============================================
 // CLIENT IMPORTS
@@ -123,8 +126,12 @@ function App() {
                 <Route element={<SuperAdminLayout />}>
                   <Route path="/superadmin/dashboard" element={<SuperAdminDashboard />} />
                   <Route path="/superadmin/transactions" element={<TransactionsList />} />
+                  <Route path="/superadmin/audit-log" element={<SuperAdminAuditLog />} />
+                  <Route path="/superadmin/resources" element={<ResourceControlCenter />} />
+                  <Route path="/resources" element={<Navigate to="/superadmin/resources" replace />} />
                   <Route path="/superadmin/profile" element={<ProfilePage />} />
                   <Route path="/superadmin/photographers" element={<PhotographersList />} />
+                  <Route path="/superadmin/users/:id" element={<SuperAdminUserDetail />} />
                   <Route path="/superadmin/plans" element={<SubscriptionPlans />} />
                   <Route path="/superadmin/settings" element={<SuperAdminSettings />} />
                   <Route path="/superadmin" element={<Navigate to="/superadmin/dashboard" replace />} />

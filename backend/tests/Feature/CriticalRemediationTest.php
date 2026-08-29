@@ -243,7 +243,7 @@ class CriticalRemediationTest extends TestCase
 
         $this->get($signedUrl)
             ->assertOk()
-            ->assertSee('protected-image');
+            ->assertStreamedContent('protected-image');
     }
 
     public function test_public_builder_media_remains_accessible_without_a_signature(): void
@@ -254,7 +254,7 @@ class CriticalRemediationTest extends TestCase
         $this->withServerVariables(['HTTP_HOST' => 'api.vanda-studio.org'])
             ->get('/media/builder-media/1/hero/public.jpg')
             ->assertOk()
-            ->assertSee('public-image');
+            ->assertStreamedContent('public-image');
     }
 
     public function test_liking_a_pin_protected_gallery_requires_the_pin(): void

@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0.0",
+  "events": [
+    {"event_name": "account_created", "type": "entry", "source": "AuthController.register", "properties": ["user_id", "occurred_at"]},
+    {"event_name": "site_builder_started", "type": "setup", "source": "frontend", "properties": ["user_id", "occurred_at"]},
+    {"event_name": "site_published", "type": "activation", "source": "SiteConfigController.publish", "properties": ["user_id", "site_config_id", "slug"]},
+    {"event_name": "site_first_public_visit", "type": "value", "source": "public site endpoint", "properties": ["user_id", "site_config_id"]},
+    {"event_name": "first_gallery_created", "type": "activation", "source": "Admin GalleryController.store", "properties": ["user_id", "gallery_uuid"]},
+    {"event_name": "first_gallery_shared", "type": "activation", "source": "ShareDialog copy or WhatsApp action", "properties": ["user_id", "gallery_uuid", "channel"]},
+    {"event_name": "gallery_first_client_opened", "type": "wow_moment", "source": "Client GalleryController.show after successful access", "properties": ["user_id", "gallery_uuid"]},
+    {"event_name": "second_gallery_created", "type": "retention", "source": "Admin GalleryController.store", "properties": ["user_id", "gallery_uuid"]},
+    {"event_name": "first_invoice_created", "type": "adoption", "source": "Admin InvoiceController.store", "properties": ["user_id", "invoice_id"]},
+    {"event_name": "checkout_started", "type": "conversion", "source": "PaymentController.checkout", "properties": ["user_id", "plan_id", "billing_cycle"]},
+    {"event_name": "subscription_activated", "type": "conversion", "source": "PaymentController.processCartStatus", "properties": ["user_id", "subscription_id", "plan"]},
+    {"event_name": "onboarding_email_sent", "type": "lifecycle", "source": "email job", "properties": ["user_id", "message_id", "template_key"]},
+    {"event_name": "onboarding_email_clicked", "type": "lifecycle", "source": "signed redirect endpoint", "properties": ["user_id", "template_key", "target"]},
+    {"event_name": "onboarding_email_goal_achieved", "type": "lifecycle", "source": "lifecycle evaluator", "properties": ["user_id", "template_key", "goal_event"]}
+  ]
+}

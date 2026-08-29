@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 interface GlobalSettings {
     site_name: string;
     contact_email: string;
+    monthly_marketing_spend: number;
     maintenance_mode: boolean;
     allow_registrations: boolean;
     require_email_verification: boolean;
@@ -21,6 +22,7 @@ const SuperAdminSettings: React.FC = () => {
     const [settings, setSettings] = useState<GlobalSettings>({
         site_name: '',
         contact_email: '',
+        monthly_marketing_spend: 0,
         maintenance_mode: false,
         allow_registrations: true,
         require_email_verification: false,
@@ -33,8 +35,10 @@ const SuperAdminSettings: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [dirty, setDirty] = useState(false);
+    const [reason, setReason] = useState('');
     const [logoFile, setLogoFile] = useState<File | null>(null);
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
+    const [removeLogo, setRemoveLogo] = useState(false);
 
     useEffect(() => {
         const fetchSettings = async () => {
@@ -58,7 +62,7 @@ const SuperAdminSettings: React.FC = () => {
         
         setSettings(prev => ({
             ...prev,
-            [name]: type === 'checkbox' ? checked : value
+            [name]: type === 'checkbox' ? checked : type === 'number' ? Number(value) : value
         }));
         setDirty(true);
     };
@@ -67,47 +71,58 @@ const SuperAdminSettings: React.FC = () => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
             setLogoFile(file);
+            setRemoveLogo(false);
             setLogoPreview(URL.createObjectURL(file));
             setDirty(true);
         }
     };
 
     const handleRemoveLogo = () => {
-        setLogoPreview(settings.logo);
+        setLogoPreview(null);
+        setSettings(prev => ({ ...prev, logo: null }));
         setLogoFile(null);
+        setRemoveLogo(true);
         setDirty(true);
     };
 
     const handleSubmit = async () => {
+        if (reason.trim().length < 5) { toast.error('Indiquez le motif de la modification.'); return; }
         setSaving(true);
         try {
             const formData = new FormData();
             formData.append('site_name', settings.site_name);
             formData.append('contact_email', settings.contact_email);
-            formData.append('maintenance_mode', String(settings.maintenance_mode));
-            formData.append('allow_registrations', String(settings.allow_registrations));
-            formData.append('require_email_verification', String(settings.require_email_verification));
-            formData.append('notify_admins_on_registration', String(settings.notify_admins_on_registration));
+            formData.append('monthly_marketing_spend', String(settings.monthly_marketing_spend));
+            formData.append('maintenance_mode', settings.maintenance_mode ? '1' : '0');
+            formData.append('allow_registrations', settings.allow_registrations ? '1' : '0');
+            formData.append('require_email_verification', settings.require_email_verification ? '1' : '0');
+            formData.append('notify_admins_on_registration', settings.notify_admins_on_registration ? '1' : '0');
             formData.append('seo_title', settings.seo_title);
             formData.append('seo_description', settings.seo_description);
+            formData.append('reason', reason);
 
             // POST /superadmin/settings is used in SettingController update, but wait it says update is usually POST with _method=PUT or just POST? 
             // In routes/api.php, the route is likely POST /superadmin/settings
             if (logoFile) {
                 formData.append('logo', logoFile);
             }
+            if (removeLogo) {
+                formData.append('remove_logo', '1');
+            }
 
             const res = await api.post('/superadmin/settings', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             
-            const newLogoUrl = res.data.logo || settings.logo;
-            setSettings(prev => ({ ...prev, logo: newLogoUrl }));
+            const newLogoUrl = res.data.logo ?? null;
+            setSettings(res.data);
             setLogoPreview(newLogoUrl);
             
             toast.success("Configuration sauvegardée avec succès");
             setDirty(false);
             setLogoFile(null);
+            setRemoveLogo(false);
+            setReason('');
         } catch (error) {
             toast.error("Erreur lors de l'enregistrement");
         } finally {
@@ -137,6 +152,7 @@ const SuperAdminSettings: React.FC = () => {
                     animate={{ opacity: 1, scale: 1 }} 
                     className="flex items-center gap-3 z-50 sticky top-4 bg-white/80 backdrop-blur-md p-2 rounded-2xl border border-slate-200 shadow-sm"
                 >
+                    <input value={reason} onChange={(event) => setReason(event.target.value)} placeholder="Motif du changement" className="h-10 w-56 rounded-xl border border-slate-200 bg-white px-3 text-sm" />
                     {dirty && (
                         <span className="text-xs font-bold bg-amber-100 text-amber-700 px-3 py-1 rounded-full border border-amber-200 shadow-sm">
                             Non sauvegardé
@@ -144,7 +160,7 @@ const SuperAdminSettings: React.FC = () => {
                     )}
                     <button
                         onClick={handleSubmit}
-                        disabled={saving || !dirty}
+                        disabled={saving || !dirty || reason.trim().length < 5}
                         className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold transition-all ${
                             saving || !dirty 
                                 ? 'bg-slate-100 text-slate-400 cursor-not-allowed' 
@@ -224,6 +240,14 @@ const SuperAdminSettings: React.FC = () => {
                                 type="email" name="contact_email" value={settings.contact_email} onChange={handleChange}
                                 className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 bg-slate-50 focus:bg-white transition-colors"
                             />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-slate-700">Dépense marketing mensuelle (FCFA)</label>
+                            <input
+                                type="number" min="0" step="1" name="monthly_marketing_spend" value={settings.monthly_marketing_spend} onChange={handleChange}
+                                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 bg-slate-50 focus:bg-white transition-colors"
+                            />
+                            <p className="text-xs text-slate-500">Source du CAC : dépense des 30 derniers jours ÷ nouveaux clients payants.</p>
                         </div>
                     </div>
                 </div>

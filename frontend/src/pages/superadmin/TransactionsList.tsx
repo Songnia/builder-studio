@@ -1,166 +1,31 @@
-import { useEffect, useState } from 'react';
-import { api } from '@/services/api';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { toast } from 'sonner';
+import { CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, CircleDollarSign, Download, Filter, RefreshCw, Search, TriangleAlert, UsersRound } from 'lucide-react';
+import { api } from '@/services/api';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
 
-interface Transaction {
-    id: number;
-    user_id: number;
-    subscription_plan_id: number;
-    billing_cycle: 'monthly' | 'yearly';
-    status: string;
-    payment_status: string;
-    maketou_cart_id: string;
-    starts_at: string;
-    ends_at: string;
-    created_at: string;
-    user?: {
-        name: string;
-        email: string;
-    };
-    plan?: {
-        name: string;
-        price: number;
-        yearly_price: number | null;
-    };
-}
+interface Transaction { id:number; user_id:number; billing_cycle:string; monthly_value:number; status:string; payment_status:string; maketou_cart_id?:string; starts_at?:string; ends_at?:string; created_at:string; user?:{name:string;email:string}; plan?:{name:string;price:number;yearly_price?:number} }
+interface Plan { id:number; name:string }
+interface Meta { current_page:number;last_page:number;total:number;from:number|null;to:number|null }
+const paymentLabels:Record<string,string>={completed:'Payé',waiting_payment:'En attente',payment_failed:'Échoué',abandoned:'Abandonné',manual:'Manuel',pending:'En attente'};
 
-export default function TransactionsList() {
-    const [transactions, setTransactions] = useState<Transaction[]>([]);
-    const [loading, setLoading] = useState(true);
-    const navigate = useNavigate();
-
-    useEffect(() => {
-        fetchTransactions();
-    }, []);
-
-    const fetchTransactions = async () => {
-        try {
-            const response = await api.get('/superadmin/dashboard/transactions?limit=100');
-            setTransactions(response.data);
-        } catch (error) {
-            console.error("Failed to fetch transactions", error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const getStatusBadge = (status: string) => {
-        switch (status) {
-            case 'completed':
-                return <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">Payé</span>;
-            case 'waiting_payment':
-                return <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-full">En attente</span>;
-            case 'payment_failed':
-            case 'abandoned':
-                return <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-semibold rounded-full">Échoué</span>;
-            default:
-                return <span className="px-2 py-1 bg-gray-100 text-gray-800 text-xs font-semibold rounded-full">{status}</span>;
-        }
-    };
-
-    const getSubStatusBadge = (status: string) => {
-        switch (status) {
-            case 'active':
-                return <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full">Actif</span>;
-            case 'canceled':
-                return <span className="px-2 py-1 bg-gray-100 text-gray-800 text-xs font-semibold rounded-full">Annulé/Inactif</span>;
-            case 'expired':
-                return <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs font-semibold rounded-full">Expiré</span>;
-            default:
-                return <span className="px-2 py-1 bg-gray-100 text-gray-800 text-xs font-semibold rounded-full">{status}</span>;
-        }
-    };
-
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center min-h-[60vh]">
-                <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-            </div>
-        );
-    }
-
-    return (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="flex items-center gap-4 mb-8">
-                <button 
-                    onClick={() => navigate('/superadmin/dashboard')}
-                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                >
-                    <ArrowLeft className="w-6 h-6 text-gray-600" />
-                </button>
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Toutes les Transactions</h1>
-                    <p className="text-gray-500 mt-1">Historique détaillé des paiements et abonnements</p>
-                </div>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-gray-50 border-b border-gray-200 text-gray-600 text-sm">
-                                <th className="p-4 font-semibold">Date</th>
-                                <th className="p-4 font-semibold">Client</th>
-                                <th className="p-4 font-semibold">Forfait</th>
-                                <th className="p-4 font-semibold">Paiement</th>
-                                <th className="p-4 font-semibold">Abonnement</th>
-                                <th className="p-4 font-semibold">Validité</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {transactions.map((tx) => (
-                                <tr key={tx.id} className="hover:bg-gray-50 transition-colors">
-                                    <td className="p-4 text-sm text-gray-900 whitespace-nowrap">
-                                        {format(new Date(tx.created_at), 'dd MMM yyyy HH:mm', { locale: fr })}
-                                    </td>
-                                    <td className="p-4">
-                                        <div className="font-medium text-gray-900">{tx.user?.name || 'Inconnu'}</div>
-                                        <div className="text-sm text-gray-500">{tx.user?.email}</div>
-                                    </td>
-                                    <td className="p-4">
-                                        <div className="font-medium text-gray-900">{tx.plan?.name || 'Inconnu'}</div>
-                                        <div className="text-sm text-gray-500">
-                                            {tx.plan
-                                                ? `${tx.billing_cycle === 'yearly' ? tx.plan.yearly_price : tx.plan.price} F / ${tx.billing_cycle === 'yearly' ? 'an' : 'mois'}`
-                                                : ''}
-                                        </div>
-                                    </td>
-                                    <td className="p-4">
-                                        <div className="flex flex-col gap-1 items-start">
-                                            {getStatusBadge(tx.payment_status)}
-                                            <span className="text-[10px] text-gray-400 font-mono truncate max-w-[120px]" title={tx.maketou_cart_id}>
-                                                {tx.maketou_cart_id ? tx.maketou_cart_id.split('-')[0] + '...' : '-'}
-                                            </span>
-                                        </div>
-                                    </td>
-                                    <td className="p-4">
-                                        {getSubStatusBadge(tx.status)}
-                                    </td>
-                                    <td className="p-4 text-sm text-gray-500">
-                                        {tx.ends_at ? (
-                                            <div>
-                                                Jusqu'au <span className="font-medium text-gray-900">{format(new Date(tx.ends_at), 'dd MMM yyyy', { locale: fr })}</span>
-                                            </div>
-                                        ) : (
-                                            '-'
-                                        )}
-                                    </td>
-                                </tr>
-                            ))}
-                            {transactions.length === 0 && (
-                                <tr>
-                                    <td colSpan={6} className="p-8 text-center text-gray-500">
-                                        Aucune transaction trouvée.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    );
+export default function TransactionsList(){
+  const navigate=useNavigate(); const [rows,setRows]=useState<Transaction[]>([]); const [plans,setPlans]=useState<Plan[]>([]); const [paymentStatuses,setPaymentStatuses]=useState<string[]>([]); const [summary,setSummary]=useState({total:0,active:0,completed:0,failed:0,mrr:0}); const [meta,setMeta]=useState<Meta>({current_page:1,last_page:1,total:0,from:null,to:null}); const [loading,setLoading]=useState(true); const [exporting,setExporting]=useState(false);
+  const [q,setQ]=useState(''); const [debounced,setDebounced]=useState(''); const [status,setStatus]=useState('all'); const [payment,setPayment]=useState(''); const [planId,setPlanId]=useState(''); const [cycle,setCycle]=useState('all'); const [from,setFrom]=useState(''); const [to,setTo]=useState(''); const [page,setPage]=useState(1);
+  useEffect(()=>{const timer=window.setTimeout(()=>setDebounced(q.trim()),350);return()=>window.clearTimeout(timer)},[q]);
+  useEffect(()=>{setPage(1)},[debounced,status,payment,planId,cycle,from,to]);
+  const params=useMemo(()=>({q:debounced||undefined,status,payment_status:payment||undefined,plan_id:planId||undefined,billing_cycle:cycle,from:from||undefined,to:to||undefined,page,per_page:30}),[debounced,status,payment,planId,cycle,from,to,page]);
+  const load=async()=>{setLoading(true);try{const response=await api.get('/superadmin/dashboard/transactions',{params});setRows(response.data.data??[]);setMeta(response.data.meta);setSummary(response.data.summary);setPlans(response.data.plans??[]);setPaymentStatuses(response.data.payment_statuses??[])}catch{toast.error('Le registre financier ne peut pas être chargé.')}finally{setLoading(false)}};
+  useEffect(()=>{void load()},[params]);
+  const exportCsv=async()=>{setExporting(true);try{const response=await api.get('/superadmin/dashboard/transactions',{params:{...params,export:'csv'},responseType:'blob'});const url=URL.createObjectURL(response.data);const link=document.createElement('a');link.href=url;link.download=`transactions-vanda-${new Date().toISOString().slice(0,10)}.csv`;link.click();URL.revokeObjectURL(url);toast.success('Export CSV généré et journalisé.')}catch{toast.error('L’export ne peut pas être généré.')}finally{setExporting(false)}};
+  const reset=()=>{setQ('');setStatus('all');setPayment('');setPlanId('');setCycle('all');setFrom('');setTo('');setPage(1)};
+  const statCards=[["Écritures",summary.total,UsersRound,'text-slate-900'],["Abonnements actifs",summary.active,CheckCircle2,'text-emerald-700'],["Paiements validés",summary.completed,CircleDollarSign,'text-blue-700'],["Échecs",summary.failed,TriangleAlert,'text-red-700'],["MRR filtré",`${Number(summary.mrr).toLocaleString('fr-FR')} F`,CircleDollarSign,'text-teal-700']];
+  return <main className="mx-auto max-w-[1500px] space-y-6 pb-12"><header className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between"><div><p className="text-xs font-semibold uppercase tracking-[.18em] text-emerald-700">Finance · Abonnements</p><h1 className="mt-2 text-4xl font-semibold tracking-[-.04em] text-slate-950">Registre financier</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">Analysez chaque abonnement, paiement et revenu récurrent avec des filtres combinables.</p></div><div className="flex gap-2"><Button variant="outline" onClick={()=>void load()}><RefreshCw className="mr-2 h-4 w-4"/>Actualiser</Button><Button className="bg-slate-950 hover:bg-slate-800" disabled={exporting} onClick={()=>void exportCsv()}><Download className="mr-2 h-4 w-4"/>{exporting?'Export…':'Exporter CSV'}</Button></div></header>
+  <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">{statCards.map(([label,value,Icon,tone]:any)=><article key={label} className="rounded-2xl bg-white p-5 ring-1 ring-slate-200"><Icon className={`h-5 w-5 ${tone}`}/><p className={`mt-5 text-2xl font-semibold tabular-nums ${tone}`}>{value}</p><p className="mt-1 text-xs text-slate-500">{label}</p></article>)}</section>
+  <section className="overflow-hidden rounded-2xl bg-white shadow-[0_18px_50px_rgba(15,23,42,.06)] ring-1 ring-slate-200"><div className="border-b border-slate-100 p-5"><div className="grid gap-3 lg:grid-cols-[1fr_180px_180px_180px]"><div className="relative"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"/><Input className="pl-9" value={q} onChange={event=>setQ(event.target.value)} placeholder="Client, email ou référence…"/></div><select className="h-10 rounded-md border border-slate-200 px-3 text-sm" value={status} onChange={event=>setStatus(event.target.value)}><option value="all">Tous les abonnements</option><option value="active">Actifs</option><option value="canceled">Annulés</option><option value="past_due">En retard</option></select><select className="h-10 rounded-md border border-slate-200 px-3 text-sm" value={payment} onChange={event=>setPayment(event.target.value)}><option value="">Tous les paiements</option>{paymentStatuses.map(item=><option value={item} key={item}>{paymentLabels[item]??item}</option>)}</select><select className="h-10 rounded-md border border-slate-200 px-3 text-sm" value={planId} onChange={event=>setPlanId(event.target.value)}><option value="">Tous les forfaits</option>{plans.map(plan=><option value={plan.id} key={plan.id}>{plan.name}</option>)}</select></div><div className="mt-3 flex flex-wrap items-center gap-2"><Filter className="h-4 w-4 text-slate-400"/><select className="h-10 rounded-md border border-slate-200 px-3 text-sm" value={cycle} onChange={event=>setCycle(event.target.value)}><option value="all">Tous les cycles</option><option value="monthly">Mensuel</option><option value="yearly">Annuel</option></select><label className="flex items-center gap-2 text-xs text-slate-500"><CalendarDays className="h-4 w-4"/>Du <Input type="date" className="w-40" value={from} onChange={event=>setFrom(event.target.value)}/></label><label className="flex items-center gap-2 text-xs text-slate-500">au <Input type="date" className="w-40" value={to} onChange={event=>setTo(event.target.value)}/></label><button onClick={reset} className="px-3 text-sm font-medium text-slate-500 hover:text-slate-950">Réinitialiser</button></div></div>
+  <div className="overflow-x-auto"><table className="w-full min-w-[1100px] text-sm"><thead className="border-b bg-slate-50/70 text-left text-xs uppercase tracking-wide text-slate-400"><tr><th className="px-5 py-4">Date</th><th className="px-5 py-4">Client</th><th className="px-5 py-4">Forfait</th><th className="px-5 py-4">MRR</th><th className="px-5 py-4">Paiement</th><th className="px-5 py-4">Abonnement</th><th className="px-5 py-4">Validité</th><th className="px-5 py-4">Référence</th></tr></thead><tbody className="divide-y divide-slate-100">{loading&&Array.from({length:7}).map((_,i)=><tr key={i}>{Array.from({length:8}).map((__,j)=><td className="px-5 py-4" key={j}><Skeleton className="h-8 w-full"/></td>)}</tr>)}{!loading&&rows.map(row=><tr key={row.id} className="cursor-pointer transition hover:bg-emerald-50/30" onClick={()=>navigate(`/superadmin/users/${row.user_id}`)}><td className="px-5 py-4 tabular-nums text-slate-500">{new Date(row.created_at).toLocaleString('fr-FR')}</td><td className="px-5 py-4"><p className="font-semibold text-slate-900">{row.user?.name??'Compte supprimé'}</p><p className="text-xs text-slate-400">{row.user?.email}</p></td><td className="px-5 py-4"><p className="font-medium">{row.plan?.name??'Plan supprimé'}</p><p className="text-xs text-slate-400">{row.billing_cycle}</p></td><td className="px-5 py-4 font-semibold tabular-nums">{Number(row.monthly_value).toLocaleString('fr-FR')} F</td><td className="px-5 py-4"><span className={`rounded-md px-2 py-1 text-xs font-semibold ${row.payment_status==='completed'?'bg-emerald-50 text-emerald-700':row.payment_status==='payment_failed'?'bg-red-50 text-red-700':'bg-amber-50 text-amber-700'}`}>{paymentLabels[row.payment_status]??row.payment_status}</span></td><td className="px-5 py-4"><span className={`rounded-md px-2 py-1 text-xs font-semibold ${row.status==='active'?'bg-blue-50 text-blue-700':'bg-slate-100 text-slate-600'}`}>{row.status}</span></td><td className="px-5 py-4 text-xs text-slate-500">{row.ends_at?new Date(row.ends_at).toLocaleDateString('fr-FR'):'Sans échéance'}</td><td className="max-w-[170px] truncate px-5 py-4 font-mono text-xs text-slate-400" title={row.maketou_cart_id}>{row.maketou_cart_id??'—'}</td></tr>)}</tbody></table>{!loading&&rows.length===0&&<div className="py-20 text-center"><CircleDollarSign className="mx-auto h-10 w-10 text-slate-300"/><p className="mt-4 font-semibold">Aucune écriture trouvée</p><p className="text-sm text-slate-500">Modifiez la période ou les filtres.</p></div>}</div>
+  <footer className="flex items-center justify-between border-t border-slate-100 px-5 py-4"><p className="text-sm text-slate-500">{meta.from??0}–{meta.to??0} sur {meta.total}</p><div className="flex items-center gap-2"><Button variant="outline" size="sm" disabled={page<=1} onClick={()=>setPage(value=>value-1)}><ChevronLeft className="h-4 w-4"/></Button><span className="text-sm tabular-nums">{meta.current_page}/{meta.last_page}</span><Button variant="outline" size="sm" disabled={page>=meta.last_page} onClick={()=>setPage(value=>value+1)}><ChevronRight className="h-4 w-4"/></Button></div></footer></section></main>
 }

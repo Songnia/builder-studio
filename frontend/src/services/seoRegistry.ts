@@ -21,7 +21,7 @@ export const SEO_PAGES_REGISTRY: Record<string, SeoPageData> = {
     toolType: 'invoice_calculator',
     ctaText: 'Générer ma facture professionnelle',
     ctaLink: 'https://app.vanda-studio.org/auth/register',
-    screenshotUrl: '/assets/screenshots/facturation/create facture.png'
+    screenshotUrl: '/assets/screenshots/facturation/create-facture.png'
   },
   '/tools/simulateur-tarifs-photographe': {
     title: 'Simulateur de Tarifs Freelance & Créatif | Vanda Studio',
@@ -32,7 +32,7 @@ export const SEO_PAGES_REGISTRY: Record<string, SeoPageData> = {
     toolType: 'rate_simulator',
     ctaText: 'Intégrer mes tarifs dans mon studio',
     ctaLink: 'https://app.vanda-studio.org/auth/register',
-    screenshotUrl: '/assets/screenshots/facturation/facturation list.png'
+    screenshotUrl: '/assets/screenshots/facturation/facturation-list.png'
   },
 
   // Features
@@ -42,7 +42,7 @@ export const SEO_PAGES_REGISTRY: Record<string, SeoPageData> = {
     h1: 'Facturation & Devis Simplifiés pour Créatifs',
     subtitle: 'Créez, envoyez et suivez des devis et factures élégants sans sortir de votre plateforme.',
     template: 'feature',
-    screenshotUrl: '/assets/screenshots/facturation/create facture.png'
+    screenshotUrl: '/assets/screenshots/facturation/create-facture.png'
   },
   '/features/galeries-clients-privees': {
     title: 'Galeries Clients Privées & Protégées par Code PIN | Vanda Studio',
@@ -50,7 +50,7 @@ export const SEO_PAGES_REGISTRY: Record<string, SeoPageData> = {
     h1: 'Galeries Clients Privées et Sécurisées',
     subtitle: 'Offrez à vos clients une expérience de livraison haut de gamme et sécurisée.',
     template: 'feature',
-    screenshotUrl: '/assets/screenshots/galerie/Partager la galerie.png'
+    screenshotUrl: '/assets/screenshots/galerie/partager-galerie.png'
   },
   '/features/builder-site-vitrine': {
     title: 'Builder de Site Vitrine sans Code pour Créatifs | Vanda Studio',
@@ -58,7 +58,7 @@ export const SEO_PAGES_REGISTRY: Record<string, SeoPageData> = {
     h1: 'Le Builder de Site Vitrine Conçu pour les Créatifs',
     subtitle: 'Créez votre site vitrine sur mesure sans taper la moindre ligne de code.',
     template: 'feature',
-    screenshotUrl: '/assets/screenshots/monsite/star creation site.png'
+    screenshotUrl: '/assets/screenshots/monsite/start-creation-site.png'
   },
   '/features/paiement-en-ligne-et-acompte': {
     title: 'Paiement en Ligne et Gestion des Acomptes | Vanda Studio',
@@ -66,7 +66,7 @@ export const SEO_PAGES_REGISTRY: Record<string, SeoPageData> = {
     h1: 'Encaissez vos Acomptes et Règlements en Ligne',
     subtitle: 'Proposez des moyens de paiement fluides et sécurisés à vos clients.',
     template: 'feature',
-    screenshotUrl: '/assets/screenshots/facturation/facturation list.png'
+    screenshotUrl: '/assets/screenshots/facturation/facturation-list.png'
   },
 
   // Solutions
@@ -76,7 +76,7 @@ export const SEO_PAGES_REGISTRY: Record<string, SeoPageData> = {
     h1: 'Plateforme Complète pour les Professionnels du Mariage',
     subtitle: 'Simplifiez votre gestion avant, pendant et après chaque événement.',
     template: 'solution_hub',
-    screenshotUrl: '/assets/screenshots/galerie/cree galerie.png'
+    screenshotUrl: '/assets/screenshots/galerie/cree-galerie.png'
   },
   '/solutions/gestion-seances-portrait-et-studio': {
     title: 'Solution Web pour Photographes de Portrait & Studio | Vanda Studio',
@@ -92,7 +92,7 @@ export const SEO_PAGES_REGISTRY: Record<string, SeoPageData> = {
     h1: 'La Solution Web pour vos Clients Entreprises & B2B',
     subtitle: 'Structurez votre relation client professionnelle avec des devis et espaces dédiés.',
     template: 'solution_hub',
-    screenshotUrl: '/assets/screenshots/facturation/facturation list.png'
+    screenshotUrl: '/assets/screenshots/facturation/facturation-list.png'
   },
 
   // Audiences
@@ -109,7 +109,7 @@ export const SEO_PAGES_REGISTRY: Record<string, SeoPageData> = {
     h1: 'La Plateforme N°1 pour Photographes Professionnels',
     subtitle: 'Créez votre vitrine, protégez vos galeries et facturez vos prestations sans effort.',
     template: 'audience',
-    screenshotUrl: '/assets/screenshots/galerie/Partager la galerie.png'
+    screenshotUrl: '/assets/screenshots/galerie/partager-galerie.png'
   },
   '/for/graphiste': {
     title: 'Vanda Studio pour Graphistes & Designers Visuels',
@@ -117,7 +117,7 @@ export const SEO_PAGES_REGISTRY: Record<string, SeoPageData> = {
     h1: 'Sublimez vos Projets de Design Graphique',
     subtitle: 'Valorisez votre travail visuel et automatisez votre gestion de devis et factures.',
     template: 'audience',
-    screenshotUrl: '/assets/screenshots/monsite/step10-preview site.png'
+    screenshotUrl: '/assets/screenshots/monsite/step10-preview-site.png'
   },
   '/for/illustrateur': {
     title: 'Vanda Studio pour Illustrateurs & Artistes Numériques',
@@ -133,7 +133,7 @@ export const SEO_PAGES_REGISTRY: Record<string, SeoPageData> = {
     h1: 'Présentez vos Showreels & Prestations Vidéo',
     subtitle: 'Créez votre vitrine vidéo, gérez vos acomptes et rassurez vos commanditaires.',
     template: 'audience',
-    screenshotUrl: '/assets/screenshots/facturation/create facture.png'
+    screenshotUrl: '/assets/screenshots/facturation/create-facture.png'
   },
   '/for/maquilleur': {
     title: 'Vanda Studio pour Maquilleurs & Makeup Artists (MUA)',
@@ -141,7 +141,7 @@ export const SEO_PAGES_REGISTRY: Record<string, SeoPageData> = {
     h1: 'Votre Studio Web pour Makeup Artists & Beauty Pros',
     subtitle: 'Valorisez vos avant/après et sécurisez vos réservations avec acompte.',
     template: 'audience',
-    screenshotUrl: '/assets/screenshots/galerie/cree galerie.png'
+    screenshotUrl: '/assets/screenshots/galerie/cree-galerie.png'
   },
   '/for/wedding-planner': {
     title: 'Vanda Studio pour Wedding Planners & Organisateurs',
@@ -149,7 +149,7 @@ export const SEO_PAGES_REGISTRY: Record<string, SeoPageData> = {
     h1: 'La Vitrine Web Parfaite pour Organisteurs de Mariage',
     subtitle: 'Inspirez la confiance à vos mariés avec une présentation raffinée.',
     template: 'audience',
-    screenshotUrl: '/assets/screenshots/monsite/star creation site.png'
+    screenshotUrl: '/assets/screenshots/monsite/start-creation-site.png'
   },
   '/for/architecte-interieur': {
     title: 'Vanda Studio pour Architectes d\'Intérieur',
@@ -157,7 +157,7 @@ export const SEO_PAGES_REGISTRY: Record<string, SeoPageData> = {
     h1: 'Sublimez vos Projets d\'Architecture & Designer d\'Espace',
     subtitle: 'Mettez en scène vos réalisations et gérez vos phases d\'honoraires.',
     template: 'audience',
-    screenshotUrl: '/assets/screenshots/monsite/step10-preview site.png'
+    screenshotUrl: '/assets/screenshots/monsite/step10-preview-site.png'
   },
 
   // Guides & Tutoriels
@@ -167,7 +167,7 @@ export const SEO_PAGES_REGISTRY: Record<string, SeoPageData> = {
     h1: 'Guide Pratique : Créer son Site Vitrine de Photographe en 10 min',
     subtitle: 'Suivez le tutoriel pas à pas pour lancer votre studio professionnel sans code.',
     template: 'guide',
-    screenshotUrl: '/assets/screenshots/monsite/star creation site.png'
+    screenshotUrl: '/assets/screenshots/monsite/start-creation-site.png'
   },
   '/guides/comment-facturer-acompte-freelance': {
     title: 'Comment Facturer des Acomptes en Freelance | Tutoriel & Bonnes Pratiques',
@@ -175,7 +175,7 @@ export const SEO_PAGES_REGISTRY: Record<string, SeoPageData> = {
     h1: 'Tutoriel : Structurer et Encaiiser ses Acomptes en Freelance',
     subtitle: 'Sécurisez votre activité créative avec la gestion automatisée des factures d\'acompte.',
     template: 'guide',
-    screenshotUrl: '/assets/screenshots/facturation/create facture.png'
+    screenshotUrl: '/assets/screenshots/facturation/create-facture.png'
   },
 
   // Templates
@@ -185,7 +185,7 @@ export const SEO_PAGES_REGISTRY: Record<string, SeoPageData> = {
     h1: 'Template Vanda : Studio & Portfolio Photographe de Mariage',
     subtitle: 'Un design raffiné pour séduire vos futurs mariés et livrer vos galeries sous code PIN.',
     template: 'template',
-    screenshotUrl: '/assets/screenshots/monsite/step10-preview site.png'
+    screenshotUrl: '/assets/screenshots/monsite/step10-preview-site.png'
   },
 
   // Alternatives
@@ -202,7 +202,7 @@ export const SEO_PAGES_REGISTRY: Record<string, SeoPageData> = {
     h1: 'Vanda Studio vs Pixieset : Le Comparatif Complet',
     subtitle: 'Découvrez la solution qui rassemble galeries clients ET facturation sur-mesure.',
     template: 'alternative',
-    screenshotUrl: '/assets/screenshots/galerie/Partager la galerie.png'
+    screenshotUrl: '/assets/screenshots/galerie/partager-galerie.png'
   },
   '/alternatives/format-alternative': {
     title: 'Alternative à Format.com | Vanda Studio',

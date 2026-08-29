@@ -105,6 +105,10 @@ export const galleryService = {
         await api.delete(`/admin/galleries/${id}`);
     },
 
+    recordGalleryShare: async (id: string, channel: 'clipboard' | 'whatsapp'): Promise<void> => {
+        await api.post(`/admin/galleries/${id}/share-event`, { channel });
+    },
+
     // Add photos to existing gallery (Admin)
     addPhotosToGallery: async (id: string, files: File[]): Promise<Gallery> => {
         const formData = new FormData();

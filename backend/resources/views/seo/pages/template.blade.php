@@ -22,7 +22,7 @@
                 <span style="font-weight: 700; color: var(--accent-green);">Aperçu Live du Builder Vanda Studio</span>
                 <span style="font-size: 0.85rem; color: var(--text-muted);">Responsive Desktop & Mobile</span>
             </div>
-            <img src="/assets/screenshots/monsite/step10-preview site.png" alt="Aperçu Template Vanda Studio" style="width: 100%; height: auto; border-radius: 0.75rem; display: block; border: 1px solid var(--surface-border);">
+            <img src="/assets/screenshots/monsite/step10-preview-site.png" alt="Aperçu Template Vanda Studio" style="width: 100%; height: auto; border-radius: 0.75rem; display: block; border: 1px solid var(--surface-border);">
         </div>
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">

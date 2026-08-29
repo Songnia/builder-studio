@@ -54,11 +54,11 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 3.5rem;">
             <div class="glass-card" style="padding: 1.25rem;">
                 <div style="font-size: 0.8rem; color: var(--accent-green); font-weight: 700; margin-bottom: 0.75rem;">Création de Galerie Client</div>
-                <img src="/assets/screenshots/galerie/cree galerie.png" alt="Créer une galerie client" style="width: 100%; height: 150px; object-fit: cover; border-radius: 0.5rem;">
+                <img src="/assets/screenshots/galerie/cree-galerie.png" alt="Créer une galerie client" style="width: 100%; height: 150px; object-fit: cover; border-radius: 0.5rem;">
             </div>
             <div class="glass-card" style="padding: 1.25rem;">
                 <div style="font-size: 0.8rem; color: var(--accent-green); font-weight: 700; margin-bottom: 0.75rem;">Builder Site Vitrine</div>
-                <img src="/assets/screenshots/monsite/star creation site.png" alt="Builder site vitrine" style="width: 100%; height: 150px; object-fit: cover; border-radius: 0.5rem;">
+                <img src="/assets/screenshots/monsite/start-creation-site.png" alt="Builder site vitrine" style="width: 100%; height: 150px; object-fit: cover; border-radius: 0.5rem;">
             </div>
         </div>
 

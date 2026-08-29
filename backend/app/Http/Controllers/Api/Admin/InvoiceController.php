@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
 use App\Services\SubscriptionEntitlementService;
+use App\Services\OnboardingLifecycleService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -18,7 +19,7 @@ class InvoiceController extends Controller
             ->get();
     }
 
-    public function store(Request $request, SubscriptionEntitlementService $subscriptions)
+    public function store(Request $request, SubscriptionEntitlementService $subscriptions, OnboardingLifecycleService $onboarding)
     {
         if ($denied = $subscriptions->authorize($request->user(), 'invoicing')) {
             return $denied;
@@ -44,7 +45,7 @@ class InvoiceController extends Controller
             'items.*.total' => 'required|numeric|min:0',
         ]);
 
-        return DB::transaction(function () use ($validated, $request) {
+        $invoice = DB::transaction(function () use ($validated, $request) {
             $amount_paid = $validated['amount_paid'] ?? 0;
             $status = 'pending';
             if ($amount_paid > 0 && $amount_paid < $validated['total_amount']) {
@@ -75,8 +76,15 @@ class InvoiceController extends Controller
                 $invoice->items()->create($item);
             }
 
-            return response()->json($invoice->load('items'), 201);
+            return $invoice->load('items');
         });
+
+        $eventName = $request->user()->invoices()->whereKeyNot($invoice->id)->exists()
+            ? 'invoice_created'
+            : 'first_invoice_created';
+        $onboarding->record($request->user(), $eventName, $invoice);
+
+        return response()->json($invoice, 201);
     }
 
     public function show($id, Request $request)

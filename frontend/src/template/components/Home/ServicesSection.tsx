@@ -2,11 +2,6 @@ import React from 'react';
 import { Box, Container, Typography, Link } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { useSiteConfig } from '@/context/SiteConfigContext';
-// Images moved to placeholders as original images don't exist in project
-// import shootingImage from '/shooting_service_composition_1768795530003.png';
-// import postProductionImage from '/postproduction_service_composition_1768795547698.png';
-// import formationImage from '/formation_service_composition_1768795564721.png';
-// import locationImage from '/location_service_composition_1768795581894.png';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 
 // Placeholder images

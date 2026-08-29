@@ -1,0 +1,121 @@
+{
+  "schema_version": "1.0.0",
+  "sender": {"address": "assistant@vanda-studio.org", "name": "Assistant VANDA STUDIO"},
+  "messages": [
+    {
+      "id": "welcome-first-value",
+      "type": "welcome",
+      "entry_condition": "account_created",
+      "delay": "immediate",
+      "send_if": "user.is_active",
+      "suppress_if": "never_sent_only=false",
+      "goal_event": "site_builder_started OR first_gallery_created",
+      "subject": "Bienvenue sur VANDA STUDIO — créez votre premier espace",
+      "content_goal": "Faire choisir une première action utile",
+      "primary_cta": {"label": "Configurer mon studio", "path": "/admin/site-builder"}
+    },
+    {
+      "id": "site-setup-rescue",
+      "type": "setup_nudge",
+      "entry_condition": "account_created",
+      "delay": "24 hours",
+      "send_if": "site_config_count == 0",
+      "suppress_if": "site_config_count > 0 OR site_published",
+      "goal_event": "site_published",
+      "subject": "Votre studio en ligne peut être prêt aujourd’hui",
+      "content_goal": "Reprendre la création du site",
+      "primary_cta": {"label": "Créer mon site", "path": "/admin/site-builder"}
+    },
+    {
+      "id": "site-published-confirmation",
+      "type": "value_confirmation",
+      "entry_condition": "site_published",
+      "delay": "immediate",
+      "send_if": "first publication for this site",
+      "suppress_if": "message already sent for site_config_id",
+      "goal_event": "site_first_public_visit",
+      "subject": "Votre site VANDA STUDIO est en ligne",
+      "content_goal": "Confirmer la valeur et fournir le lien public",
+      "primary_cta": {"label": "Voir mon site", "path": "dynamic_public_site_url"}
+    },
+    {
+      "id": "gallery-rescue",
+      "type": "blocker_rescue",
+      "entry_condition": "account_created",
+      "delay": "48 hours",
+      "send_if": "gallery_count == 0",
+      "suppress_if": "gallery_count > 0",
+      "goal_event": "first_gallery_created",
+      "subject": "Livrez votre première galerie privée",
+      "content_goal": "Aider à créer la première livraison client",
+      "primary_cta": {"label": "Créer une galerie", "path": "/admin/new-delivery"}
+    },
+    {
+      "id": "gallery-created-confirmation",
+      "type": "value_confirmation",
+      "entry_condition": "first_gallery_created",
+      "delay": "immediate",
+      "send_if": "gallery still exists",
+      "suppress_if": "message already sent for gallery_uuid",
+      "goal_event": "first_gallery_shared",
+      "subject": "Votre galerie est prête à être partagée",
+      "content_goal": "Faire partager le lien et le mot de passe depuis l’admin",
+      "primary_cta": {"label": "Partager la galerie", "path": "/admin/dashboard"}
+    },
+    {
+      "id": "invoice-discovery",
+      "type": "feature_discovery",
+      "entry_condition": "site_published OR first_gallery_created",
+      "delay": "72 hours after latest qualifying event",
+      "send_if": "invoice_count == 0",
+      "suppress_if": "invoice_count > 0",
+      "goal_event": "first_invoice_created",
+      "subject": "Transformez votre prochaine prestation en facture",
+      "content_goal": "Faire créer une première facture réelle",
+      "primary_cta": {"label": "Créer ma première facture", "path": "/admin/invoices/new"}
+    },
+    {
+      "id": "trial-seven-days-left",
+      "type": "upgrade_context",
+      "entry_condition": "trial_active",
+      "delay": "7 days before trial_ends_at",
+      "send_if": "no currently active paid subscription",
+      "suppress_if": "subscription_activated",
+      "goal_event": "subscription_activated",
+      "subject": "Il reste 7 jours à votre essai VANDA STUDIO",
+      "content_goal": "Expliquer ce qui restera accessible avec le forfait choisi",
+      "primary_cta": {"label": "Choisir mon forfait", "path": "/admin/subscription"}
+    },
+    {
+      "id": "trial-two-days-left",
+      "type": "upgrade_context",
+      "entry_condition": "trial_active",
+      "delay": "2 days before trial_ends_at",
+      "send_if": "no currently active paid subscription",
+      "suppress_if": "subscription_activated",
+      "goal_event": "subscription_activated",
+      "subject": "Votre essai se termine dans 2 jours",
+      "content_goal": "Éviter l’interruption des sites et galeries publiques",
+      "primary_cta": {"label": "Maintenir mon accès", "path": "/admin/subscription"}
+    },
+    {
+      "id": "subscription-confirmation",
+      "type": "value_confirmation",
+      "entry_condition": "subscription_activated",
+      "delay": "immediate",
+      "send_if": "subscription currently active",
+      "suppress_if": "message already sent for subscription_id",
+      "goal_event": "subscription_activated",
+      "subject": "Votre abonnement VANDA STUDIO est actif",
+      "content_goal": "Confirmer le plan, le cycle et la date de renouvellement/fin",
+      "primary_cta": {"label": "Accéder à mon studio", "path": "/admin/dashboard"}
+    }
+  ],
+  "rules": {
+    "frequency_cap": "1 non-transactional onboarding email per 24 hours",
+    "quiet_hours": "20:00-07:00 Africa/Douala",
+    "preferred_send_window": "09:00-17:00 Africa/Douala",
+    "unsubscribe": "required for feature discovery and promotional lifecycle messages",
+    "sensitive_data": "never include gallery PINs, passwords, tokens or private media in onboarding emails"
+  }
+}

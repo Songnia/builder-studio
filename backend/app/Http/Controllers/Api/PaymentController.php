@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Exceptions\MaketouApiException;
 use App\Http\Controllers\Controller;
 use App\Models\SiteConfig;
 use App\Models\SubscriptionPlan;
 use App\Models\UserSubscription;
 use App\Services\MaketouService;
+use App\Services\OnboardingLifecycleService;
 use App\Support\MaketouPulsePayload;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -15,7 +17,7 @@ class PaymentController extends Controller
 {
     protected MaketouService $maketouService;
 
-    public function __construct(MaketouService $maketouService)
+    public function __construct(MaketouService $maketouService, private readonly OnboardingLifecycleService $onboarding)
     {
         $this->maketouService = $maketouService;
     }
@@ -100,10 +102,35 @@ class PaymentController extends Controller
 
             return response()->json(['message' => 'Réponse invalide de Maketou'], 500);
 
+        } catch (MaketouApiException $e) {
+            Log::error('Maketou checkout rejected', [
+                'code' => $e->apiCode,
+                'status' => $e->httpStatus,
+                'plan_id' => $plan->id,
+                'billing_cycle' => $billingCycle,
+            ]);
+
+            [$message, $code, $status] = match ($e->apiCode) {
+                'INVALID_API_KEY' => [
+                    'Le service de paiement est temporairement mal configuré. Contactez l’administrateur.',
+                    'payment_configuration_error',
+                    503,
+                ],
+                'INVALID_PRODUCT' => [
+                    'Ce forfait n’est pas disponible au paiement. Contactez l’administrateur.',
+                    'plan_payment_unavailable',
+                    400,
+                ],
+                'VALIDATION_ERROR' => ['Les informations de paiement sont invalides.', 'payment_validation_error', 422],
+                'RATE_LIMITED' => ['Le service de paiement reçoit trop de demandes. Réessayez dans quelques instants.', 'payment_rate_limited', 429],
+                default => ['Le service de paiement est momentanément indisponible.', 'payment_provider_error', 502],
+            };
+
+            return response()->json(['message' => $message, 'code' => $code], $status);
         } catch (\Exception $e) {
             Log::error('Maketou Checkout Error: '.$e->getMessage());
 
-            return response()->json(['message' => 'Erreur lors de l\'initialisation du paiement', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'Le service de paiement est momentanément indisponible.', 'code' => 'payment_provider_error'], 502);
         }
     }
 
@@ -232,8 +259,11 @@ class PaymentController extends Controller
 
         if ($subscription) {
             $subscription->payment_status = $status;
+            $activatedNow = false;
 
             if ($status === 'completed') {
+                $wasActive = $subscription->status === 'active';
+                $activatedNow = ! $wasActive;
                 $subscription->status = 'active';
                 // Calculate ends_at based on plan logic, assuming 1 month for now
                 if (! $subscription->ends_at) {
@@ -253,6 +283,11 @@ class PaymentController extends Controller
             }
 
             $subscription->save();
+            if ($activatedNow) {
+                $this->onboarding->recordAndTrigger($subscription->user, 'subscription_activated', $subscription, [
+                    'plan' => $subscription->plan?->name,
+                ]);
+            }
         }
 
         return $subscription;

@@ -7,11 +7,12 @@ use App\Models\Gallery;
 use App\Models\Like;
 use App\Models\Photo;
 use App\Services\SubscriptionEntitlementService;
+use App\Services\OnboardingLifecycleService;
 use Illuminate\Http\Request;
 
 class GalleryController extends Controller
 {
-    public function show(Request $request, $uuid, SubscriptionEntitlementService $subscriptions)
+    public function show(Request $request, $uuid, SubscriptionEntitlementService $subscriptions, OnboardingLifecycleService $onboarding)
     {
         $gallery = Gallery::where('uuid', $uuid)->with(['photos' => function ($query) use ($request) {
             $query->orderBy('order_column')
@@ -46,6 +47,10 @@ class GalleryController extends Controller
 
         $galleryData = $gallery->toArray();
         $galleryData['photographer_slug'] = $photographerSlug;
+
+        $onboarding->recordOnce($gallery->user, 'gallery_first_client_opened', $gallery, [
+            'gallery_uuid' => $gallery->uuid,
+        ]);
 
         return response()->json($galleryData);
     }

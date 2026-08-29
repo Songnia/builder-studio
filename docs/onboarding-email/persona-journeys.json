@@ -1,0 +1,32 @@
+{
+  "schema_version": "1.0.0",
+  "journeys": [
+    {
+      "id": "creative-owner-first-session",
+      "persona_id": "persona-creative-owner",
+      "first_run_objective": "Publier un site ou préparer une galerie client partageable",
+      "entry_condition": "account_created",
+      "goal_event": "site_published OR first_gallery_shared",
+      "steps": [
+        {"id": "choose-goal", "mechanism": "welcome_email_and_existing_dashboard", "completion_event": "site_builder_started OR first_gallery_created"},
+        {"id": "complete-core-action", "mechanism": "existing_in_app_checklist", "completion_event": "site_published OR first_gallery_created"},
+        {"id": "receive-value", "mechanism": "confirmation_email", "completion_event": "site_first_public_visit OR gallery_first_client_opened"}
+      ],
+      "exit_conditions": ["site_published", "first_gallery_shared"],
+      "resume_allowed": true
+    },
+    {
+      "id": "creative-owner-monetization",
+      "persona_id": "persona-creative-owner",
+      "first_run_objective": "Créer une première facture après avoir configuré une activité réelle",
+      "entry_condition": "site_published OR first_gallery_created",
+      "goal_event": "first_invoice_created",
+      "steps": [
+        {"id": "discover-invoice", "mechanism": "behavioral_email", "completion_event": "invoice_builder_started"},
+        {"id": "create-invoice", "mechanism": "in_app_form", "completion_event": "first_invoice_created"}
+      ],
+      "exit_conditions": ["first_invoice_created"],
+      "resume_allowed": true
+    }
+  ]
+}

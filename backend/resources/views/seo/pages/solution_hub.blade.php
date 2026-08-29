@@ -52,11 +52,11 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 3.5rem;">
             <div class="glass-card" style="padding: 1.25rem;">
                 <div style="font-size: 0.8rem; color: var(--accent-green); font-weight: 700; margin-bottom: 0.75rem;">Partage & Livraison de Galeries</div>
-                <img src="/assets/screenshots/galerie/Partager la galerie.png" alt="Partager galerie client" style="width: 100%; height: 155px; object-fit: cover; border-radius: 0.5rem;">
+                <img src="/assets/screenshots/galerie/partager-galerie.png" alt="Partager galerie client" style="width: 100%; height: 155px; object-fit: cover; border-radius: 0.5rem;">
             </div>
             <div class="glass-card" style="padding: 1.25rem;">
                 <div style="font-size: 0.8rem; color: var(--accent-green); font-weight: 700; margin-bottom: 0.75rem;">Facturation & Suivi Acomptes</div>
-                <img src="/assets/screenshots/facturation/facturation list.png" alt="Liste des factures" style="width: 100%; height: 155px; object-fit: cover; border-radius: 0.5rem;">
+                <img src="/assets/screenshots/facturation/facturation-list.png" alt="Liste des factures" style="width: 100%; height: 155px; object-fit: cover; border-radius: 0.5rem;">
             </div>
         </div>
 

@@ -18,6 +18,8 @@ import {
     Download as DownloadIcon,
     Send as SendIcon,
     GetApp as GetAppIcon,
+    Visibility as VisibilityIcon,
+    VisibilityOff as VisibilityOffIcon,
 } from '@mui/icons-material';
 import { useParams } from 'react-router-dom';
 import Masonry, { ResponsiveMasonry } from 'react-responsive-masonry';
@@ -362,6 +364,7 @@ const ClientGalleryView: React.FC = () => {
     const [pinInput, setPinInput] = useState('');
     const [pinError, setPinError] = useState('');
     const [activePin, setActivePin] = useState<string | undefined>();
+    const [showPin, setShowPin] = useState(false);
 
     const fetchGallery = useCallback(async (pinToTry?: string) => {
         if (!uuid) return;
@@ -473,15 +476,25 @@ const ClientGalleryView: React.FC = () => {
                             </Alert>
                         )}
 
-                        <input
-                            type="password"
-                            maxLength={10}
-                            placeholder="Code PIN"
-                            value={pinInput}
-                            onChange={(e) => setPinInput(e.target.value)}
-                            className="w-full px-4 py-3 bg-slate-950/80 border border-slate-700 rounded-lg text-white text-center text-xl tracking-widest focus:outline-none focus:border-indigo-500 transition mb-4 placeholder:text-slate-600 placeholder:text-base placeholder:tracking-normal"
-                            autoFocus
-                        />
+                        <Box sx={{ position: 'relative', mb: 2 }}>
+                            <input
+                                type={showPin ? 'text' : 'password'}
+                                maxLength={4}
+                                aria-label="Mot de passe de la galerie"
+                                value={pinInput}
+                                onChange={(e) => setPinInput(e.target.value)}
+                                className="w-full px-12 py-3 bg-slate-950/80 border border-slate-700 rounded-lg text-white text-center text-xl tracking-widest focus:outline-none focus:border-indigo-500 transition"
+                                autoFocus
+                            />
+                            <IconButton
+                                type="button"
+                                onClick={() => setShowPin((value) => !value)}
+                                aria-label={showPin ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                                sx={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }}
+                            >
+                                {showPin ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                            </IconButton>
+                        </Box>
 
                         <Button
                             type="submit"

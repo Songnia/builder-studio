@@ -39,6 +39,108 @@ class MaketouOfferMappingTest extends TestCase
         }
     }
 
+    public function test_seeded_catalog_matches_the_three_public_offers(): void
+    {
+        $this->seed(SubscriptionPlanSeeder::class);
+
+        $expectedPrices = [
+            'STARTER' => [5000, 50000],
+            'PRO' => [11000, 100000],
+            'STUDIO' => [25000, 250000],
+        ];
+
+        $this->assertDatabaseCount('subscription_plans', 3);
+
+        foreach ($expectedPrices as $name => [$monthly, $yearly]) {
+            $plan = SubscriptionPlan::where('name', $name)->firstOrFail();
+
+            $this->assertSame($monthly, (int) $plan->price);
+            $this->assertSame($yearly, (int) $plan->yearly_price);
+            $this->assertTrue($plan->is_active);
+            $this->assertNotEmpty($plan->features);
+        }
+    }
+
+    public function test_admin_subscription_endpoint_exposes_public_catalog_metadata(): void
+    {
+        $this->seed(SubscriptionPlanSeeder::class);
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->getJson('/api/plans')
+            ->assertOk()
+            ->assertJsonCount(3)
+            ->assertJsonPath('0.policy_key', 'starter')
+            ->assertJsonPath('0.description', 'Pour démarrer votre studio en ligne')
+            ->assertJsonPath('0.promo_monthly_price', 2500)
+            ->assertJsonPath('0.promo_months', 6)
+            ->assertJsonPath('0.popular', false)
+            ->assertJsonPath('1.policy_key', 'pro')
+            ->assertJsonPath('1.promo_monthly_price', 5000)
+            ->assertJsonPath('1.popular', true)
+            ->assertJsonPath('2.policy_key', 'studio')
+            ->assertJsonPath('2.promo_monthly_price', 15000)
+            ->assertJsonPath('2.popular', false);
+    }
+
+    public function test_checkout_reports_an_invalid_maketou_api_key(): void
+    {
+        config(['services.maketou.api_key' => 'invalid-test-key']);
+        Http::fake([
+            '*' => Http::response([
+                'code' => 'INVALID_API_KEY',
+                'message' => 'Invalid API key',
+            ], 401),
+        ]);
+
+        $this->seed(SubscriptionPlanSeeder::class);
+        $user = User::factory()->create();
+        $plan = SubscriptionPlan::where('name', 'STARTER')->firstOrFail();
+
+        $this->actingAs($user)
+            ->postJson('/api/payment/checkout', [
+                'plan_id' => $plan->id,
+                'billing_cycle' => 'monthly',
+                'redirect_url' => 'https://app.vanda-studio.org/admin/dashboard',
+            ])
+            ->assertStatus(503)
+            ->assertJson([
+                'code' => 'payment_configuration_error',
+                'message' => 'Le service de paiement est temporairement mal configuré. Contactez l’administrateur.',
+            ]);
+
+        $this->assertDatabaseCount('user_subscriptions', 0);
+    }
+
+    public function test_checkout_reports_an_invalid_product_id(): void
+    {
+        config(['services.maketou.api_key' => 'valid-test-key']);
+        Http::fake([
+            '*' => Http::response([
+                'code' => 'INVALID_PRODUCT',
+                'message' => 'Invalid product',
+            ], 400),
+        ]);
+
+        $this->seed(SubscriptionPlanSeeder::class);
+        $user = User::factory()->create();
+        $plan = SubscriptionPlan::where('name', 'PRO')->firstOrFail();
+
+        $this->actingAs($user)
+            ->postJson('/api/payment/checkout', [
+                'plan_id' => $plan->id,
+                'billing_cycle' => 'yearly',
+                'redirect_url' => 'https://app.vanda-studio.org/admin/dashboard',
+            ])
+            ->assertStatus(400)
+            ->assertJson([
+                'code' => 'plan_payment_unavailable',
+                'message' => 'Ce forfait n’est pas disponible au paiement. Contactez l’administrateur.',
+            ]);
+
+        $this->assertDatabaseCount('user_subscriptions', 0);
+    }
+
     public function test_yearly_checkout_uses_yearly_product_and_persists_cycle(): void
     {
         Http::fake([

@@ -31,7 +31,8 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
     Route::post('/payment/verify', [PaymentController::class, 'verifyPayment']);
 
     Route::prefix('admin')->group(function () {
-        Route::apiResource('galleries', AdminGalleryController::class);
+    Route::apiResource('galleries', AdminGalleryController::class);
+    Route::post('galleries/{id}/share-event', [AdminGalleryController::class, 'recordShare']);
         Route::apiResource('invoices', AdminInvoiceController::class);
         Route::post('invoices/{id}/payment', [AdminInvoiceController::class, 'recordPayment']);
         Route::post('galleries/{id}/photos', [AdminGalleryController::class, 'addPhotos']);
@@ -51,6 +52,10 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
     Route::middleware('superadmin')->prefix('superadmin')->group(function () {
         Route::get('/dashboard/stats', [\App\Http\Controllers\Api\SuperAdmin\DashboardController::class, 'stats']);
         Route::get('/dashboard/transactions', [\App\Http\Controllers\Api\SuperAdmin\DashboardController::class, 'transactions']);
+        Route::get('/audit-logs', [\App\Http\Controllers\Api\SuperAdmin\AuditLogController::class, 'index']);
+        Route::get('/resources', [\App\Http\Controllers\Api\SuperAdmin\ResourceControlController::class, 'index']);
+        Route::patch('/resources/sites/{id}', [\App\Http\Controllers\Api\SuperAdmin\ResourceControlController::class, 'updateSite']);
+        Route::patch('/resources/galleries/{id}', [\App\Http\Controllers\Api\SuperAdmin\ResourceControlController::class, 'updateGallery']);
         
         Route::get('/users', [\App\Http\Controllers\Api\SuperAdmin\PhotographerController::class, 'index']);
         Route::post('/users', [\App\Http\Controllers\Api\SuperAdmin\PhotographerController::class, 'store']);
@@ -58,6 +63,13 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         Route::delete('/users/{id}', [\App\Http\Controllers\Api\SuperAdmin\PhotographerController::class, 'destroy']);
         Route::patch('/users/{id}/toggle-active', [\App\Http\Controllers\Api\SuperAdmin\PhotographerController::class, 'toggleActive']);
         Route::patch('/users/{id}/toggle-publish', [\App\Http\Controllers\Api\SuperAdmin\PhotographerController::class, 'togglePublish']);
+        Route::get('/users/{id}/deletion-impact', [\App\Http\Controllers\Api\SuperAdmin\PhotographerController::class, 'deletionImpact']);
+        Route::post('/users/{id}/revoke-tokens', [\App\Http\Controllers\Api\SuperAdmin\PhotographerController::class, 'revokeTokens']);
+        Route::patch('/users/{id}/email-verification', [\App\Http\Controllers\Api\SuperAdmin\PhotographerController::class, 'setEmailVerification']);
+        Route::get('/users/{id}/overview', [\App\Http\Controllers\Api\SuperAdmin\UserControlController::class, 'show']);
+        Route::post('/users/{id}/subscriptions', [\App\Http\Controllers\Api\SuperAdmin\UserControlController::class, 'storeSubscription']);
+        Route::post('/users/{id}/subscriptions/{subscriptionId}/change-plan', [\App\Http\Controllers\Api\SuperAdmin\UserControlController::class, 'changePlan']);
+        Route::patch('/users/{id}/subscriptions/{subscriptionId}', [\App\Http\Controllers\Api\SuperAdmin\UserControlController::class, 'updateSubscription']);
         
         Route::apiResource('plans', \App\Http\Controllers\Api\SuperAdmin\SubscriptionPlanController::class);
         

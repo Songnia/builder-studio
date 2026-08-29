@@ -7,7 +7,9 @@ import {
     Settings,
     LogOut,
     User,
-    Receipt
+    Receipt,
+    History,
+    Database
 } from 'lucide-react';
 import { authService } from '../../services/authService';
 import vandaLogo from '@/template/assets/logo/vanda_logo.png';
@@ -26,8 +28,10 @@ export const SuperAdminSidebar: React.FC<SuperAdminSidebarProps> = ({ className 
     const links = [
         { name: 'Tableau de bord', path: '/superadmin/dashboard', icon: LayoutDashboard },
         { name: 'Utilisateurs', path: '/superadmin/photographers', icon: Users },
+        { name: 'Ressources', path: '/superadmin/resources', icon: Database },
         { name: 'Forfaits', path: '/superadmin/plans', icon: CreditCard },
         { name: 'Transactions', path: '/superadmin/transactions', icon: Receipt },
+        { name: 'Journal d’audit', path: '/superadmin/audit-log', icon: History },
         { name: 'Mon Profil', path: '/superadmin/profile', icon: User },
         { name: 'Paramètres', path: '/superadmin/settings', icon: Settings },
     ];

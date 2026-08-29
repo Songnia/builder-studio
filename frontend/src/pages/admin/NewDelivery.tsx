@@ -7,9 +7,11 @@ import {
     Button,
     Stack,
     CircularProgress,
+    IconButton,
+    InputAdornment,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { ArrowBack as BackIcon, Save as SaveIcon } from '@mui/icons-material';
+import { ArrowBack as BackIcon, Save as SaveIcon, Visibility, VisibilityOff } from '@mui/icons-material';
 import { toast } from 'sonner';
 import DualUploadZone from '../../components/Delivery/DualUploadZone';
 import ShareDialog from '../../components/Delivery/ShareDialog';
@@ -24,6 +26,9 @@ const NewDelivery: React.FC = () => {
     const [uploading, setUploading] = useState(false);
     const [shareDialogOpen, setShareDialogOpen] = useState(false);
     const [createdUuid, setCreatedUuid] = useState('');
+    const [createdPhotographerSlug, setCreatedPhotographerSlug] = useState<string | undefined>();
+    const [pin, setPin] = useState(() => String(Math.floor(1000 + Math.random() * 9000)));
+    const [showPin, setShowPin] = useState(false);
 
     const [imagesUploading, setImagesUploading] = useState(false);
     const [imagesProgress, setImagesProgress] = useState(0);
@@ -80,7 +85,7 @@ const NewDelivery: React.FC = () => {
                 files: [],
                 zipFileUrl: '#',
                 zipFileSize: '0',
-                pin: '1234'
+                pin
             });
 
             const galleryUuid = newGallery.uuid;
@@ -105,6 +110,7 @@ const NewDelivery: React.FC = () => {
             setImagesProgress(100);
 
             setCreatedUuid(galleryUuid);
+            setCreatedPhotographerSlug(newGallery.photographerSlug);
             setUploading(false);
             setUploadStatus('');
 
@@ -185,6 +191,26 @@ const NewDelivery: React.FC = () => {
                         placeholder="Ex: +33612345678 ou +2250710000000"
                         helperText="Avec indicatif pays, sans espaces ni tirets. Utilisé pour le partage WhatsApp direct."
                         inputProps={{ type: 'tel' }}
+                    />
+
+                    <TextField
+                        fullWidth
+                        label="Mot de passe de la galerie"
+                        value={pin}
+                        onChange={(event) => setPin(event.target.value.replace(/\D/g, '').slice(0, 4))}
+                        type={showPin ? 'text' : 'password'}
+                        required
+                        inputProps={{ inputMode: 'numeric', maxLength: 4 }}
+                        helperText="Ce code sera ajouté au message WhatsApp envoyé au client."
+                        InputProps={{
+                            endAdornment: (
+                                <InputAdornment position="end">
+                                    <IconButton onClick={() => setShowPin((value) => !value)} edge="end" aria-label={showPin ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}>
+                                        {showPin ? <VisibilityOff /> : <Visibility />}
+                                    </IconButton>
+                                </InputAdornment>
+                            ),
+                        }}
                     />
 
                     {/* Upload Zone A - Images */}
@@ -271,7 +297,9 @@ const NewDelivery: React.FC = () => {
                 open={shareDialogOpen}
                 onClose={handleDialogClose}
                 uuid={createdUuid}
+                photographerSlug={createdPhotographerSlug}
                 clientPhone={clientPhone.trim() || undefined}
+                pin={pin}
             />
 
         </Container>

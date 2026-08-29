@@ -18,6 +18,8 @@ interface Plan {
 const SubscriptionPlans: React.FC = () => {
     const [plans, setPlans] = useState<Plan[]>([]);
     const [loading, setLoading] = useState(true);
+    const [deleteTarget, setDeleteTarget] = useState<Plan | null>(null);
+    const [deleteReason, setDeleteReason] = useState('');
     
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
@@ -28,7 +30,8 @@ const SubscriptionPlans: React.FC = () => {
         features: '',
         maketou_product_id: '',
         maketou_yearly_product_id: '',
-        is_active: true
+        is_active: true,
+        reason: ''
     });
 
     const fetchPlans = async () => {
@@ -52,7 +55,8 @@ const SubscriptionPlans: React.FC = () => {
                 features: Array.isArray(plan.features) ? plan.features.join('\n') : '',
                 maketou_product_id: plan.maketou_product_id || '',
                 maketou_yearly_product_id: plan.maketou_yearly_product_id || '',
-                is_active: plan.is_active
+                is_active: plan.is_active,
+                reason: ''
             });
         } else {
             setEditingPlan(null);
@@ -63,7 +67,8 @@ const SubscriptionPlans: React.FC = () => {
                 features: '',
                 maketou_product_id: '',
                 maketou_yearly_product_id: '',
-                is_active: true
+                is_active: true,
+        reason: ''
             });
         }
         setIsModalOpen(true);
@@ -95,17 +100,18 @@ const SubscriptionPlans: React.FC = () => {
         fetchPlans();
     }, []);
 
-    const deletePlan = async (id: number) => {
-        if (!confirm("Voulez-vous vraiment supprimer ce forfait ?")) return;
+    const deletePlan = async () => {
+        if (!deleteTarget || deleteReason.trim().length < 5) return;
         try {
-            await api.delete(`/superadmin/plans/${id}`);
-            setPlans(prev => prev.filter(p => p.id !== id));
-            toast.success("Forfait supprimé");
-        } catch {
-            toast.error("Erreur lors de la suppression");
+            await api.delete(`/superadmin/plans/${deleteTarget.id}`, { data: { reason: deleteReason } });
+            setPlans(prev => prev.filter(plan => plan.id !== deleteTarget.id));
+            setDeleteTarget(null);
+            setDeleteReason('');
+            toast.success('Forfait supprimé et action journalisée.');
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || 'La suppression a été bloquée.');
         }
     };
-
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
@@ -190,7 +196,7 @@ const SubscriptionPlans: React.FC = () => {
                                 Éditer
                             </button>
                             <button 
-                                onClick={() => deletePlan(plan.id)}
+                                onClick={() => { setDeleteTarget(plan); setDeleteReason(''); }}
                                 className="text-sm font-bold bg-white hover:bg-red-50 text-slate-400 hover:text-red-600 px-4 py-2.5 rounded-xl transition-colors flex items-center justify-center border border-slate-200 hover:border-red-200"
                             >
                                 <Trash2 className="w-4 h-4" />
@@ -218,6 +224,18 @@ const SubscriptionPlans: React.FC = () => {
                         Créer le premier forfait
                     </button>
                 </motion.div>
+            )}
+
+            {deleteTarget && (
+                <div className="fixed inset-0 z-[70] grid place-items-center bg-slate-950/40 p-4 backdrop-blur-sm" role="dialog" aria-modal="true">
+                    <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+                        <p className="text-xs font-bold uppercase tracking-widest text-red-600">Action sensible</p>
+                        <h2 className="mt-2 text-xl font-bold text-slate-900">Supprimer {deleteTarget.name}</h2>
+                        <p className="mt-2 text-sm text-slate-500">La suppression sera refusée si ce forfait possède un historique d’abonnement. Indiquez le motif de cette décision.</p>
+                        <input value={deleteReason} onChange={(e) => setDeleteReason(e.target.value)} placeholder="Motif obligatoire" className="mt-5 w-full rounded-xl border border-slate-200 px-4 py-3" />
+                        <div className="mt-4 flex gap-2"><button onClick={() => setDeleteTarget(null)} className="flex-1 rounded-xl bg-slate-100 px-4 py-3 font-bold text-slate-700">Annuler</button><button disabled={deleteReason.trim().length < 5} onClick={() => void deletePlan()} className="flex-1 rounded-xl bg-red-600 px-4 py-3 font-bold text-white disabled:opacity-40">Supprimer</button></div>
+                    </div>
+                </div>
             )}
 
             {isModalOpen && (
@@ -315,6 +333,10 @@ const SubscriptionPlans: React.FC = () => {
                                 />
                             </div>
 
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-1">Motif de la décision</label>
+                                <input type="text" value={formData.reason} onChange={(e) => setFormData({...formData, reason: e.target.value})} required minLength={5} placeholder="Pourquoi ce changement ?" className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500" />
+                            </div>
                             <div className="flex items-center gap-2 pt-2">
                                 <input 
                                     type="checkbox" 

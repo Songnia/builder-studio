@@ -21,6 +21,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'phone',
         'password',
         'role',
         'is_active',
@@ -72,6 +73,21 @@ class User extends Authenticatable
     public function subscriptions()
     {
         return $this->hasMany(\App\Models\UserSubscription::class);
+    }
+
+    public function invoices()
+    {
+        return $this->hasMany(\App\Models\Invoice::class);
+    }
+
+    public function onboardingEvents()
+    {
+        return $this->hasMany(\App\Models\OnboardingEvent::class);
+    }
+
+    public function onboardingEmailDeliveries()
+    {
+        return $this->hasMany(\App\Models\OnboardingEmailDelivery::class);
     }
 
     /**

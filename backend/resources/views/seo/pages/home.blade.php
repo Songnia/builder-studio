@@ -39,7 +39,7 @@
             
             <div class="glass-card" style="padding: 2rem; display: flex; flex-direction: column;">
                 <div style="margin-bottom: 1.25rem; overflow: hidden; border-radius: 0.75rem; border: 1px solid var(--surface-border);">
-                    <img src="/assets/screenshots/monsite/star creation site.png" alt="Builder site vitrine" style="width: 100%; height: 180px; object-fit: cover;">
+                    <img src="/assets/screenshots/monsite/start-creation-site.png" alt="Builder site vitrine" style="width: 100%; height: 180px; object-fit: cover;">
                 </div>
                 <h3 style="margin-bottom: 0.75rem; color: var(--accent-green); font-size: 1.35rem; font-weight: 700;">Builder Site No-Code</h3>
                 <p style="color: var(--text-muted); line-height: 1.6; margin-bottom: 1.5rem; flex-grow: 1;">Un assistant guidé en 10 étapes pour configurer votre site vitrine, portfolio, avis et services sans toucher une ligne de code.</p>
@@ -48,7 +48,7 @@
 
             <div class="glass-card" style="padding: 2rem; display: flex; flex-direction: column;">
                 <div style="margin-bottom: 1.25rem; overflow: hidden; border-radius: 0.75rem; border: 1px solid var(--surface-border);">
-                    <img src="/assets/screenshots/galerie/Partager la galerie.png" alt="Galerie client protégée" style="width: 100%; height: 180px; object-fit: cover;">
+                    <img src="/assets/screenshots/galerie/partager-galerie.png" alt="Galerie client protégée" style="width: 100%; height: 180px; object-fit: cover;">
                 </div>
                 <h3 style="margin-bottom: 0.75rem; color: var(--accent-green); font-size: 1.35rem; font-weight: 700;">Galeries Clients Privées</h3>
                 <p style="color: var(--text-muted); line-height: 1.6; margin-bottom: 1.5rem; flex-grow: 1;">Livrez vos fichiers et créations dans des galeries élégantes, protégées par code PIN avec sélection des favoris par le client.</p>
@@ -57,7 +57,7 @@
 
             <div class="glass-card" style="padding: 2rem; display: flex; flex-direction: column;">
                 <div style="margin-bottom: 1.25rem; overflow: hidden; border-radius: 0.75rem; border: 1px solid var(--surface-border);">
-                    <img src="/assets/screenshots/facturation/create facture.png" alt="Facturation et devis" style="width: 100%; height: 180px; object-fit: cover;">
+                    <img src="/assets/screenshots/facturation/create-facture.png" alt="Facturation et devis" style="width: 100%; height: 180px; object-fit: cover;">
                 </div>
                 <h3 style="margin-bottom: 0.75rem; color: var(--accent-green); font-size: 1.35rem; font-weight: 700;">Facturation & Devis</h3>
                 <p style="color: var(--text-muted); line-height: 1.6; margin-bottom: 1.5rem; flex-grow: 1;">Générez des devis et factures conformes, encaissez des acomptes en ligne par carte et Mobile Money en toute simplicité.</p>

@@ -93,7 +93,7 @@ const InvoiceList: React.FC<InvoiceListProps> = ({ onCreateNew, onEdit }) => {
             amountPaid: inv.amount_paid,
             status: inv.status,
             studio: inv.studio_info || {
-                logoUrl: '/logo.png',
+                logoUrl: '/favicon.png',
                 photographerName: 'Vanda Studio',
                 email: 'contact@vanda-studio.org',
                 address: 'Paris, France',

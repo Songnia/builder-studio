@@ -1,0 +1,50 @@
+{
+  "schema_version": "1.0.0",
+  "frictions": [
+    {
+      "id": "mail-log-only",
+      "type": "infrastructure",
+      "severity": "critical",
+      "route": "backend/config/mail.php",
+      "problem": "The default mailer logs messages instead of delivering them unless production environment overrides it",
+      "recommended_mechanism": "verified SMTP plus queued delivery",
+      "evidence": ["MAIL_MAILER default is log"]
+    },
+    {
+      "id": "no-lifecycle-state",
+      "type": "state",
+      "severity": "high",
+      "route": "backend",
+      "problem": "No durable record prevents duplicate or obsolete onboarding emails",
+      "recommended_mechanism": "delivery ledger with unique idempotency key",
+      "evidence": ["No onboarding mail models, jobs or notifications found"]
+    },
+    {
+      "id": "client-value-not-measured",
+      "type": "analytics",
+      "severity": "high",
+      "route": "/api/client/gallery/{uuid}",
+      "problem": "The first successful client gallery open is not persisted as a wow moment",
+      "recommended_mechanism": "first-open event with privacy-safe deduplication",
+      "evidence": ["Gallery show returns content but records no onboarding event"]
+    },
+    {
+      "id": "share-not-measured",
+      "type": "analytics",
+      "severity": "medium",
+      "route": "ShareDialog",
+      "problem": "Copy and WhatsApp actions are not recorded server-side",
+      "recommended_mechanism": "authenticated onboarding event endpoint",
+      "evidence": ["ShareDialog only opens clipboard or wa.me"]
+    },
+    {
+      "id": "in-app-state-local",
+      "type": "continuity",
+      "severity": "medium",
+      "route": "/admin/dashboard",
+      "problem": "Dismissal and progress are primarily derived client-side and cannot coordinate with email",
+      "recommended_mechanism": "backend onboarding state derived from product events",
+      "evidence": ["Dashboard uses component state and database counts"]
+    }
+  ]
+}

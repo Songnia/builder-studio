@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Gallery;
 use App\Services\SubscriptionEntitlementService;
+use App\Services\OnboardingLifecycleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -26,7 +27,7 @@ class GalleryController extends Controller
             ->paginate(20);
     }
 
-    public function store(Request $request, SubscriptionEntitlementService $subscriptions)
+    public function store(Request $request, SubscriptionEntitlementService $subscriptions, OnboardingLifecycleService $onboarding)
     {
         if ($denied = $subscriptions->authorize($request->user(), 'secure_gallery_delivery')) {
             return $denied;
@@ -69,6 +70,11 @@ class GalleryController extends Controller
             }
 
             Log::info('Gallery created: '.$gallery->id);
+
+            $eventName = $request->user()->galleries()->whereKeyNot($gallery->id)->exists()
+                ? 'gallery_created'
+                : 'first_gallery_created';
+            $onboarding->recordAndTrigger($request->user(), $eventName, $gallery, ['gallery_uuid' => $gallery->uuid]);
 
             if ($request->hasFile('zip_file')) {
                 Log::info('Processing zip file');
@@ -122,6 +128,21 @@ class GalleryController extends Controller
                 },
             ])
             ->firstOrFail();
+    }
+
+    public function recordShare(Request $request, $id, OnboardingLifecycleService $onboarding)
+    {
+        $gallery = Gallery::ownedByCurrentUser()
+            ->where(fn ($query) => $query->where('uuid', $id)->orWhere('id', $id))
+            ->firstOrFail();
+
+        $validated = $request->validate(['channel' => 'required|in:clipboard,whatsapp']);
+        $onboarding->recordOnce($request->user(), 'first_gallery_shared', $gallery, [
+            'gallery_uuid' => $gallery->uuid,
+            'channel' => $validated['channel'],
+        ]);
+
+        return response()->noContent();
     }
 
     public function update(Request $request, $id)

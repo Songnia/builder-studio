@@ -11,6 +11,7 @@ interface DashboardStats {
         total_galleries: number;
         active_subscriptions: number;
         monthly_revenue: number;
+        mrr?: number; customer_churn?: number | null; revenue_churn?: number | null; arpu?: number | null; cac?: number | null; ltv?: number | null; ltv_cac_ratio?: number | null; metrics_status?: string;
     };
     growth_data: Array<{
         name: string;
@@ -71,6 +72,11 @@ const SuperAdminDashboard: React.FC = () => {
         { title: 'Total Créateurs', value: stats.metrics.total_photographers, icon: Users, color: '#4f46e5', bg: 'rgba(79, 70, 229, 0.1)', sub: 'Inscrits sur la plateforme' },
         { title: 'Abonnements Actifs', value: stats.metrics.active_subscriptions, icon: CreditCard, color: '#6366f1', bg: 'rgba(99, 102, 241, 0.1)', sub: 'Forfaits SaaS en cours' },
         { title: 'CA Mensuel (SaaS)', value: `${stats.metrics.monthly_revenue} Fcfa`, icon: TrendingUp, color: '#10b981', bg: 'rgba(16, 185, 129, 0.1)', sub: 'Revenus récurrents' },
+        { title: 'MRR', value: `${stats.metrics.mrr ?? stats.metrics.monthly_revenue} Fcfa`, icon: TrendingUp, color: '#0f766e', bg: 'rgba(15,118,110,0.1)', sub: 'Revenu récurrent mensuel' },
+        { title: 'Churn client', value: stats.metrics.customer_churn == null ? 'N/D' : `${(stats.metrics.customer_churn * 100).toFixed(2)}%`, icon: Activity, color: '#dc2626', bg: 'rgba(220,38,38,0.1)', sub: 'Sur les 30 derniers jours' },
+        { title: 'CAC', value: stats.metrics.cac == null ? 'N/D' : `${stats.metrics.cac} Fcfa`, icon: CreditCard, color: '#9333ea', bg: 'rgba(147,51,234,0.1)', sub: 'Dépense marketing / nouveaux payants' },
+        { title: 'LTV', value: stats.metrics.ltv == null ? 'N/D' : `${stats.metrics.ltv} Fcfa`, icon: TrendingUp, color: '#0369a1', bg: 'rgba(3,105,161,0.1)', sub: 'Valeur de vie client estimée' },
+        { title: 'LTV / CAC', value: stats.metrics.ltv_cac_ratio == null ? 'N/D' : stats.metrics.ltv_cac_ratio.toFixed(2), icon: TrendingUp, color: '#ea580c', bg: 'rgba(234,88,12,0.1)', sub: 'Objectif : LTV > 3 × CAC' },
         { title: 'Galeries Créées', value: stats.metrics.total_galleries, icon: Image, color: '#84cc16', bg: 'rgba(132, 204, 22, 0.1)', sub: 'Hébergées sur nos serveurs' },
     ];
 
@@ -239,8 +245,8 @@ const RecentTransactionsTable = () => {
     useEffect(() => {
         const fetchRecent = async () => {
             try {
-                const response = await api.get('/superadmin/dashboard/transactions?limit=5');
-                setTransactions(response.data);
+                const response = await api.get('/superadmin/dashboard/transactions?per_page=10');
+                setTransactions((response.data.data ?? []).slice(0, 5));
             } catch (error) {
                 console.error("Failed to fetch recent transactions", error);
             } finally {
